@@ -16,9 +16,13 @@ How to read this: severity and importance ratings are the panel's opinion unless
 | Parked for Goal 2 | A1, A9, A10, A11, A12, A14, A15, plus the coverage matrix and lesson plan |
 | Declined by Wil | C4 (weekly targets with skip days), C8 (habit cue / reminders); targets and streaks stay out |
 
+**Second review:** a later design review (`docs/design-review.md`) led to these changes in `ARCHITECTURE.md`: a learning pilot built before the full app, an effect gate that fades per note, one rule for when the reference is revealed, a quick-capture inbox, held-out transfer cards in the Goal 1 finish line, "works, but" style advice, broken setups reported instead of crashing, and a warning that imported decks are code.
+
+**Third review:** `docs/design-review-3.md` changed the unit of learning: cards are now patterns, each with at least 3 varied practice instances and a cold instance; about one review in four is a notebook-style challenge; the stuck key asks why you're stuck and routes help accordingly; the diagram and bench fade behind an Explain button once a pattern is fluent; and weekly cold challenges replace the transfer check. 21 patterns, 84 instances, all validated.
+
 **Open questions answered:** the goal is "stop freezing" first and "job-ready" later, never mixed; no targets or streaks.
 
-**Checker and seed notes now:** the rewritten checker passes a 71-case regression suite that includes every false accept, false reject and crash listed in D4–D10, and all 21 seed notes pass `validate()` (see `python/` and `content/decks/` in the repo).
+**Checker and seed notes now:** the rewritten checker passes an 83-case regression suite that includes every false accept, false reject and crash listed in D4–D10, and all 84 instances of the 21 seed patterns pass `validate()` (see `python/` and `content/decks/` in the repo).
 
 ## 1. Curriculum coverage matrix: v1 fully covers about 7 of the 25 core line-shaped skills
 

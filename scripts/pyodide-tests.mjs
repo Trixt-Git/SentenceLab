@@ -41,12 +41,17 @@ runpy.run_path(_file, run_name="__main__")
 
 const checker = runScript('/repo/python/tests/test_checker.py', ['/repo/python']);
 const seed = runScript('/repo/python/tests/test_seed.py', ['/repo']);
-process.stdout.write(checker.text + seed.text);
+const bench = runScript('/repo/python/tests/test_bench.py', ['/repo']);
+process.stdout.write(checker.text + seed.text + bench.text);
 
 const m = checker.text.match(/mismatches: (\d+) of (\d+)/);
-const s = seed.text.match(/notes: (\d+) problems: (\d+)/);
-const checkerOk = m && m[1] === '0' && m[2] === '71';
-const seedOk = s && s[1] === '21' && s[2] === '0' && seed.exit === 0;
+const s = seed.text.match(/patterns: (\d+) instances: (\d+) problems: (\d+)/);
+// Pass = no mismatches and no problems; the totals grow as cases and patterns are added.
+const checkerOk = m && m[1] === '0';
+const seedOk = s && s[3] === '0' && seed.exit === 0;
+const bn = bench.text.match(/bench tests: (\d+) failed: (\d+)/);
+const benchOk = bn && bn[2] === '0' && bench.exit === 0;
 console.log(`\ntest_checker: ${checkerOk ? 'PASS' : 'FAIL'} (${m ? m[0] : 'no summary line'})`);
 console.log(`test_seed:    ${seedOk ? 'PASS' : 'FAIL'} (${s ? s[0] : 'no summary line'})`);
-process.exit(checkerOk && seedOk ? 0 : 1);
+console.log(`test_bench:   ${benchOk ? 'PASS' : 'FAIL'} (${bn ? bn[0] : 'no summary line'})`);
+process.exit(checkerOk && seedOk && benchOk ? 0 : 1);

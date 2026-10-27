@@ -3,7 +3,8 @@
 check(setup, reference, answer, options=None)      -> result dict for one setup
 check_all(setups, reference, answer, options=None) -> first failing setup's result, else the last passing one
   options: {"ignore_order": bool}  (per note; default False)
-validate(setups, reference, traps)   -> list of authoring errors (empty = note is usable)
+validate(setups, reference, traps, options=None)   -> list of authoring errors (empty = note is usable)
+A correct result may carry "style": advice when the line works but isn't the preferred form.
 parts(line)                          -> nested dict for the sentence diagram
 """
 import ast, builtins, contextlib, copy, io, math, numbers, pickle, random, sys, types, warnings
@@ -200,10 +201,15 @@ def run(setup, line):
     saved_builtins = dict(builtins.__dict__)
     ns = {"__builtins__": builtins}
     out = io.StringIO()
-    dropped, error, warned = None, None, []
+    dropped, error, warned, setup_error = None, None, [], None
     try:
         _seed()
-        exec(setup, ns)
+        try:
+            exec(setup, ns)
+        except BaseException as e:        # a broken note setup must never crash the checker
+            setup_error = {"type": type(e).__name__, "message": str(e)}
+            return {"setup_error": setup_error, "ns": {}, "rebound": [], "mutated": [], "deleted": [],
+                    "landed": [], "stdout": "", "dropped": None, "error": None, "warnings": []}
         before_ids = {k: id(v) for k, v in _visible(ns).items()}
         before_vals = {k: _copy(v) for k, v in _visible(ns).items()}
         tree = ast.parse(line, mode="exec")
@@ -233,7 +239,7 @@ def run(setup, line):
     deleted = sorted(k for k in before_ids if k not in after)
     return {"ns": after, "rebound": rebound, "mutated": mutated, "deleted": deleted,
             "landed": sorted(landed), "stdout": out.getvalue(), "dropped": dropped, "error": error,
-            "warnings": warned}
+            "warnings": warned, "setup_error": None}
 
 
 def effects(r):
@@ -293,6 +299,10 @@ def check(setup, reference, answer, options=None):
                 "messages": [f"One sentence at a time: your answer has {len(tree.body)} statements."]}
 
     ref, you = run(setup, reference), run(setup, answer)
+    if ref["setup_error"]:
+        se = ref["setup_error"]
+        return {"correct": False, "stage": "note",
+                "messages": [f"The note's setup fails ({se['type']}: {se['message']}); fix the note."]}
     if ref["error"]:
         return {"correct": False, "stage": "note", "messages": ["The note's reference line fails on this setup; fix the note."]}
     if you["error"]:
@@ -333,6 +343,10 @@ def check(setup, reference, answer, options=None):
         elif hasattr(rv, "get_params") and hasattr(rv, "fit"):
             msgs.append(f"`{n}` is fitted differently from the reference. Check which data the verb was given"
                         f" (for example X_train vs X).")
+        elif type(rv) is not type(yv) and rv is not None and yv is not None:
+            msgs.append(f"`{n}` should be a {type(rv).__name__} but is a {type(yv).__name__}.")
+        elif getattr(rv, "shape", None) is not None and getattr(rv, "shape", None) != getattr(yv, "shape", None):
+            msgs.append(f"`{n}` should have shape {tuple(rv.shape)} but has {tuple(yv.shape)}.")
         elif _short(rv) == _short(yv):
             msgs.append(f"`{n}` looks the same when printed, but its contents differ from the reference.")
         else:
@@ -357,7 +371,23 @@ def check(setup, reference, answer, options=None):
             else "verb" if "is now None" in m else None
     return {"correct": ok, "stage": "compare", "blame": blame if not ok else None,
             "messages": msgs or ["Same effects, same result."],
+            "style": style(answer) if ok else [],
             "effects": {"reference": effects(ref), "yours": effects(you)}}
+
+
+def style(answer):
+    """'Works, but' advice for correct lines that aren't the preferred form. Never affects correctness."""
+    notes = []
+    try:
+        tree = ast.parse(answer)
+    except SyntaxError:
+        return notes
+    for node in ast.walk(tree):
+        if isinstance(node, ast.keyword) and node.arg == "inplace" and \
+                isinstance(node.value, ast.Constant) and node.value.value is True:
+            notes.append("Works, but pandas is phasing out inplace=True. Prefer landing the result: df = df.method(...).")
+            break
+    return notes
 
 
 def check_all(setups, reference, answer, options=None):
@@ -385,6 +415,9 @@ def validate(setups, reference, traps=(), options=None):
     finals = []
     for i, s in enumerate(setups):
         a, b = run(s, reference), run(s, reference)
+        if a["setup_error"]:
+            errs.append(f"Setup {i + 1} fails: {a['setup_error']['type']}: {a['setup_error']['message']}")
+            continue
         if a["error"]:
             errs.append(f"Reference fails on setup {i + 1}: {a['error']['type']}: {a['error']['message']}")
             continue
@@ -456,3 +489,136 @@ def parts(line):
         s = sentence(node.value)
         return {"landing": {"kind": "sends_out" if s["verb"] == "print" else "dropped", "text": None}, **s}
     return {"landing": None, "subject": {"text": line, "nested": None}, "verb": None, "details": []}
+
+
+# ---------- the bench ----------
+
+BENCH_ITEMS, BENCH_DEPTH, BENCH_ROWS = 8, 2, 5
+
+
+def _py(v):
+    """numpy scalars become plain Python values so previews are JSON."""
+    if type(v).__module__ == "numpy" and hasattr(v, "item") and getattr(v, "shape", None) == ():
+        try:
+            return v.item()
+        except Exception:
+            return v
+    return v
+
+
+def _scalar(v):
+    x = _py(v)
+    if x is None or isinstance(x, (bool, str)):
+        return {"kind": "scalar", "value": x}
+    if isinstance(x, int):
+        return {"kind": "scalar", "value": x}
+    if isinstance(x, float):
+        if math.isnan(x):
+            return {"kind": "scalar", "value": None, "special": "nan"}
+        if math.isinf(x):
+            return {"kind": "scalar", "value": None, "special": "inf" if x > 0 else "-inf"}
+        return {"kind": "scalar", "value": x}
+    return None
+
+
+def _preview(v, depth=0):
+    """A JSON-safe picture of one object for the bench. Never returns a Python object."""
+    s = _scalar(v)
+    if s is not None:
+        return s
+    pd, np = sys.modules.get("pandas"), sys.modules.get("numpy")
+    if pd is not None and isinstance(v, pd.DataFrame):
+        head = v.head(BENCH_ROWS)
+        return {"kind": "dataframe", "shape": [int(v.shape[0]), int(v.shape[1])],
+                "columns": [str(c) for c in v.columns], "index": [_scalar_or_text(i) for i in head.index],
+                "rows": [[_scalar_or_text(c) for c in row] for row in head.itertuples(index=False, name=None)],
+                "more": max(0, int(v.shape[0]) - BENCH_ROWS)}
+    if pd is not None and isinstance(v, pd.Series):
+        head = v.head(BENCH_ITEMS)
+        return {"kind": "series", "length": int(len(v)),
+                "items": [{"index": _scalar_or_text(i), "value": _scalar_or_text(x)} for i, x in head.items()],
+                "more": max(0, int(len(v)) - BENCH_ITEMS)}
+    if np is not None and isinstance(v, np.ndarray):
+        flat = v.ravel()[:BENCH_ITEMS].tolist()
+        return {"kind": "ndarray", "shape": [int(n) for n in v.shape], "values": [_scalar_or_text(x) for x in flat],
+                "more": max(0, int(v.size) - BENCH_ITEMS)}
+    if hasattr(v, "get_params") and hasattr(v, "fit"):
+        return {"kind": "model", "cls": type(v).__name__,
+                "fitted": any(k.endswith("_") and not k.startswith("_") for k in vars(v))}
+    if isinstance(v, (list, tuple, set, frozenset)):
+        if depth >= BENCH_DEPTH:
+            return {"kind": "other", "text": _short(v)}
+        items = list(v)
+        if isinstance(v, (set, frozenset)):
+            try:
+                items = sorted(items)
+            except Exception:
+                pass
+        return {"kind": "list", "items": [_preview(x, depth + 1) for x in items[:BENCH_ITEMS]],
+                "more": max(0, len(items) - BENCH_ITEMS)}
+    if isinstance(v, dict):
+        if depth >= BENCH_DEPTH:
+            return {"kind": "other", "text": _short(v)}
+        items = list(v.items())
+        return {"kind": "dict", "items": [{"key": _preview(k, depth + 1), "value": _preview(x, depth + 1)}
+                                          for k, x in items[:BENCH_ITEMS]],
+                "more": max(0, len(items) - BENCH_ITEMS)}
+    return {"kind": "other", "text": _short(v, 80)}
+
+
+def _scalar_or_text(x):
+    return _scalar(x) or {"kind": "other", "text": _short(x, 40)}
+
+
+def bench(setup, line=""):
+    """State of the world before and after a line, for the bench (ARCHITECTURE.md section 8).
+
+    Each state is {"names": [{"name", "key"}], "objects": [{"key", "type", "preview", "changed"}]}. Keys are
+    o1, o2, ... in order of first appearance and are shared by before and after, so an object that survives keeps
+    its key and two names with one key are aliases. An empty line returns the same state twice."""
+    saved_builtins = dict(builtins.__dict__)
+    ns = {"__builtins__": builtins}
+    keys, keep = {}, {}               # keep holds every object seen, so Python can't reuse an id mid-call
+    out, error = io.StringIO(), None
+
+    def key_of(v):
+        if id(v) not in keys:
+            keys[id(v)] = f"o{len(keys) + 1}"
+            keep[id(v)] = v
+        return keys[id(v)]
+
+    def state(vis, changed=frozenset()):
+        names = [{"name": n, "key": key_of(v)} for n, v in vis.items()]
+        seen, objects = set(), []
+        for v in vis.values():
+            if id(v) in seen:
+                continue
+            seen.add(id(v))
+            objects.append({"key": key_of(v), "type": type(v).__name__, "preview": _preview(v),
+                            "changed": id(v) in changed})
+        return {"names": names, "objects": objects}
+
+    try:
+        _seed()
+        exec(setup, ns)
+        vis0 = _visible(ns)
+        before = state(vis0)
+        before_vals = {id(v): _copy(v) for v in vis0.values()}
+        if line.strip():
+            try:
+                tree = ast.parse(line)
+                _seed()
+                with contextlib.redirect_stdout(out), warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    exec(compile(tree, "<line>", "exec"), ns)
+            except SyntaxError as e:
+                error = {"type": "SyntaxError", "message": e.msg}
+            except BaseException as e:
+                error = {"type": type(e).__name__, "message": str(e)}
+        vis1 = _visible(ns)
+        changed = {id(v) for v in vis1.values() if id(v) in before_vals and not same(v, before_vals[id(v)])}
+        after = state(vis1, changed)
+    finally:
+        builtins.__dict__.clear()
+        builtins.__dict__.update(saved_builtins)
+    return {"before": before, "after": after, "error": error, "stdout": out.getvalue()}

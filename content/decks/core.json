@@ -1,116 +1,281 @@
 {
   "deck": "core",
-  "schemaVersion": 1,
-  "notes": [
+  "schemaVersion": 2,
+  "patterns": [
     {
       "id": "core-compare",
       "kind": "line",
       "deck": "core",
-      "intents": [
-        "Check whether qty is above 10, keeping True or False in big_order.",
-        "Store in big_order whether qty is greater than 10."
-      ],
-      "setups": [
-        "qty = 12",
-        "qty = 10"
-      ],
-      "reference": "big_order = qty > 10",
-      "returns": "new",
+      "pattern": "Store the result of a comparison",
       "rule": "A comparison makes True or False; land it like any other result.",
-      "traps": [
-        "big_order = qty >= 10",
-        "qty > 10"
-      ],
-      "distractors": [],
-      "tiles": null,
+      "returns": "new",
       "contrast": "gt-vs-ge",
       "requires": [],
       "options": {},
+      "distractors": [],
+      "tiles": null,
       "tags": [
-        "python"
+        "core"
       ],
       "source": "seed",
-      "version": 2
+      "version": 3,
+      "instances": [
+        {
+          "id": "core-compare",
+          "role": "practice",
+          "intents": [
+            "Check whether qty is above 10, keeping True or False in big_order.",
+            "Store in big_order whether qty is greater than 10."
+          ],
+          "setups": [
+            "qty = 12",
+            "qty = 10"
+          ],
+          "reference": "big_order = qty > 10",
+          "traps": [
+            "big_order = qty >= 10",
+            "qty > 10"
+          ]
+        },
+        {
+          "id": "core-compare-2",
+          "role": "practice",
+          "intents": [
+            "Check whether minutes is over 30, keeping True or False in is_late.",
+            "Store in is_late whether minutes is greater than 30."
+          ],
+          "setups": [
+            "minutes = 45",
+            "minutes = 30"
+          ],
+          "reference": "is_late = minutes > 30",
+          "traps": [
+            "is_late = minutes >= 30",
+            "minutes > 30"
+          ]
+        },
+        {
+          "id": "core-compare-3",
+          "role": "practice",
+          "intents": [
+            "Check whether price is below 5.0, keeping True or False in is_cheap.",
+            "Store in is_cheap whether price is less than 5.0."
+          ],
+          "setups": [
+            "price = 3.5",
+            "price = 5.0"
+          ],
+          "reference": "is_cheap = price < 5.0",
+          "traps": [
+            "is_cheap = price <= 5.0",
+            "price < 5.0"
+          ]
+        },
+        {
+          "id": "core-compare-cold",
+          "role": "cold",
+          "intents": [
+            "Check whether score is at least 60, keeping True or False in passed.",
+            "Store in passed whether score is 60 or more."
+          ],
+          "setups": [
+            "score = 60",
+            "score = 59.5"
+          ],
+          "reference": "passed = score >= 60",
+          "traps": [
+            "passed = score > 60",
+            "score >= 60"
+          ]
+        }
+      ]
     },
     {
       "id": "core-unpack",
       "kind": "line",
       "deck": "core",
-      "intents": [
-        "Split pair into two names, first and second.",
-        "Unpack the two items of pair into first and second."
-      ],
-      "setups": [
-        "pair = (3, 'x')",
-        "pair = ('a', 'b')"
-      ],
-      "reference": "first, second = pair",
-      "returns": "new",
+      "pattern": "Unpack several values into names",
       "rule": "Several names left of = take the items in order.",
-      "traps": [
-        "first = pair[0]",
-        "first, second = pair[1], pair[0]"
-      ],
-      "distractors": [],
-      "tiles": null,
+      "returns": "new",
       "contrast": null,
       "requires": [],
       "options": {},
+      "distractors": [],
+      "tiles": null,
       "tags": [
-        "python"
+        "core"
       ],
       "source": "seed",
-      "version": 2
+      "version": 3,
+      "instances": [
+        {
+          "id": "core-unpack",
+          "role": "practice",
+          "intents": [
+            "Split pair into two names, first and second.",
+            "Unpack the two items of pair into first and second."
+          ],
+          "setups": [
+            "pair = (3, 'x')",
+            "pair = ('a', 'b')"
+          ],
+          "reference": "first, second = pair",
+          "traps": [
+            "first = pair[0]",
+            "first, second = pair[1], pair[0]"
+          ]
+        },
+        {
+          "id": "core-unpack-2",
+          "role": "practice",
+          "intents": [
+            "Split person into name and age.",
+            "Unpack the two items of person into name and age."
+          ],
+          "setups": [
+            "person = ('Ana', 31)",
+            "person = ('Ben', 7)"
+          ],
+          "reference": "name, age = person",
+          "traps": [
+            "name = person[0]",
+            "name, age = person[1], person[0]"
+          ]
+        },
+        {
+          "id": "core-unpack-3",
+          "role": "practice",
+          "intents": [
+            "Split bounds into low and high.",
+            "Unpack the two numbers in bounds into low and high."
+          ],
+          "setups": [
+            "bounds = [2, 9]",
+            "bounds = [-1, 0]"
+          ],
+          "reference": "low, high = bounds",
+          "traps": [
+            "low = bounds[0]",
+            "low, high = bounds[1], bounds[0]"
+          ]
+        },
+        {
+          "id": "core-unpack-cold",
+          "role": "cold",
+          "intents": [
+            "Split point into x, y and z.",
+            "Unpack the three coordinates in point into x, y and z."
+          ],
+          "setups": [
+            "point = (1, 2, 3)",
+            "point = (0, -5, 8)"
+          ],
+          "reference": "x, y, z = point",
+          "traps": [
+            "x = point[0]",
+            "x, y, z = point[2], point[1], point[0]"
+          ]
+        }
+      ]
     },
     {
       "id": "core-append",
       "kind": "line",
       "deck": "core",
-      "intents": [
-        "Add 'kiwi' to the end of fruits.",
-        "Put 'kiwi' on the end of the fruits list, changing that list itself."
-      ],
-      "setups": [
-        "fruits = ['apple', 'pear']",
-        "fruits = []"
-      ],
-      "reference": "fruits.append('kiwi')",
-      "returns": "none_after_mutating",
+      "pattern": "Add an item to the end of a list",
       "rule": "append changes the list and returns None; don't land it.",
-      "traps": [
-        "fruits = fruits.append('kiwi')",
-        "fruits.insert(0, 'kiwi')"
-      ],
-      "distractors": [],
-      "tiles": null,
+      "returns": "none_after_mutating",
       "contrast": "mutate-vs-new",
       "requires": [],
       "options": {},
+      "distractors": [],
+      "tiles": null,
       "tags": [
-        "python"
+        "core"
       ],
       "source": "seed",
-      "version": 2
+      "version": 3,
+      "instances": [
+        {
+          "id": "core-append",
+          "role": "practice",
+          "intents": [
+            "Add 'kiwi' to the end of fruits.",
+            "Put 'kiwi' on the end of the fruits list, changing that list itself."
+          ],
+          "setups": [
+            "fruits = ['apple', 'pear']",
+            "fruits = []"
+          ],
+          "reference": "fruits.append('kiwi')",
+          "traps": [
+            "fruits = fruits.append('kiwi')",
+            "fruits.insert(0, 'kiwi')"
+          ]
+        },
+        {
+          "id": "core-append-2",
+          "role": "practice",
+          "intents": [
+            "Add 88 to the end of scores.",
+            "Put 88 on the end of the scores list itself."
+          ],
+          "setups": [
+            "scores = [70, 91]",
+            "scores = []"
+          ],
+          "reference": "scores.append(88)",
+          "traps": [
+            "scores = scores.append(88)",
+            "scores.insert(0, 88)"
+          ]
+        },
+        {
+          "id": "core-append-3",
+          "role": "practice",
+          "intents": [
+            "Add 'done' to the end of log.",
+            "Put the string 'done' on the end of the log list."
+          ],
+          "setups": [
+            "log = ['start']",
+            "log = ['a', 'b']"
+          ],
+          "reference": "log.append('done')",
+          "traps": [
+            "log = log.append('done')",
+            "log + ['done']"
+          ]
+        },
+        {
+          "id": "core-append-cold",
+          "role": "cold",
+          "intents": [
+            "Add 'email Ana' to the end of tasks.",
+            "Put 'email Ana' on the end of the tasks list itself."
+          ],
+          "setups": [
+            "tasks = ['call Ben']",
+            "tasks = []"
+          ],
+          "reference": "tasks.append('email Ana')",
+          "traps": [
+            "tasks = tasks.append('email Ana')",
+            "tasks.insert(0, 'email Ana')"
+          ]
+        }
+      ]
     },
     {
       "id": "core-sorted",
       "kind": "line",
       "deck": "core",
-      "intents": [
-        "Make a sorted copy of scores called ranked, leaving scores as it is.",
-        "Put the scores in order, lowest first, in a new list ranked; don't touch scores."
-      ],
-      "setups": [
-        "scores = [3, 1, 2]",
-        "scores = [5, 5, 0]"
-      ],
-      "reference": "ranked = sorted(scores)",
-      "returns": "new",
+      "pattern": "Make a sorted copy of a list",
       "rule": "sorted() gives a new list; .sort() changes the old one and returns None.",
-      "traps": [
-        "ranked = scores.sort()",
-        "scores.sort()"
-      ],
+      "returns": "new",
+      "contrast": "mutate-vs-new",
+      "requires": [],
+      "options": {},
       "distractors": [
         {
           "tile": ".sort",
@@ -118,64 +283,180 @@
         }
       ],
       "tiles": null,
-      "contrast": "mutate-vs-new",
-      "requires": [],
-      "options": {},
       "tags": [
-        "python"
+        "core"
       ],
       "source": "seed",
-      "version": 2
+      "version": 3,
+      "instances": [
+        {
+          "id": "core-sorted",
+          "role": "practice",
+          "intents": [
+            "Make a sorted copy of scores called ranked, leaving scores as it is.",
+            "Put the scores in order, lowest first, in a new list ranked; don't touch scores."
+          ],
+          "setups": [
+            "scores = [3, 1, 2]",
+            "scores = [5, 5, 0]"
+          ],
+          "reference": "ranked = sorted(scores)",
+          "traps": [
+            "ranked = scores.sort()",
+            "scores.sort()"
+          ]
+        },
+        {
+          "id": "core-sorted-2",
+          "role": "practice",
+          "intents": [
+            "Make a sorted copy of names called by_name, leaving names alone.",
+            "Put names in alphabetical order in a new list by_name."
+          ],
+          "setups": [
+            "names = ['cy', 'ana', 'ben']",
+            "names = ['zed', 'amy']"
+          ],
+          "reference": "by_name = sorted(names)",
+          "traps": [
+            "by_name = names.sort()",
+            "names.sort()"
+          ]
+        },
+        {
+          "id": "core-sorted-3",
+          "role": "practice",
+          "intents": [
+            "Make a copy of sizes sorted largest first, called biggest_first.",
+            "Put sizes in descending order in a new list biggest_first; don't touch sizes."
+          ],
+          "setups": [
+            "sizes = [3, 9, 1]",
+            "sizes = [5, 5, 7]"
+          ],
+          "reference": "biggest_first = sorted(sizes, reverse=True)",
+          "traps": [
+            "biggest_first = sorted(sizes)",
+            "biggest_first = sizes.sort(reverse=True)"
+          ]
+        },
+        {
+          "id": "core-sorted-cold",
+          "role": "cold",
+          "intents": [
+            "Make a sorted copy of temps called ordered, leaving temps alone.",
+            "Put temps in order, lowest first, in a new list ordered."
+          ],
+          "setups": [
+            "temps = [21.5, 18.0, 25.2]",
+            "temps = [3.0, -1.0]"
+          ],
+          "reference": "ordered = sorted(temps)",
+          "traps": [
+            "ordered = temps.sort()",
+            "temps.sort()"
+          ]
+        }
+      ]
     },
     {
       "id": "core-lookup",
       "kind": "line",
       "deck": "core",
-      "intents": [
-        "Look up Ana's age in ages and keep it in age.",
-        "Get the value stored under 'Ana' in ages, as age."
-      ],
-      "setups": [
-        "ages = {'Ana': 31, 'Ben': 27}",
-        "ages = {'Ben': 1, 'Ana': 2}"
-      ],
-      "reference": "age = ages['Ana']",
+      "pattern": "Look up a value by key",
+      "rule": "A dict key goes in square brackets as a value, usually a string.",
       "returns": "new",
-      "rule": "A dict key goes in square brackets as a value, here the string 'Ana'.",
-      "traps": [
-        "age = ages[Ana]",
-        "age = ages.Ana"
-      ],
-      "distractors": [],
-      "tiles": null,
       "contrast": null,
       "requires": [],
       "options": {},
+      "distractors": [],
+      "tiles": null,
       "tags": [
-        "python"
+        "core"
       ],
       "source": "seed",
-      "version": 2
+      "version": 3,
+      "instances": [
+        {
+          "id": "core-lookup",
+          "role": "practice",
+          "intents": [
+            "Look up Ana's age in ages and keep it in age.",
+            "Get the value stored under 'Ana' in ages, as age."
+          ],
+          "setups": [
+            "ages = {'Ana': 31, 'Ben': 27}",
+            "ages = {'Ben': 1, 'Ana': 2}"
+          ],
+          "reference": "age = ages['Ana']",
+          "traps": [
+            "age = ages[Ana]",
+            "age = ages.Ana"
+          ]
+        },
+        {
+          "id": "core-lookup-2",
+          "role": "practice",
+          "intents": [
+            "Look up the price of tea in prices and keep it in rate.",
+            "Get the value stored under 'tea' in prices, as rate."
+          ],
+          "setups": [
+            "prices = {'tea': 2.5, 'coffee': 3.0}",
+            "prices = {'coffee': 1.0, 'tea': 4.0}"
+          ],
+          "reference": "rate = prices['tea']",
+          "traps": [
+            "rate = prices[tea]",
+            "rate = prices.tea"
+          ]
+        },
+        {
+          "id": "core-lookup-3",
+          "role": "practice",
+          "intents": [
+            "Look up Ben's extension in phone_book, as ext.",
+            "Get the value stored under 'Ben' in phone_book and keep it in ext."
+          ],
+          "setups": [
+            "phone_book = {'Ana': '101', 'Ben': '102'}",
+            "phone_book = {'Ben': '555'}"
+          ],
+          "reference": "ext = phone_book['Ben']",
+          "traps": [
+            "ext = phone_book[Ben]",
+            "ext = phone_book.Ben"
+          ]
+        },
+        {
+          "id": "core-lookup-cold",
+          "role": "cold",
+          "intents": [
+            "Look up max_rows in settings and keep it in limit.",
+            "Get the value stored under 'max_rows' in settings, as limit."
+          ],
+          "setups": [
+            "settings = {'max_rows': 50, 'theme': 'dark'}",
+            "settings = {'max_rows': 10}"
+          ],
+          "reference": "limit = settings['max_rows']",
+          "traps": [
+            "limit = settings[max_rows]",
+            "limit = settings.max_rows"
+          ]
+        }
+      ]
     },
     {
       "id": "core-set",
       "kind": "line",
       "deck": "core",
-      "intents": [
-        "Set Ben's age in ages to 28.",
-        "Change the value stored under 'Ben' in ages to 28."
-      ],
-      "setups": [
-        "ages = {'Ana': 31, 'Ben': 27}",
-        "ages = {'Ben': 1}"
-      ],
-      "reference": "ages['Ben'] = 28",
-      "returns": "new",
+      "pattern": "Store a value under a key",
       "rule": "One = stores; == only compares.",
-      "traps": [
-        "ages['Ben'] == 28",
-        "ages = {'Ben': 28}"
-      ],
+      "returns": "none_after_mutating",
+      "contrast": null,
+      "requires": [],
+      "options": {},
       "distractors": [
         {
           "tile": "==",
@@ -183,34 +464,92 @@
         }
       ],
       "tiles": null,
-      "contrast": null,
-      "requires": [],
-      "options": {},
       "tags": [
-        "python"
+        "core"
       ],
       "source": "seed",
-      "version": 2
+      "version": 3,
+      "instances": [
+        {
+          "id": "core-set",
+          "role": "practice",
+          "intents": [
+            "Set Ben's age in ages to 28.",
+            "Change the value stored under 'Ben' in ages to 28."
+          ],
+          "setups": [
+            "ages = {'Ana': 31, 'Ben': 27}",
+            "ages = {'Ben': 1}"
+          ],
+          "reference": "ages['Ben'] = 28",
+          "traps": [
+            "ages['Ben'] == 28",
+            "ages = {'Ben': 28}"
+          ]
+        },
+        {
+          "id": "core-set-2",
+          "role": "practice",
+          "intents": [
+            "Set the apples count in stock to 0.",
+            "Change the value stored under 'apples' in stock to 0."
+          ],
+          "setups": [
+            "stock = {'apples': 4, 'pears': 2}",
+            "stock = {'pears': 1}"
+          ],
+          "reference": "stock['apples'] = 0",
+          "traps": [
+            "stock['apples'] == 0",
+            "stock = {'apples': 0}"
+          ]
+        },
+        {
+          "id": "core-set-3",
+          "role": "practice",
+          "intents": [
+            "Turn debug on in config by setting it to True.",
+            "Store True under 'debug' in config."
+          ],
+          "setups": [
+            "config = {'debug': False, 'level': 2}",
+            "config = {}"
+          ],
+          "reference": "config['debug'] = True",
+          "traps": [
+            "config['debug'] == True",
+            "config = {'debug': True}"
+          ]
+        },
+        {
+          "id": "core-set-cold",
+          "role": "cold",
+          "intents": [
+            "Set the east total in totals to 120.5.",
+            "Store 120.5 under 'east' in totals."
+          ],
+          "setups": [
+            "totals = {'east': 10.0, 'west': 3.0}",
+            "totals = {'west': 1.0}"
+          ],
+          "reference": "totals['east'] = 120.5",
+          "traps": [
+            "totals['east'] == 120.5",
+            "totals = {'east': 120.5}"
+          ]
+        }
+      ]
     },
     {
       "id": "core-len",
       "kind": "line",
       "deck": "core",
-      "intents": [
-        "Count how many orders there are and keep the number in n.",
-        "Store the number of items in orders as n."
-      ],
-      "setups": [
-        "orders = ['o1', 'o2', 'o3']",
-        "orders = []"
-      ],
-      "reference": "n = len(orders)",
+      "pattern": "Count the items in something",
+      "rule": "len() is a function you hand the thing to, not a method on it.",
       "returns": "new",
-      "rule": "len() is a function you hand the list to, not a method on it.",
-      "traps": [
-        "n = orders.len()",
-        "n = orders.count()"
-      ],
+      "contrast": null,
+      "requires": [],
+      "options": {},
       "distractors": [
         {
           "tile": ".len",
@@ -218,105 +557,346 @@
         }
       ],
       "tiles": null,
-      "contrast": null,
-      "requires": [],
-      "options": {},
       "tags": [
-        "python"
+        "core"
       ],
       "source": "seed",
-      "version": 2
+      "version": 3,
+      "instances": [
+        {
+          "id": "core-len",
+          "role": "practice",
+          "intents": [
+            "Count how many orders there are and keep the number in n.",
+            "Store the number of items in orders as n."
+          ],
+          "setups": [
+            "orders = ['o1', 'o2', 'o3']",
+            "orders = []"
+          ],
+          "reference": "n = len(orders)",
+          "traps": [
+            "n = orders.len()",
+            "n = orders.count()"
+          ]
+        },
+        {
+          "id": "core-len-2",
+          "role": "practice",
+          "intents": [
+            "Count the rows in df and keep the number in n_rows.",
+            "Store how many rows df has as n_rows."
+          ],
+          "setups": [
+            "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
+            "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
+          ],
+          "reference": "n_rows = len(df)",
+          "traps": [
+            "n_rows = df.len()",
+            "n_rows = df.count()"
+          ]
+        },
+        {
+          "id": "core-len-3",
+          "role": "practice",
+          "intents": [
+            "Count how many words there are, as word_count.",
+            "Store the number of items in words as word_count."
+          ],
+          "setups": [
+            "words = ['a', 'b']",
+            "words = ['x']"
+          ],
+          "reference": "word_count = len(words)",
+          "traps": [
+            "word_count = words.len()",
+            "word_count = words.count()"
+          ]
+        },
+        {
+          "id": "core-len-cold",
+          "role": "cold",
+          "intents": [
+            "Count the files and keep the number in n_files.",
+            "Store how many items files holds as n_files."
+          ],
+          "setups": [
+            "files = ['a.csv', 'b.csv', 'c.csv']",
+            "files = []"
+          ],
+          "reference": "n_files = len(files)",
+          "traps": [
+            "n_files = files.len()",
+            "n_files = files.count()"
+          ]
+        }
+      ]
     },
     {
       "id": "core-augadd",
       "kind": "line",
       "deck": "core",
-      "intents": [
-        "Add 5 to total.",
-        "Increase total by 5."
-      ],
-      "setups": [
-        "total = 10",
-        "total = -2"
-      ],
-      "reference": "total += 5",
+      "pattern": "Update a number in place",
+      "rule": "+=, -= and *= compute and land in one step.",
       "returns": "new",
-      "rule": "+= computes and lands in one step.",
-      "traps": [
-        "total + 5",
-        "total == total + 5",
-        "total = 15"
-      ],
-      "distractors": [],
-      "tiles": null,
       "contrast": null,
       "requires": [],
       "options": {},
+      "distractors": [],
+      "tiles": null,
       "tags": [
-        "python"
+        "core"
       ],
       "source": "seed",
-      "version": 2
+      "version": 3,
+      "instances": [
+        {
+          "id": "core-augadd",
+          "role": "practice",
+          "intents": [
+            "Add 5 to total.",
+            "Increase total by 5."
+          ],
+          "setups": [
+            "total = 10",
+            "total = -2"
+          ],
+          "reference": "total += 5",
+          "traps": [
+            "total + 5",
+            "total == total + 5",
+            "total = 15"
+          ]
+        },
+        {
+          "id": "core-augadd-2",
+          "role": "practice",
+          "intents": [
+            "Add 1 to count.",
+            "Increase count by one."
+          ],
+          "setups": [
+            "count = 0",
+            "count = 9"
+          ],
+          "reference": "count += 1",
+          "traps": [
+            "count + 1",
+            "count = 1"
+          ]
+        },
+        {
+          "id": "core-augadd-3",
+          "role": "practice",
+          "intents": [
+            "Take 20 off balance.",
+            "Reduce balance by 20."
+          ],
+          "setups": [
+            "balance = 100",
+            "balance = 15"
+          ],
+          "reference": "balance -= 20",
+          "traps": [
+            "balance - 20",
+            "balance = 80"
+          ]
+        },
+        {
+          "id": "core-augadd-cold",
+          "role": "cold",
+          "intents": [
+            "Double score.",
+            "Multiply score by 2, keeping the result in score."
+          ],
+          "setups": [
+            "score = 3",
+            "score = -4"
+          ],
+          "reference": "score *= 2",
+          "traps": [
+            "score * 2",
+            "score = 6"
+          ]
+        }
+      ]
     },
     {
       "id": "core-pop",
       "kind": "line",
       "deck": "core",
-      "intents": [
-        "Remove the last item from stack and keep it in top.",
-        "Take the item off the end of stack, storing it as top."
-      ],
-      "setups": [
-        "stack = [1, 2, 3]",
-        "stack = ['a']"
-      ],
-      "reference": "top = stack.pop()",
+      "pattern": "Remove an item from a list and keep it",
+      "rule": "pop() removes the item and returns it, so the line changes the list and lands the item.",
       "returns": "new",
-      "rule": "pop() removes the item and returns it, so the line changes stack and lands in top.",
-      "traps": [
-        "top = stack[-1]",
-        "stack.pop()"
-      ],
-      "distractors": [],
-      "tiles": null,
       "contrast": null,
       "requires": [],
       "options": {},
+      "distractors": [],
+      "tiles": null,
       "tags": [
-        "python"
+        "core"
       ],
       "source": "seed",
-      "version": 2
+      "version": 3,
+      "instances": [
+        {
+          "id": "core-pop",
+          "role": "practice",
+          "intents": [
+            "Remove the last item from stack and keep it in top.",
+            "Take the item off the end of stack, storing it as top."
+          ],
+          "setups": [
+            "stack = [1, 2, 3]",
+            "stack = ['a']"
+          ],
+          "reference": "top = stack.pop()",
+          "traps": [
+            "top = stack[-1]",
+            "stack.pop()"
+          ]
+        },
+        {
+          "id": "core-pop-2",
+          "role": "practice",
+          "intents": [
+            "Remove the last job from queue and keep it in last_job.",
+            "Take the item off the end of queue, storing it as last_job."
+          ],
+          "setups": [
+            "queue = ['j1', 'j2']",
+            "queue = ['k']"
+          ],
+          "reference": "last_job = queue.pop()",
+          "traps": [
+            "last_job = queue[-1]",
+            "queue.pop()"
+          ]
+        },
+        {
+          "id": "core-pop-3",
+          "role": "practice",
+          "intents": [
+            "Remove the first person from line and keep them in first.",
+            "Take the item at position 0 out of line, storing it as first."
+          ],
+          "setups": [
+            "line = ['Ana', 'Ben', 'Cy']",
+            "line = ['Di', 'Ed']"
+          ],
+          "reference": "first = line.pop(0)",
+          "traps": [
+            "first = line[0]",
+            "first = line.pop()"
+          ]
+        },
+        {
+          "id": "core-pop-cold",
+          "role": "cold",
+          "intents": [
+            "Remove the newest entry from the end of history, keeping it in newest.",
+            "Take the last item off history and store it as newest."
+          ],
+          "setups": [
+            "history = ['v1', 'v2', 'v3']",
+            "history = ['only']"
+          ],
+          "reference": "newest = history.pop()",
+          "traps": [
+            "newest = history[-1]",
+            "history.pop()"
+          ]
+        }
+      ]
     },
     {
       "id": "core-comp",
       "kind": "line",
       "deck": "core",
-      "intents": [
-        "Make a new list, upper, with every name in names in capitals.",
-        "Build upper: each name from names, uppercased."
-      ],
-      "setups": [
-        "names = ['ana', 'ben']",
-        "names = ['cy']"
-      ],
-      "reference": "upper = [n.upper() for n in names]",
+      "pattern": "Build a new list by transforming each item",
+      "rule": "A method or function works on one item; a comprehension applies it to each.",
       "returns": "new",
-      "rule": "String methods work on one string; a comprehension applies one to each.",
-      "traps": [
-        "upper = names.upper()",
-        "upper = ['ANA', 'BEN']"
-      ],
-      "distractors": [],
-      "tiles": null,
       "contrast": null,
       "requires": [],
       "options": {},
+      "distractors": [],
+      "tiles": null,
       "tags": [
-        "python"
+        "core"
       ],
       "source": "seed",
-      "version": 2
+      "version": 3,
+      "instances": [
+        {
+          "id": "core-comp",
+          "role": "practice",
+          "intents": [
+            "Make a new list, upper, with every name in names in capitals.",
+            "Build upper: each name from names, uppercased."
+          ],
+          "setups": [
+            "names = ['ana', 'ben']",
+            "names = ['cy']"
+          ],
+          "reference": "upper = [n.upper() for n in names]",
+          "traps": [
+            "upper = names.upper()",
+            "upper = ['ANA', 'BEN']"
+          ]
+        },
+        {
+          "id": "core-comp-2",
+          "role": "practice",
+          "intents": [
+            "Make a list, lengths, with the length of each word in words.",
+            "Build lengths: len of every item in words."
+          ],
+          "setups": [
+            "words = ['hi', 'there']",
+            "words = ['a']"
+          ],
+          "reference": "lengths = [len(w) for w in words]",
+          "traps": [
+            "lengths = len(words)",
+            "lengths = [len(words) for w in words]"
+          ]
+        },
+        {
+          "id": "core-comp-3",
+          "role": "practice",
+          "intents": [
+            "Make a new list, doubled, with every number in nums times 2.",
+            "Build doubled: each item of nums multiplied by 2."
+          ],
+          "setups": [
+            "nums = [1, 2, 3]",
+            "nums = [-5]"
+          ],
+          "reference": "doubled = [x * 2 for x in nums]",
+          "traps": [
+            "doubled = nums * 2",
+            "doubled = [nums * 2 for x in nums]"
+          ]
+        },
+        {
+          "id": "core-comp-cold",
+          "role": "cold",
+          "intents": [
+            "Make a new list, lowered, with every tag in tags in lower case.",
+            "Build lowered: each string in tags, lowercased."
+          ],
+          "setups": [
+            "tags = ['A', 'Bb']",
+            "tags = ['XY']"
+          ],
+          "reference": "lowered = [s.lower() for s in tags]",
+          "traps": [
+            "lowered = tags.lower()",
+            "lowered = ['a', 'bb']"
+          ]
+        }
+      ]
     }
   ]
 }

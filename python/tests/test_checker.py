@@ -89,6 +89,17 @@ CASES = [
     ("D25", ["x = [1, 2, 3]", "x = [1]"], "print(len(x))", "len(x)", False),
     ("CHAIN", PD, "df.loc[0, 'qty'] = 99", "df['qty'][0] = 99", False),
     ("LOC", PD, "df.loc[0, 'qty'] = 99", "df.at[0, 'qty'] = 99", True),
+    # --- second review: aliases, empty inputs, missing values, shape changes, broken setups ---
+    ("ALIAS-PD", [PD1 + "\nview = df"], "df['x'] = 1", "df = df.assign(x=1)", False),
+    ("ALIAS-OK", [PD1 + "\nview = df"], "df['x'] = 1", "df.loc[:, 'x'] = 1", True),
+    ("EMPTY", ["xs = [1, 2]", "xs = []"], "total = sum(xs)", "total = xs[0] + xs[1]", False),
+    ("EMPTY-DF", [PD1, "import pandas as pd\ndf = pd.DataFrame({'qty': []}, dtype=float)"], "n = len(df)", "n = df.shape[0]", True),
+    ("NAN-MEAN", PD, "m = df['price'].mean()", "m = df['price'].sum() / len(df)", False),
+    ("NAN-OK", PD, "m = df['price'].mean()", "m = df['price'].dropna().mean()", True),
+    ("SHAPE", PD, "sub = df[['price']]", "sub = df['price']", False),
+    ("SHAPE2", PD, "sub = df[['price', 'qty']]", "sub = df[['price']]", False),
+    ("BADSETUP", ["x = 1/0"], "y = 1", "y = 1", False),
+    ("BADSETUP2", ["x = [1"], "y = 1", "y = 1", False),
 ]
 ORDERED = [  # (id, setups, reference, answer, options, expected)
     ("ORD1", ["import pandas as pd\ndf = pd.DataFrame({'c':['b','a','b'], 'p':[1.0,2.0,3.0]})"],
@@ -116,6 +127,19 @@ for cid, setups, ref, ans, opts, exp in ORDERED:
     bad += flag == "BAD "
     print(f"{flag}{cid:9} exp={exp!s:5} got={r['correct']!s:5} {r['messages'][0][:95]}")
 
+# validate() reports a broken setup instead of crashing
+ve = validate(["x = [1", "x = [2]"], "y = len(x)", [])
+okv = any("Setup 1 fails" in e for e in ve)
+print("OK  " if okv else "BAD ", "VALIDATE broken setup reported:", ve[:1])
+bad += not okv
+
+# a correct inplace answer passes but carries style advice; a preferred answer carries none
+r1 = check_all(PD, "df = df.dropna(subset=['price'])", "df.dropna(subset=['price'], inplace=True)")
+r2 = check_all(PD, "df = df.dropna(subset=['price'])", "df = df.dropna(subset=['price'])")
+oks = r1["correct"] and bool(r1["style"]) and r2["correct"] and not r2["style"]
+print("OK  " if oks else "BAD ", "STYLE    inplace flagged, preferred form clean:", r1["style"][:1])
+bad += not oks
+
 # builtins isolation: a patch in one check must not leak into the next
 check_all(["x=[1,2]"], "n = len(x)", "__import__('builtins').len = lambda o: 99")
 r = check_all(["x=[1,2]", "x=[1]"], "n = len(x)", "n = len(x)")
@@ -131,4 +155,4 @@ except ValueError:
     pm = True
 print("OK  " if pa and pm else "BAD ", "PARTS    augmented label + single statement:", pa, pm)
 bad += not (pa and pm)
-print("mismatches:", bad, "of", len(CASES) + len(ORDERED) + 2)
+print("mismatches:", bad, "of", len(CASES) + len(ORDERED) + 4)

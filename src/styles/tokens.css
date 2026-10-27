@@ -1,0 +1,359 @@
+/* Design tokens and the few shared layout rules. Light and dark follow the system setting. */
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --surface: #f6f7f9;
+  --fg: #16181d;
+  --muted: #5a6270;
+  --border: #d5d9e0;
+  --accent: #2563eb;
+  --accent-fg: #ffffff;
+  --good: #15803d;
+  --bad: #b91c1c;
+  --changed: #ea580c;
+  --mark: rgba(220, 38, 38, 0.28);
+  --mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --sans: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14161a;
+    --surface: #1d2026;
+    --fg: #e8eaef;
+    --muted: #a3abb9;
+    --border: #3a3f4a;
+    --accent: #60a5fa;
+    --accent-fg: #0b1020;
+    --good: #4ade80;
+    --bad: #f87171;
+    --changed: #fb923c;
+    --mark: rgba(248, 113, 113, 0.35);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.5 var(--sans);
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+}
+button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+  font-weight: 600;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+kbd {
+  font: 0.8em var(--mono);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 0.3em;
+  color: var(--muted);
+}
+
+button.primary kbd {
+  color: inherit;
+  border-color: currentColor;
+}
+
+code,
+pre {
+  font-family: var(--mono);
+}
+
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 4rem;
+}
+.narrow {
+  max-width: 560px;
+}
+.muted {
+  color: var(--muted);
+}
+.stack > * + * {
+  margin-top: 1rem;
+}
+.row {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Review: bench on the left, work on the right; one column under 900px. */
+.review {
+  display: grid;
+  grid-template-columns: minmax(280px, 5fr) 7fr;
+  gap: 2rem;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .review {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cards-left {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+.intent {
+  font-size: 1.6rem;
+  line-height: 1.3;
+  margin: 0 0 1rem;
+}
+.cell {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+.cell .comment {
+  color: var(--muted);
+}
+
+/* The one-line input. Code at 18px or larger on the review screen. */
+.line {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  padding: 0.25rem 0.5rem;
+}
+.line:focus-within {
+  border-color: var(--accent);
+}
+.line.locked {
+  opacity: 0.55;
+}
+.line .cm-editor {
+  font: 1.15rem/1.6 var(--mono);
+  background: transparent;
+}
+.line .cm-editor.cm-focused {
+  outline: none;
+}
+.line .cm-content {
+  caret-color: var(--fg);
+}
+.line .cm-error-mark {
+  background: var(--mark);
+  border-bottom: 2px solid var(--bad);
+}
+.blanked {
+  font: 1.15rem/1.6 var(--mono);
+  margin: 0 0 0.75rem;
+  overflow-wrap: anywhere;
+}
+.blanked mark {
+  background: var(--mark);
+  color: inherit;
+  border-radius: 4px;
+  padding: 0 0.25em;
+}
+.fill {
+  width: 100%;
+  font: 1.15rem/1.6 var(--mono);
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+/* Effect gate: four large toggles. */
+.gate {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.6rem;
+  margin: 0.5rem 0 1rem;
+}
+.gate button {
+  padding: 0.9rem 0.6rem;
+  text-align: left;
+  font-weight: 600;
+}
+.gate button[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--accent-fg);
+  border-color: var(--accent);
+}
+
+.verdict {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+}
+.verdict.good {
+  color: var(--good);
+}
+.verdict.bad {
+  color: var(--bad);
+}
+.advice {
+  border-left: 3px solid var(--changed);
+  padding-left: 0.75rem;
+  margin: 0;
+}
+.rule {
+  border-left: 3px solid var(--accent);
+  padding-left: 0.75rem;
+  margin: 0;
+}
+.feedback {
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+.feedback p {
+  margin: 0.25rem 0;
+}
+.reference {
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+  font-size: 1.1rem;
+  overflow-x: auto;
+}
+
+/* The bench: names on the left as tags, objects on the right as boxes. */
+.bench h3 {
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.5rem;
+}
+.bench-pair {
+  display: grid;
+  gap: 1.25rem;
+}
+.bench-row {
+  display: grid;
+  grid-template-columns: minmax(60px, auto) 1.2rem 1fr;
+  gap: 0.4rem;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+.tags {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-end;
+}
+.tag {
+  font: 0.95rem var(--mono);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.05rem 0.6rem;
+}
+.arrow {
+  color: var(--muted);
+  text-align: center;
+}
+.obj {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.4rem 0.6rem;
+  background: var(--bg);
+  min-width: 0;
+  overflow-x: auto;
+}
+.obj.changed {
+  border: 2px solid var(--changed);
+  padding: calc(0.4rem - 1px) calc(0.6rem - 1px);
+}
+.obj-type {
+  font-size: 0.7rem;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+.obj code {
+  font-size: 0.95rem;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: center;
+}
+.chips .chip {
+  background: var(--surface);
+  border-radius: 4px;
+  padding: 0 0.35rem;
+}
+.obj table {
+  border-collapse: collapse;
+  font: 0.9rem var(--mono);
+}
+.obj th,
+.obj td {
+  border: 1px solid var(--border);
+  padding: 0.1rem 0.45rem;
+  text-align: right;
+}
+.obj th {
+  background: var(--surface);
+  font-weight: 600;
+}
+.dict {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.1rem 0.6rem;
+}
+.err {
+  color: var(--bad);
+}
+.summary dt {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.summary dd {
+  margin: 0 0 0.8rem;
+  font-size: 1.2rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

@@ -18,6 +18,8 @@ Sentence Lab is a browser study app that trains one skill: turning a plain-Engli
 
 The app asks for the whole line first, and when it fails, gives help on the one decision that went wrong.
 
+**The unit of learning is a pattern, not a line.** The goal isn't to memorise 100 Python lines but to build thousands from a smaller set of reusable patterns, such as "make a calculated column" or "keep the rows that meet a condition". Every card is a pattern, and each review shows a different instance of it: different data, names, columns, operators and values. Mastery means writing correct lines you have never seen.
+
 ### Two goals, in order
 
 | Goal | What it means | Where it lives |
@@ -31,12 +33,12 @@ The two goals are never mixed. Goal 2 content is not added to Goal 1 decks as te
 
 Goal 1 is done when the app's own numbers and Wil's notebook experience agree. The thresholds below are defaults that Wil can change in Settings.
 
-- **First-try success on new lines:** at least 80% of never-seen notes answered correctly on the first L5 attempt, across 5 separate days.
+- **First-try success on new patterns:** at least 80% of never-seen patterns answered correctly on the first L5 attempt, across 5 separate days.
 - **Unaided recall:** at least 90% of due notes answered correctly on the first L5 attempt over the last 2 weeks.
 - **Start time:** median time from card shown to first keystroke is falling, shown in the session summary (section 6).
 - **Notebook check (Wil judges):** freezing on a single line in real work has become rare.
 
-When all four hold, Goal 2 starts as a separate piece of work.
+Cold challenges: at least 80% of the cold challenges over the last 3 weeks answered correctly, with no help (section 7). They are unseen instances of patterns already practised, so they test the skill rather than memory of practised cards. When all five hold, Goal 2 starts as a separate piece of work.
 
 ## 2. Locked decisions
 
@@ -51,6 +53,8 @@ These were decided by Wil on 26 Oct 2026 and are not open for the builder to cha
 | How answers are judged | The typed line runs as real Python (Pyodide, in a Web Worker) and its effects are compared with the reference line's effects | Accepts every correct spelling the checker can verify, and makes feedback causal. |
 | Grading | Fully automatic. The learner never rates a card. | Removes a decision from every card and stops self-grading drift. |
 | Motivation | No points, XP, streaks, targets, badges or leaderboards. An end-of-session summary is shown as information only. | Expected rewards can crowd out interest; informational feedback on competence supports it. |
+
+Also locked, after the third review: cards are **patterns with varied instances**, not fixed lines (section 5).
 
 ## 3. Learning model: the anatomy of a Python sentence
 
@@ -98,13 +102,19 @@ The learner must know, for every verb, which of three things comes back. Each no
 - **None, after mutating in place** — (`list.sort`, `list.append`, `dict.update`).
 - **The same object, after mutating it** — (`model.fit` returns the model itself).
 
+### Training wheels, not a permanent way of thinking
+
+Subject, verb, details and landing are scaffolding. They are shown heavily while a pattern is new, available on request once it is developing, and out of the way once it is fluent (sections 5 and 6). The end state is: intent → write Python → verify, with no required steps in between.
+
+The four parts are a useful model, not a complete account of Python. Lines that don't fit it (comprehensions, unpacking, a lone comparison) get no forced diagram: the diagram shows only the landing and the line as one chunk, and the bench carries the explanation.
+
 ## 4. Scope
 
 This build is Goal 1 only: single-line sentences. Goal 2 is listed here so that nothing in this build blocks it, not so that any of it gets built now.
 
 | Version | Serves | Contents |
 | --- | --- | --- |
-| v1 (this build) | Goal 1 | Single lines; L5-first ladder with fallback help; automatic spaced repetition; real-Python checking; sentence diagram and bench; three seed decks used as exposure (core Python, pandas, scikit-learn); add-your-own notes; session summary; JSON export and import |
+| v1 (pilot first, then the full build; section 13) | Goal 1 | Single lines; L5-first ladder with fallback help; automatic spaced repetition; real-Python checking; sentence diagram and bench; three seed decks used as exposure (core Python, pandas, scikit-learn); quick-capture inbox plus card authoring; patterns with varied instances; notebook-style challenges; weekly cold challenges; session summary; JSON export and import |
 | v2 (later) | Bridge from Goal 1 to 2. Starts only when the Goal 1 finish line (section 1) holds | 2–4 line phrases built from common plans (accumulate in a loop, filter into a new list, clean → split → fit → predict); the "moves the needle" effect; line-ordering and missing-line cards |
 | v3+ (later) | Goal 2 | The job-ready curriculum below |
 
@@ -124,6 +134,16 @@ The full skill map, lesson plan and real-dataset capstones are in the audit repo
 
 Every card starts by asking for the whole line. Help appears only after a miss, and only the kind the miss calls for. Wil can already read code, and the evidence favours attempting first and getting targeted help over walking every note up a fixed staircase.
 
+**Patterns and instances.** A card is a pattern ("make a calculated column"). It holds at least 3 practice instances and at least 1 cold instance. Each instance is a complete line with its own data, names and values:
+
+| Round | Intent | Line |
+| --- | --- | --- |
+| 1 | Add a total column: price times qty. | `df['total'] = df['price'] * df['qty']` |
+| 2 | Add a profit column: revenue minus cost. | `sales['profit'] = sales['revenue'] - sales['cost']` |
+| 3 | Add a remaining column: planned minus complete. | `jobs['remaining'] = jobs['planned'] - jobs['complete']` |
+
+**Which instance comes next.** A new pattern stays on its first instance until the learner gets it right on a first attempt; varying everything from the first exposure slows early learning. After that, each review shows the least recently seen practice instance, so the same line never comes twice in a row. Cold instances are never used in reviews (section 7).
+
 | Level | Learner sees | Learner does | Shown when |
 | --- | --- | --- | --- |
 | L5 Produce | An intent and the bench | Picks the effects, types the whole line | Always first |
@@ -136,15 +156,36 @@ The old L0 (pick the intent from three) is removed. It trained recognition, whic
 
 **After a miss** the order is always: feedback (section 8) → the fallback level for that miss → the same note again at L5 with a different intent wording. The card ends on an unaided attempt. A miss still counts as wrong for scheduling, however the retry goes.
 
-**Effect-first gate (L5 and L4).** Input is locked until the learner picks what the line should change (section 6). It's graded against the reference's effects, or against the learner's own effects when the line was correct by another route (for example `df.dropna(inplace=True)` mutates where the reference rebinds). A wrong pick shows a one-line hint and is logged against "Effect"; it doesn't end the card.
+**Effect-first gate (L5 and L4).** While a pattern is new, input is locked until the learner picks what the line should change (section 6). The gate fades: once the effect has been picked correctly on 3 first attempts in a row for that pattern, the pattern is asked without it. It comes back for that pattern after a miss blamed on effect or landing. The aim is natural writing, not a ritual before every line. It's graded against the reference's effects, or against the learner's own effects when the line was correct by another route (for example `df.dropna(inplace=True)` mutates where the reference rebinds). A wrong pick shows a one-line hint and is logged against "Effect"; it doesn't end the card.
 
-**Reworded intents.** Each note has 2–4 intent wordings, rotated so the same wording never appears twice in a row. This stops the learner memorising "this sentence → this line" instead of building the line.
+**Reworded intents.** Each instance also has 2–4 intent wordings, rotated so the same wording never appears twice in a row. Varying the wording, the data and the names together is what stops "this sentence → this line" memorisation.
 
 **Which part L4 blanks.** The part the checker blamed for the miss. If it blamed none, rotate subject → verb → details → landing.
 
 **Contrast pairs.** Notes that are easy to confuse (`.sort()` and `sorted()`, `>` and `>=`) carry the same `contrast` tag. When one is due, its partner is pulled into the same session if it's due within 3 days.
 
-**I'm stuck.** Pressing `?` (or the Stuck button) at L5 counts as a miss and drops straight to L4 without revealing the answer. A freeze always turns into an easier attempt, never a dead end.
+**Notebook-style challenges.** Once a pattern has 2 correct first attempts, about one review in four shows the instance as a small notebook cell instead of an English instruction: the first setup as code, then the intent as a `#` comment, then an empty line to fill. The learner still writes exactly one line, but has to recognise which pattern applies, the way a real notebook asks. For example:
+
+```python
+import pandas as pd
+jobs = pd.DataFrame({'job': ['j1','j2','j3'], 'planned': [100, 200, 150], 'complete': [80, 200, 50]})
+# Add a remaining column: planned minus complete
+█
+```
+
+**Fading the framework.** While a pattern is new, every check shows the sentence diagram and the bench. Once a pattern is fluent (3 correct first attempts in a row), a correct answer shows only the verdict and Next, and the diagram and bench sit behind an Explain button. Any miss brings them back for that pattern.
+
+**I'm stuck, and why.** Pressing `?` (or the Stuck button) at L5 counts as a miss and asks one question with three answers (keys 1–3). The reason for a freeze is often different from the error the learner would eventually make, so the help follows the reason:
+
+| Reason | Help given | Logged as |
+| --- | --- | --- |
+| 1. I don't know what to use | Shows only the verb chip (for example `.dropna` or `train_test_split`), then L5 again | stuck: verb |
+| 2. I know what to use but can't write it | L4 with one part blanked, or L3 tiles if L4 was already missed | stuck: assemble |
+| 3. I'm not sure what should change | L2: effects and the result, on the bench | stuck: effect |
+
+The answer is never revealed. The stuck reasons are counted in the session summary, so it's clear where freezes come from.
+
+The levels and routing in this section describe the full build. The pilot has no L1–L3, so it uses the table under "Help after a miss in the pilot" in section 13.
 
 **Sure or unsure.** Enter checks the line as "sure"; Shift+Enter checks it as "unsure". A sure-but-wrong answer shows the rule first and gets one extra L5 retry later in the session. This is only logged; it never reaches FSRS.
 
@@ -163,18 +204,18 @@ The review screen is the product; every other screen is plumbing. It always show
 
 | Screen | Purpose | Main controls |
 | --- | --- | --- |
-| Home | One button to start today's session | Start session, Add a line that froze me, Browse, Settings |
+| Home | One button to start today's session | Start session, Capture a freeze, Browse, Settings |
 | Review | Runs one card at a time (layout below) | Effect gate, the level's work area, Check, Next |
-| Feedback | Opens in place under the work area after Check | Compare diagrams, Show reference, Try again |
+| Feedback | Opens in place under the work area after Check | Show reference, Try again |
 | Add / edit note | Writes a new note, including a line that froze him at work | Fields from section 9, Validate (runs it in Pyodide), Save |
 | Browse | Lists notes by deck and due date, the stuck list, and misses by part and effect over the last 30 days | Search, filter, edit, stuck list |
 | Settings | Daily limits and data | New notes per day (default 5), daily review cap (default 40), cards per session (default 20), Goal 1 finish-line thresholds, export JSON, import JSON, preload Python packages |
 
 **Session summary.** Shown when a session ends: lines attempted, first-try correct, median seconds to first keystroke, and the part or effect missed most this session. It is information only: no score, no comparison against a target, no history graph on the home screen. Settings shows the four Goal 1 finish-line numbers (section 1) for anyone who wants to check them.
 
-**Feedback layout after a miss.** One thing changes at a time. First the learner taps the chip they think is wrong (Space skips this). Then the checker's message appears next to the chip it's about, and chips that match the reference collapse. The bench animation plays on the next Space press.
+**Feedback layout after a miss.** One thing changes at a time. First the learner taps the chip they think is wrong (Space skips this). Then the checker's message appears next to the chip it's about, and chips that aren't at fault collapse. The bench animation plays on the next Space press.
 
-**Add a line that froze me.** On Home, not buried in a menu. It opens the note editor with the line pasted in, so real notebook freezes become cards.
+**Quick capture.** Home has one button, Capture a freeze. It asks for two things only: what you were trying to do (one sentence) and, optionally, the line you tried. The item goes to an Inbox and nothing else happens. Turning it into a card (intents, setups, reference, traps, rule) is a separate authoring step done later in the note editor; the card enters spaced repetition only after Validate passes. Browse has an Inbox tab listing captured items.
 
 ### Review screen regions
 
@@ -182,12 +223,12 @@ The review screen is the product; every other screen is plumbing. It always show
 
 The numbers match the list below; at lower levels only region 4 changes.
 
-1. **Intent banner** — the English intent in large type (L3–L5), or the reference line itself (L1–L2).
+1. **Intent banner** — the English intent in large type (L3–L5), a notebook cell with the intent as a comment (notebook-style challenges, section 5), or the reference line itself (L1–L2).
 2. **State panel ("the bench")** — names on the left as tags, objects on the right as boxes, with an arrow from each name to its object. Lists and dicts show their items; a DataFrame shows its first 5 rows and its shape; a model shows its class and whether it is fitted. This keeps state visible so it never has to be held in the head.
 3. **Effect gate** (L4–L5) — four large toggle buttons: Rebinds a name, Mutates an object, Sends out, Nothing changes. The learner picks all that apply (\`x = lst.pop()\` both rebinds and mutates), then confirms; "Nothing changes" clears the others.
 4. **Work area** — changes by level: taggable chunks (L1), effect ticks and a value box (L2), paired tiles (L3), a line with one blank (L4), an empty line input with Python syntax colouring (L5).
 5. **Check** — Enter runs the line. Nothing about the answer is shown before this.
-6. **Feedback** — the verdict, then the learner's line and the reference line as two sentence diagrams one above the other, then the bench animating before → after (section 8 defines the message).
+6. **Feedback** — the verdict, then the learner's line as a sentence diagram with the part at fault marked, then the bench animating before → after. The reference diagram is added underneath only once the reference is revealed (section 8).
 7. **After check** — a correct line shows Next. A miss shows the fallback level, then the same note again at L5 (section 5). There are no rating buttons.
 
 ### The sentence diagram
@@ -201,7 +242,7 @@ A line is drawn as a row of chips, one per part, each filled with its part colou
 - **State colours:** changed object = accent outline plus a short pulse; rebound name = its arrow slides to the new object; new object = fades in. Nothing else animates.
 - **Motion:** 300ms or less, and none when the system asks for reduced motion.
 - **Themes:** light and dark, following the system setting, with a manual toggle.
-- **Keyboard first:** 1–4 toggle effects, Enter confirms and checks as sure, Shift+Enter checks as unsure, ? means stuck, Space continues. Tiles are reorderable by keyboard as well as by drag.
+- **Keyboard first:** 1–4 toggle effects, Enter confirms and checks as sure, Shift+Enter checks as unsure, ? means stuck (then 1–3 says why), E opens Explain, Space continues. Tiles are reorderable by keyboard as well as by drag.
 - **Layout:** desktop-first two-column (bench left, work right); stacks to one column under 900px wide.
 - **No reward theatre:** no confetti, sounds, scores or progress bars on the review screen. The only counts shown are cards left in this session and the end-of-session summary.
 
@@ -219,7 +260,7 @@ Spaced repetition runs in the background and the learner never touches it. A lin
 | Correct, effect gate missed | Hard |
 | Wrong, or "Show reference" pressed first | Again |
 
-A new note enters FSRS with the rating of its very first L5 attempt. Easy is never sent.
+Scheduling is per pattern: one FSRS card per pattern, whichever instance was shown. A new pattern enters FSRS with the rating of its very first L5 attempt. Easy is never sent. A notebook-style challenge counts like any other first L5 attempt.
 
 **Daily load.** New notes per day: 5 by default. Reviews per day: capped at 40 by default. On a day when due reviews reach the cap, no new notes are introduced.
 
@@ -240,6 +281,8 @@ A new note enters FSRS with the rating of its very first L5 attempt. Easy is nev
 **Session size.** A session ends after the set number of cards (default 20), then shows the summary. Wil can start another session straight away.
 
 **Prerequisites.** A note may list `requires` (section 9). A new note is introduced only after every note it requires has had at least one correct first L5 attempt. Among new notes that are unlocked, the order is the deck file's order.
+
+**Cold challenges.** Once a week, Home offers a cold challenge; it is never forced. It shows 4 cold instances from patterns that already have at least 2 correct first attempts, at L5, with no effect gate, no help levels, no retries, no diagram and nothing sent to FSRS. Each cold instance is used once and then retired. The results feed only the Goal 1 finish line. When a pattern's cold instances run out, its pattern simply isn't offered until more are written.
 
 ## 8. Answer checking
 
@@ -265,7 +308,7 @@ The learner's line and the reference line are each run as real Python against th
 
 ### Result fields
 
-`correct`, `stage` (assemble, run, compare, note), `blame` (subject, verb, details, landing, effect, assemble, or none), `messages`, `effects` (reference and learner), `setup_index` (which setup failed). `blame` picks the fallback level in section 5: assemble → L3; verb, details or subject → L4 with that part blanked; landing or effect → L2; none → L4 with rotation.
+`correct`, `stage` (assemble, run, compare, note), `blame` (subject, verb, details, landing, effect, assemble, or none), `messages`, `effects` (reference and learner), `setup_index` (which setup failed). `blame` picks the fallback level in section 5: assemble → L3; verb, details or subject → L4 with that part blanked; landing or effect → L2; none → L4 with rotation. This is the full-build routing; the pilot uses the table under "Help after a miss in the pilot" in section 13.
 
 **Per-note options.** `check_all(setups, reference, answer, options)` takes the note's `options` (section 9). Today there is one: `ignore_order: true` sorts DataFrame rows and columns, Series index and plain lists before comparing. Use it for notes where row or column order doesn't matter (for example `groupby(..., sort=False)` is then also accepted).
 
@@ -274,6 +317,12 @@ The learner's line and the reference line are each run as real Python against th
 **Real error text.** For a runtime error, the first message line is Python's own error type and text, unchanged (for example `KeyError: 'prices'`), and the part hint comes underneath. The learner practises reading the errors a notebook will show.
 
 **pandas chained assignment.** When pandas raises its `ChainedAssignmentError` warning during the answer and the answer is wrong, the first message says so directly and gives the working form (`df.loc[row, 'col'] = …` or `df['col'] = …`).
+
+**Works, but.** Correct and preferred aren't the same. A correct answer can carry `style` advice; today the only rule is `inplace=True` ("Works, but pandas is phasing out inplace=True. Prefer landing the result."). The advice shows under the verdict, and the answer still counts as correct for scheduling.
+
+**Broken setups never crash.** If a note's setup itself fails (a typo in a card you wrote, say), `check_all` returns stage `note` with the setup's error, and `validate()` reports "Setup N fails" instead of throwing.
+
+**Two setups are evidence, not proof.** Matching the reference on every setup shows the answer behaves the same on those inputs, not on all inputs. That's why the authoring rules require setups with boundaries, missing values and empty inputs where they matter, and why the suite tests aliases, empty inputs, missing values and shape changes.
 
 ### Feedback after a miss
 
@@ -284,7 +333,7 @@ The research is clear that explaining why an answer failed beats showing the rig
 3. **The rule:** the note's one-line `rule` field (section 9), for example "dropna returns a new DataFrame; land it with df = …".
 4. **The next step:** the fallback level (section 5), then a retry.
 
-The reference line is shown only after the retry, or if the learner presses Show reference (which counts as a miss).
+When the reference is revealed, in this one order everywhere: the reference line is shown only when the fallback level is L2 or L1 (those levels work on the reference itself), after the L5 retry has been answered, or when the learner presses Show reference (which counts as a miss). L4 and L3 never show the whole line. Until one of those happens, feedback shows only the learner's own line.
 
 | Situation | Message pattern | Blame |
 | --- | --- | --- |
@@ -299,13 +348,13 @@ The reference line is shown only after the retry, or if the learner presses Show
 
 ### Reference implementation
 
-Rewritten after the 26 Oct 2026 audit. It passes a 71-case regression suite (below), which includes every false accept, false reject and crash the audit found. All 21 seed notes pass `validate`. Tested with CPython 3.13, pandas 3.0.5, numpy 2.5.3 and scikit-learn 1.9.1. **Phase 1 must re-run both inside Pyodide 314.0.7** (pandas 3.0.2, scikit-learn 1.8.0) and log any difference in DECISIONS.md. Use python/checker.py as-is; add `bench()` per the spec below.
+Rewritten after the 26 Oct 2026 audit. It passes an 83-case regression suite (below), which includes every false accept, false reject and crash the audit found. All 84 instances of the 21 seed patterns pass `validate`. Tested with CPython 3.13, pandas 3.0.5, numpy 2.5.3 and scikit-learn 1.9.1. **Phase 1 must re-run both inside Pyodide 314.0.7** (pandas 3.0.2, scikit-learn 1.8.0) and log any difference in DECISIONS.md. Use python/checker.py as-is; add `bench()` per the spec below.
 
 The code lives in the repo, not in this doc, so there is only one copy to keep right: `python/checker.py` is the reference implementation and `python/tests/test_checker.py` is its regression suite. A third file, `python/tests/test_seed.py`, runs `validate()` on every seed note in `content/decks/`.
 
 ### Regression suite
 
-In the repo as `python/tests/test_checker.py`. Phase 1 passes when it prints `mismatches: 0 of 71`, both with normal Python and inside Pyodide.
+In the repo as `python/tests/test_checker.py`. Phase 1 passes when it prints `mismatches: 0 of 83`, both with normal Python and inside Pyodide.
 
 ### `bench(setup, line)` spec
 
@@ -328,32 +377,44 @@ Details the builder shouldn't have to guess:
 
 ## 9. Data model
 
-All data lives in the browser's IndexedDB (via Dexie) in five stores: notes, schedule, fsrsLog, attempts and settings. Seed decks ship as JSON and are imported on first run. Everything exports to one JSON file and imports back.
+All data lives in the browser's IndexedDB (via Dexie) in six stores: notes, schedule, fsrsLog, attempts, inbox and settings. Seed decks ship as JSON and are imported on first run. Everything exports to one JSON file and imports back.
 
-### Note (one sentence)
+### Pattern (one skill) and its instances
 
 ```json
 {
-  "id": "pd-dropna",
+  "id": "pd-newcol",
   "kind": "line",
   "deck": "pandas",
-  "intents": [
-    "Drop the rows where price is missing, and keep the result in df.",
-    "Keep only rows that have a price, saving the result back to df."
-  ],
-  "setups": ["<PD1 from section 11>", "<PD2 from section 11>"],
-  "reference": "df = df.dropna(subset=['price'])",
-  "returns": "new",
-  "rule": "dropna returns a new DataFrame; land it with df = …",
-  "traps": ["df.dropna(subset=['price'])", "df = df.dropna()", "df = df.dropna(subset=['price'], inplace=True)"],
-  "distractors": [{"tile": "df.dropna(", "imitates": "df = df.dropna("}],
-  "tiles": null,
+  "pattern": "Make a calculated column",
+  "rule": "New columns land with df['name'] = ..., not df.name; the right side combines whole columns.",
+  "returns": "none_after_mutating",
   "contrast": null,
   "requires": [],
   "options": {},
-  "tags": ["cleaning"],
+  "distractors": [],
+  "tiles": null,
+  "tags": ["pandas"],
   "source": "seed",
-  "version": 2
+  "version": 3,
+  "instances": [
+    {
+      "id": "pd-newcol-2",
+      "role": "practice",
+      "intents": ["Add a profit column to sales: revenue minus cost.", "Give sales a new column, profit, equal to revenue less cost."],
+      "setups": ["<SAL1>", "<SAL2>"],
+      "reference": "sales['profit'] = sales['revenue'] - sales['cost']",
+      "traps": ["sales.profit = sales.revenue - sales.cost", "profit = sales['revenue'] - sales['cost']"]
+    },
+    {
+      "id": "pd-newcol-cold",
+      "role": "cold",
+      "intents": ["Add a net column to orders: price times one minus discount.", "…"],
+      "setups": ["<ORD1>", "<ORD2>"],
+      "reference": "orders['net'] = orders['price'] * (1 - orders['discount'])",
+      "traps": ["orders.net = orders.price * (1 - orders.discount)", "net = orders['price'] * (1 - orders['discount'])"]
+    }
+  ]
 }
 ```
 
@@ -371,9 +432,15 @@ All data lives in the browser's IndexedDB (via Dexie) in five stores: notes, sch
 | `contrast` | A shared tag for mix-up pairs (section 5), or null. |
 | `effects` | Not stored: derived by running the reference on the first setup. |
 
+**Where each field lives.** On the pattern: `id`, `kind`, `deck`, `pattern` (its name), `rule`, `returns`, `contrast`, `requires`, `options`, `distractors`, `tiles`, `tags`, `source`, `version`. On each instance: `id`, `role` (`practice` or `cold`), `intents`, `setups`, `reference`, `traps`. The table above describes the fields wherever they live. A pattern needs at least 3 practice instances that differ in data, names, columns or values, and at least 1 cold instance; `test_seed.py` enforces both. Validate runs on every instance.
+
 The Validate button runs `validate()` (section 8) and refuses to save until it returns no errors.
 
 **Two more fields.** `requires` lists note ids that must have had a correct first L5 attempt before this note is introduced (section 7). `options` holds checker options, today only `ignore_order` (section 8).
+
+**Cold instances.** `role: "cold"` marks an instance that is never used in reviews; it appears once, in a cold challenge (section 7), and is then retired.
+
+**Inbox item.** `{id, at, intent, attempt?, status: "new" | "carded" | "dropped", patternId?}`. Only `intent` is required. An item becomes `carded` when a validated pattern or instance is saved from it.
 
 **Tile rules** (when `tiles` is null), with examples from the seed notes:
 
@@ -389,11 +456,12 @@ The Validate button runs `validate()` (section 8) and refuses to save until it r
 
 ```ts
 db.version(1).stores({
-  notes: 'id, deck, kind, source',
-  schedule: 'noteId, fsrsCard.due',
-  fsrsLog: '++id, noteId, review',
-  attempts: '++id, noteId, at',
-  settings: 'key'
+  patterns: 'id, deck, kind, source',
+  schedule: 'patternId, fsrsCard.due',
+  fsrsLog: '++id, patternId, review',
+  attempts: '++id, patternId, instanceId, at',
+  settings: 'key',
+  inbox: '++id, at, status'
 });
 ```
 
@@ -401,12 +469,12 @@ On first run, call `navigator.storage.persist()` so the browser doesn't evict th
 
 ### Schedule (one per note)
 
-`{noteId, fsrsCard, stuckCount, blankNext, nextIntent}`. `fsrsCard` is the ts-fsrs card, with its dates stored as ISO strings and converted back on read. Lapses come from `fsrsCard.lapses`.
+`{patternId, fsrsCard, recentInstanceIds, gateStreak, fluentStreak, coldUsed, stuckCount, blankNext, nextIntent}`. `fsrsCard` is the ts-fsrs card, with its dates stored as ISO strings and converted back on read. Lapses come from `fsrsCard.lapses`.
 
 ### Logs
 
 - **fsrsLog:** the ts-fsrs review log, one entry per rated review, exactly as ts-fsrs returns it. Kept separate so it stays valid for the scheduler.
-- **attempts:** one entry per answer at any level: `{noteId, at, intentIndex, level, effectPicked, effectCorrect, answer, correct, stage, blame, setupIndex, msToFirstKey, msToAnswer}`. Feeds the session summary and the Goal 1 finish line.
+- **attempts:** one entry per answer at any level: `{patternId, instanceId, at, format, stuckReason, intentIndex, level, effectPicked, effectCorrect, answer, correct, stage, blame, setupIndex, msToFirstKey, msToAnswer}`. Feeds the session summary and the Goal 1 finish line.
 
 ### Editing a note
 
@@ -418,7 +486,7 @@ The database carries a `schemaVersion`, starting at 1. Every change to a store's
 
 ### Export and import
 
-Export writes `{schemaVersion, exportedAt, notes, schedule, fsrsLog, attempts, settings}` as one `.json` file. Import offers Merge (keep the newer of each note) or Replace, and runs migrations first if the file is from an older schema.
+Export writes `{schemaVersion, exportedAt, notes, schedule, fsrsLog, attempts, settings}` as one `.json` file. Import offers Merge (keep the newer of each note) or Replace, and runs migrations first if the file is from an older schema. Imported decks are executable content: setups and references are Python that runs in the worker, which can reach browser storage and the network. The import screen says so, shows the code, and is meant only for files Wil exported himself.
 
 ## 10. Tech stack and file structure
 
@@ -457,7 +525,7 @@ sentence-lab/
     styles/         tokens.css (parts, states, themes)
   python/
     checker.py      reference implementation (section 8); add bench()
-    tests/test_checker.py   71-case regression suite
+    tests/test_checker.py   83-case regression suite
     tests/test_seed.py      runs validate() on every seed note
   content/decks/
     core.json  pandas.json  sklearn.json
@@ -467,7 +535,7 @@ sentence-lab/
 
 ## 11. Seed content
 
-The seed decks exist for Goal 1: they give the sentence skill real material to work on. The lines come from data work (pandas, scikit-learn) so the learner sees job-relevant code, but each card tests only whether he can produce the sentence. The 21 notes below all passed `validate()` on 26 Oct 2026, and every trap is rejected on at least one setup. They set the quality bar; the decks grow to about 40 / 40 / 20 notes in the same style.
+The seed decks exist for Goal 1: they give the sentence skill real material to work on. The lines come from data work (pandas, scikit-learn) so the learner sees job-relevant code, but each card tests only whether he can produce the sentence. The 21 patterns below (84 instances: 63 practice, 21 cold) all passed `validate()` on 26 Oct 2026, and every trap is rejected on at least one setup. They set the quality bar; the decks grow by adding patterns, and instances to existing patterns, in the same style.
 
 ### What the decks draw on (exposure, not a syllabus)
 
@@ -484,7 +552,7 @@ The seed decks exist for Goal 1: they give the sentence skill real material to w
 3. At least 2 small setups (2–5 rows or items), and the extra setups must change the reference's result. Include a boundary value whenever the line compares (`qty` of exactly 10 for `> 10`).
 4. The reference shows correct practice: no `inplace=True`, no training and predicting on the same data, no chained assignment, results always landed.
 5. Every trap must fail on at least one setup; Validate enforces it.
-6. One `rule` sentence per note, saying why the usual mistake fails.
+6. One `rule` sentence per pattern, saying why the usual mistake fails. Every pattern has at least 3 practice instances that differ in data, names, columns or values, and at least 1 cold instance that is never practised.
 7. List prerequisites in `requires`: a note that uses a comparison, unpacking or a mask needs the note that teaches it.
 8. For later scikit-learn cards: don't use `LogisticRegression(penalty=...)` (deprecated in 1.8, removed in 1.10; use `C` and `l1_ratio`), and remember `OneHotEncoder` returns a sparse matrix unless `sparse_output=False`.
 
@@ -514,33 +582,33 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 model.fit(X_train, y_train)
 ```
 
-### Verified seed notes
+### Seed patterns
 
-| Deck | Intents | Reference | Effects | Setups | Requires | Rule | Traps (all fail) |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| core | Check whether qty is above 10, keeping True or False in big\_order. / Store in big\_order whether qty is greater than 10. | `big_order = qty > 10` | rebinds | `12`, `10` | — | A comparison makes True or False; land it like any other result. | `big_order = qty >= 10`, `qty > 10` |
-| core | Split pair into two names, first and second. / Unpack the two items of pair into first and second. | `first, second = pair` | rebinds | `(3, 'x')`, `('a', 'b')` | — | Several names left of = take the items in order. | `first = pair[0]`, `first, second = pair[1], pair[0]` |
-| core | Add 'kiwi' to the end of fruits. / Put 'kiwi' on the end of the fruits list, changing that list itself. | `fruits.append('kiwi')` | mutates | `['apple','pear']`, `[]` | — | append changes the list and returns None; don't land it. | `fruits = fruits.append('kiwi')`, `fruits.insert(0, 'kiwi')` |
-| core | Make a sorted copy of scores called ranked, leaving scores as it is. / Put the scores in order, lowest first, in a new list ranked; don't touch scores. | `ranked = sorted(scores)` | rebinds | `[3,1,2]`, `[5,5,0]` | — | sorted() gives a new list; .sort() changes the old one and returns None. | `ranked = scores.sort()`, `scores.sort()` |
-| core | Look up Ana's age in ages and keep it in age. / Get the value stored under 'Ana' in ages, as age. | `age = ages['Ana']` | rebinds | two dicts, different Ana values | — | A dict key goes in square brackets as a value, here the string 'Ana'. | `age = ages[Ana]`, `age = ages.Ana` |
-| core | Set Ben's age in ages to 28. / Change the value stored under 'Ben' in ages to 28. | `ages['Ben'] = 28` | mutates | two dicts | — | One = stores; == only compares. | `ages['Ben'] == 28`, `ages = {'Ben': 28}` |
-| core | Count how many orders there are and keep the number in n. / Store the number of items in orders as n. | `n = len(orders)` | rebinds | 3 items, empty | — | len() is a function you hand the list to, not a method on it. | `n = orders.len()`, `n = orders.count()` |
-| core | Add 5 to total. / Increase total by 5. | `total += 5` | rebinds | `10`, `-2` | — | += computes and lands in one step. | `total + 5`, `total == total + 5`, `total = 15` |
-| core | Remove the last item from stack and keep it in top. / Take the item off the end of stack, storing it as top. | `top = stack.pop()` | mutates + rebinds | `[1,2,3]`, `['a']` | — | pop() removes the item and returns it, so the line changes stack and lands in top. | `top = stack[-1]`, `stack.pop()` |
-| core | Make a new list, upper, with every name in names in capitals. / Build upper: each name from names, uppercased. | `upper = [n.upper() for n in names]` | rebinds | `['ana','ben']`, `['cy']` | — | String methods work on one string; a comprehension applies one to each. | `upper = names.upper()`, `upper = ['ANA', 'BEN']` |
-| pandas | Drop the rows where price is missing, and keep the result in df. / Keep only rows that have a price, saving the result back to df. | `df = df.dropna(subset=['price'])` | rebinds | PD1, PD2 | — | dropna returns a new DataFrame; land it with df = … | `df.dropna(subset=['price'])`, `df = df.dropna()`, `df = df.dropna(subset=['price'], inplace=True)` |
-| pandas | Keep only the rows where qty is above 10, in a new DataFrame called big. / Make big: the rows of df with qty over 10. | `big = df[df['qty'] > 10]` | rebinds | PD1, PD2 | core-compare | The inner sentence makes a True/False mask; the outer \[ \] keeps the True rows. | `big = df[df['qty'] >= 10]`, `big = df['qty'] > 10` |
-| pandas | Keep the rows where qty is above 10 and below 20, in a new DataFrame called mid. / Make mid: rows of df with qty between 10 and 20, both ends excluded. | `mid = df[(df['qty'] > 10) & (df['qty'] < 20)]` | rebinds | PD1, PD2 | pd-filter | Masks combine with & and \|, and each comparison needs its own brackets; `and` doesn't work on columns. | `mid = df[df['qty'] > 10 & df['qty'] < 20]`, `mid = df[(df['qty'] > 10) and (df['qty'] < 20)]`, `mid = df[(df['qty'] >= 10) & (df['qty'] <= 20)]` |
-| pandas | Get the average price for each category, as avg. / Store the mean price per category in avg. | `avg = df.groupby('category')['price'].mean()` | rebinds | PD1, PD2 | — | Group first, pick the column, then the verb that summarises. | `avg = df['price'].mean()`, `avg = df.groupby('price')['category'].mean()` |
-| pandas | Add a column called total that is price times qty. / Give df a new column, total, equal to price multiplied by qty. | `df['total'] = df['price'] * df['qty']` | mutates | PD1, PD2 | — | New columns land with df\['name'\] = …, not df.name. | `df.total = df.price * df.qty`, `total = df['price'] * df['qty']` |
-| pandas | Set qty in row 0 of df to 99. / Change the qty value in the first row (label 0) to 99. | `df.loc[0, 'qty'] = 99` | mutates | PD1, PD2 | pd-newcol | One cell is set with df.loc\[row, column\]; a chain like df\['qty'\]\[0\] changes nothing under Copy-on-Write. | `df['qty'][0] = 99`, `df.loc[0] = 99` |
-| pandas | Replace missing prices with 0, keeping the result in the price column. / Fill the gaps in df's price column with 0. | `df['price'] = df['price'].fillna(0)` | mutates | PD1, PD2 | — | Under Copy-on-Write, fixing a column in place does nothing; land the result back in the column. | `df['price'].fillna(0, inplace=True)`, `df = df.fillna(0)`, `df['price'].fillna(0)` |
-| pandas | Rename the column qty to quantity, keeping the result in df. / Change the qty column's name to quantity and save it back to df. | `df = df.rename(columns={'qty': 'quantity'})` | rebinds | PD1, PD2 | — | rename needs columns= and returns a new DataFrame. | `df.rename(columns={'qty': 'quantity'})`, `df = df.rename({'qty': 'quantity'})` |
-| sklearn | Split X and y into train and test sets with 20% for testing and random\_state 42. / Hold out 20% of X and y as a test set (random\_state 42), unpacking into X\_train, X\_test, y\_train, y\_test. | `X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)` | rebinds | SK1, SK2 | core-unpack | The four landings come back in the order X\_train, X\_test, y\_train, y\_test. | names in the wrong order; `test_size=20` |
-| sklearn | Train model on the training data. / Fit model using X\_train and y\_train. | `model.fit(X_train, y_train)` | mutates | SKS1, SKS2 | sk-split | Fit only on training data; fit changes the model itself. | `model.fit(X, y)`, `model = LinearRegression()`, `model.predict(X_train)` |
-| sklearn | Use the trained model to predict on the test set, keeping the results in preds. / Store model's predictions for X\_test in preds. | `preds = model.predict(X_test)` | rebinds | SKF1, SKF2 | sk-fit | predict returns new values; land them, and use the test set. | `preds = model.predict(X_train)`, `preds = model.fit(X_train, y_train)`, `model.predict(X_test)` |
+| Pattern | Id | Practice instances | Cold instance | Requires |
+| --- | --- | --- | --- | --- |
+| Store the result of a comparison | core-compare | `big_order = qty > 10` · `is_late = minutes > 30` · `is_cheap = price < 5.0` | `passed = score >= 60` | — |
+| Unpack several values into names | core-unpack | `first, second = pair` · `name, age = person` · `low, high = bounds` | `x, y, z = point` | — |
+| Add an item to the end of a list | core-append | `fruits.append('kiwi')` · `scores.append(88)` · `log.append('done')` | `tasks.append('email Ana')` | — |
+| Make a sorted copy of a list | core-sorted | `ranked = sorted(scores)` · `by_name = sorted(names)` · `biggest_first = sorted(sizes, reverse=True)` | `ordered = sorted(temps)` | — |
+| Look up a value by key | core-lookup | `age = ages['Ana']` · `rate = prices['tea']` · `ext = phone_book['Ben']` | `limit = settings['max_rows']` | — |
+| Store a value under a key | core-set | `ages['Ben'] = 28` · `stock['apples'] = 0` · `config['debug'] = True` | `totals['east'] = 120.5` | — |
+| Count the items in something | core-len | `n = len(orders)` · `n_rows = len(df)` · `word_count = len(words)` | `n_files = len(files)` | — |
+| Update a number in place | core-augadd | `total += 5` · `count += 1` · `balance -= 20` | `score *= 2` | — |
+| Remove an item from a list and keep it | core-pop | `top = stack.pop()` · `last_job = queue.pop()` · `first = line.pop(0)` | `newest = history.pop()` | — |
+| Build a new list by transforming each item | core-comp | `upper = [n.upper() for n in names]` · `lengths = [len(w) for w in words]` · `doubled = [x * 2 for x in nums]` | `lowered = [s.lower() for s in tags]` | — |
+| Drop rows with a missing value in one column | pd-dropna | `df = df.dropna(subset=['price'])` · `orders = orders.dropna(subset=['price'])` · `students = students.dropna(subset=['grade'])` | `contacts = contacts.dropna(subset=['email'])` | — |
+| Keep the rows that meet one condition | pd-filter | `big = df[df['qty'] > 10]` · `busy = orders[orders['qty'] > 10]` · `late = jobs[jobs['complete'] < jobs['planned']]` | `passed = students[students['score'] > 50]` | core-compare |
+| Keep the rows that meet two conditions | pd-and | `mid = df[(df['qty'] > 10) & (df['qty'] < 20)]` · `night_open = jobs[(jobs['shift'] == 'night') & (jobs['complete'] < jobs['planned'])]` · `mid_scores = students[(students['score'] >= 50) & (students['score'] < 80)]` | `mid = sales[(sales['amount'] > 100) & (sales['amount'] < 500)]` | pd-filter |
+| Summarise one column per group | pd-groupby | `avg = df.groupby('category')['price'].mean()` · `best = students.groupby('grade')['score'].max()` · `avg_planned = jobs.groupby('shift')['planned'].mean()` | `totals = sales.groupby('region')['amount'].sum()` | — |
+| Make a calculated column | pd-newcol | `df['total'] = df['price'] * df['qty']` · `sales['profit'] = sales['revenue'] - sales['cost']` · `jobs['remaining'] = jobs['planned'] - jobs['complete']` | `orders['net'] = orders['price'] * (1 - orders['discount'])` | — |
+| Set one cell | pd-loc | `df.loc[0, 'qty'] = 99` · `jobs.loc[1, 'complete'] = 0` · `students.loc[0, 'grade'] = 'A'` | `orders.loc[2, 'price'] = 9.99` | pd-newcol |
+| Fill the gaps in one column | pd-fillna | `df['price'] = df['price'].fillna(0)` · `orders['discount'] = orders['discount'].fillna(0)` · `students['grade'] = students['grade'].fillna('none')` | `sales['amount'] = sales['amount'].fillna(0)` | — |
+| Rename columns | pd-rename | `df = df.rename(columns={'qty': 'quantity'})` · `sales = sales.rename(columns={'amount': 'total'})` · `jobs = jobs.rename(columns={'complete': 'done', 'planned': 'target'})` | `students = students.rename(columns={'score': 'points'})` | — |
+| Split data into training and test sets | sk-split | `X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)` · `Xtr, Xte, ytr, yte = train_test_split(features, target, test_size=0.25, random_state=1)` · `train_X, test_X, train_y, test_y = train_test_split(X, y, test_size=0.3, random_state=7)` | `a_train, a_test, b_train, b_test = train_test_split(A, b, test_size=0.5, random_state=3)` | core-unpack |
+| Train a model on the training data | sk-fit | `model.fit(X_train, y_train)` · `reg.fit(X_train, y_train)` · `tree.fit(X_train, y_train)` | `forest.fit(train_X, train_y)` | sk-split |
+| Use a trained model on the test set | sk-predict | `preds = model.predict(X_test)` · `tree_preds = tree.predict(X_test)` · `r2 = model.score(X_test, y_test)` | `guesses = reg.predict(X_test)` | sk-fit |
 
-Note ids, in table order: core-compare, core-unpack, core-append, core-sorted, core-lookup, core-set, core-len, core-augadd, core-pop, core-comp, pd-dropna, pd-filter, pd-and, pd-groupby, pd-newcol, pd-loc, pd-fillna, pd-rename, sk-split, sk-fit, sk-predict. The same 21 notes, with setups, are in `content/decks/*.json` in the repo.
+Each instance's intents, setups and traps, and each pattern's rule, are in `content/decks/core.json`, `pandas.json` and `sklearn.json`. The first practice instance of each pattern is the original single-line card; the earlier transfer cards became cold instances. Add cold instances over time, always for patterns already in the decks, and never study them.
 
 ## 12. Guardrails
 
@@ -552,18 +620,50 @@ These are rules the build must keep even when a shortcut looks harmless. Each on
 - **No reward layer.** No points, XP, streaks, targets, badges, levels shown as achievements, confetti or sounds. Help levels are internal; the learner sees the card, not a rank. The session summary is information, not a score.
 - **Correctness comes from Python, never from the learner.** The learner never rates a card; spaced repetition stays in the background.
 - **Feedback is causal.** Every wrong-answer message names a part or an effect and says what happened, never just "Incorrect".
-- **Stays small.** No accounts, no server, no sync, no general-purpose editor. Anything outside section 4's version list needs a change to this doc first. Goal 2 skills are never added to Goal 1 decks as tested content.
+- **Stays small.** No accounts, no server, no sync, no general-purpose editor. Anything outside section 4's version list needs a change to this doc first. Goal 2 skills are never added to Goal 1 decks as tested content. Imported decks are treated as code, never as plain data.
 
 ## 13. Build phases (v1)
 
-Build in this order. Phase 3 produces the smallest loop Wil can actually study with, so it comes before the visuals. Don't start a phase until the previous phase's checks pass.
+Build the pilot first. It is the smallest version that tests whether the training loop actually stops the freezing. Only if it does, phases 2–7 turn it into the full app. Within the full build, don't start a phase until the previous phase's checks pass.
+
+### Pilot — prove the loop (build first)
+
+**Includes:** all of Phase 1 below; the 21 patterns (63 practice and 21 cold instances) from `content/decks`; L5 typing with the fading effect gate; real checking with the section 8 feedback as text, including "works, but" advice; a basic bench (names and boxes, before and after, no animation); L4 help after a miss; the delayed L5 retry; the `?` stuck key with its three reasons; notebook-style challenges; the Explain button once a pattern is fluent; quick capture to the inbox; the attempts log.
+
+**Scheduling in the pilot:** fixed gaps instead of FSRS. A correct first L5 attempt moves a pattern to the next gap in 1, 3, 7, 14, 30 days; a miss sends it back to 1 day. New patterns: 5 per day, respecting `requires`.
+
+**Deferred to the full build:** L1–L3, the sentence diagram, animations, FSRS, card authoring in the app (pilot cards come from the JSON files), Browse, export and import.
+
+**Help after a miss in the pilot.** L1–L3 don't exist in the pilot, so this table replaces the full-build routing in sections 5 and 8 until Phase 5. Every row is built from things the pilot already has: L4, the effect gate's toggles, the basic bench and the checker's messages. After any of these, the L5 retry still comes 5 cards later (section 7), and the answer is never revealed.
+
+| Miss (checker `blame`) or stuck reason | Full build | Pilot |
+| --- | --- | --- |
+| `assemble`: syntax error, empty answer, several statements | L3 tiles | **Fix-it attempt:** the learner's own line stays in the input with the error position marked (the column from the checker message) and the message shown; one more try at L5 right away. A second `assemble` miss on the same card goes to L4 with the rotation. |
+| `verb`, `details`, `subject` | L4, that part blanked | Same: L4 with that part blanked. |
+| `landing` | L2 | L4 with the landing blanked, for example `____ df.dropna(subset=['price'])`, so the learner writes `df =`. |
+| `effect` | L2 | **Effect prompt** (below), then L4 with the verb blanked. |
+| none (wrong value) | L4, rotation | Same: L4 with the rotation. |
+| Stuck 1: don't know what to use | Verb chip, then L5 | Same. |
+| Stuck 2: can't write it | L4, or L3 if L4 was already missed | L4; if L4 was already missed on this card, L4 again with a different part blanked. |
+| Stuck 3: not sure what should change | L2 | **Effect prompt** (below), then L5 again. |
+
+**Effect prompt.** The same four toggles as the effect gate, asking "What should this line change?" After the pick, the basic bench shows the setup and says the reference's effects in words (for example "should rebind `df`" or "should change `fruits` itself"), with a one-line hint if the pick was wrong. It never shows the reference line. A wrong pick is logged against Effect like a gate miss.
+
+**Measures,** recorded from the first session and shown in the session summary: first-try correctness, median time to first keystroke, number of stuck presses by reason, and the cold-challenge score.
+
+- [ ] Phase 1's checks all pass
+- [ ] A session runs end to end on the 21 patterns, rotating instances; a miss or a stuck press gets the help its blame or reason calls for, then a delayed retry at L5
+- [ ] The effect gate stops appearing for a pattern after 3 correct picks in a row, and returns after an effect or landing miss
+- [ ] All four measures are recorded and a weekly cold challenge runs, using each cold instance once
+
+**Decision point.** Wil uses the pilot until he has enough sessions to judge. If first-try correctness and start time improve, stuck presses drop and cold challenges go well, build phases 2–7 on top of it; nothing is thrown away (FSRS replaces the fixed gaps in Phase 2, and the attempts log carries over). If not, revisit the design before building more.
 
 ### Phase 1 — Python in the browser
 
 - [ ] Worker loads Pyodide 314.0.7 and `checker.py` (from the repo, unchanged); the client sends `check`, `validate` and `parts` and gets typed results back
 - [ ] A 5-second timeout terminates and restarts the worker; the UI reports it
 - [ ] pandas and scikit-learn load lazily on first need
-- [ ] `test_checker.py` prints `mismatches: 0 of 71` with normal Python and inside Pyodide; any difference is logged in DECISIONS.md
+- [ ] `test_checker.py` prints `mismatches: 0 of 83` with normal Python and inside Pyodide; any difference is logged in DECISIONS.md
 - [ ] `test_seed.py` shows all 21 seed notes from section 11 passing `validate()`, both places
 
 ### Phase 2 — Data and scheduling
@@ -572,7 +672,7 @@ Build in this order. Phase 3 produces the smallest loop Wil can actually study w
 - [ ] FSRS rating comes only from the first L5 attempt, per the table in section 7 (Vitest: one test per row)
 - [ ] Daily caps, the 4am day boundary, lowest-recall-first ordering after missed days, contrast pairs, retry spacing, the session floor, session size and prerequisites work as section 7 says
 
-### Phase 3 — Minimum study loop
+### Phase 3 — Full study loop (extends the pilot)
 
 - [ ] Review screen with intent, effect gate, L5 input, Check, feedback messages as text and the `rule` line
 - [ ] A miss goes to L4 or a retry, then the same note again at L5 with another intent wording
@@ -593,13 +693,13 @@ Build in this order. Phase 3 produces the smallest loop Wil can actually study w
 
 ### Phase 6 — Authoring and data tools
 
-- [ ] Add/edit note with Validate (refuses to save on any error); editing never resets scheduling; Reset progress works
+- [ ] Add/edit note with Validate (refuses to save on any error); editing never resets scheduling; Reset progress works; an inbox item can be turned into a note and is marked carded
 - [ ] Browse with search, filters and the stuck list
 - [ ] Export and import (Merge and Replace) round-trip without loss, including migration from an older schema
 
 ### Phase 7 — Content and finish
 
-- [ ] Decks reach about 40 / 40 / 20 notes and every note passes Validate
+- [ ] Decks grow by patterns and instances, and every instance passes Validate
 - [ ] Session summary and the four Goal 1 finish-line numbers in Settings are computed from the attempts log
 - [ ] One Playwright test studies a new note through a miss, a fallback and a correct retry
 - [ ] Light and dark themes, keyboard-only use and the under-900px layout checked by hand
@@ -611,10 +711,10 @@ Export this doc as Markdown, save it as `ARCHITECTURE.md` at the root of an empt
 ```text
 Read ARCHITECTURE.md fully before writing any code. It is the source of truth.
 
-Build Phase <N> from section 13 only. Rules:
+Build the Pilot from section 13 first. Later, build one phase at a time (Phase <N>), only after Wil says the pilot worked. Rules:
 - This build is Goal 1 only (section 1). Don't add Goal 2 features or content.
 - Use python/checker.py and python/tests/ exactly as committed. Don't rewrite their logic.
-- Use content/decks/*.json (the 21 notes in section 11) as the seed content and as test fixtures.
+- Use content/decks/*.json (21 patterns, 84 instances; section 11) as the seed content and as test fixtures.
 - Pin every version in section 10 exactly. Use ts-fsrs 5.4.2, not 6.x.
 - Follow the guardrails in section 12 without exception (no autocomplete, no rating buttons, no reward layer, try before help).
 - Where this doc is silent, choose the simplest option and record it in DECISIONS.md with one line of why.
@@ -622,4 +722,4 @@ Build Phase <N> from section 13 only. Rules:
 - Finish by running the phase's checks and reporting each box as pass or fail.
 ```
 
-**What has been verified.** Library versions and the ts-fsrs setting names were checked against the npm registry and the package source on 26 Oct 2026. The checker (71 test cases) and the 21 seed notes were tested with normal Python (3.13, pandas 3.0.5, scikit-learn 1.9.1). They have not yet been run inside Pyodide 314.0.7, which ships pandas 3.0.2 and scikit-learn 1.8.0; Phase 1 does that first.
+**What has been verified.** Library versions and the ts-fsrs setting names were checked against the npm registry and the package source on 26 Oct 2026. The checker (83 test cases) and the 84 pattern instances were tested with normal Python (3.13, pandas 3.0.5, scikit-learn 1.9.1). They have not yet been run inside Pyodide 314.0.7, which ships pandas 3.0.2 and scikit-learn 1.8.0; Phase 1 does that first.

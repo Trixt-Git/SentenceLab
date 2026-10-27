@@ -1,27 +1,17 @@
 {
   "deck": "pandas",
-  "schemaVersion": 1,
-  "notes": [
+  "schemaVersion": 2,
+  "patterns": [
     {
       "id": "pd-dropna",
       "kind": "line",
       "deck": "pandas",
-      "intents": [
-        "Drop the rows where price is missing, and keep the result in df.",
-        "Keep only rows that have a price, saving the result back to df."
-      ],
-      "setups": [
-        "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
-        "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
-      ],
-      "reference": "df = df.dropna(subset=['price'])",
+      "pattern": "Drop rows with a missing value in one column",
+      "rule": "dropna returns a new DataFrame; land it, and name the column with subset=.",
       "returns": "new",
-      "rule": "dropna returns a new DataFrame; land it with df = ...",
-      "traps": [
-        "df.dropna(subset=['price'])",
-        "df = df.dropna()",
-        "df = df.dropna(subset=['price'], inplace=True)"
-      ],
+      "contrast": "land-new-frame",
+      "requires": [],
+      "options": {},
       "distractors": [
         {
           "tile": "inplace=",
@@ -29,34 +19,95 @@
         }
       ],
       "tiles": null,
-      "contrast": "land-new-frame",
-      "requires": [],
-      "options": {},
       "tags": [
         "pandas"
       ],
       "source": "seed",
-      "version": 2
+      "version": 3,
+      "instances": [
+        {
+          "id": "pd-dropna",
+          "role": "practice",
+          "intents": [
+            "Drop the rows where price is missing, and keep the result in df.",
+            "Keep only rows that have a price, saving the result back to df."
+          ],
+          "setups": [
+            "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
+            "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
+          ],
+          "reference": "df = df.dropna(subset=['price'])",
+          "traps": [
+            "df.dropna(subset=['price'])",
+            "df = df.dropna()",
+            "df = df.dropna(subset=['price'], inplace=True)"
+          ]
+        },
+        {
+          "id": "pd-dropna-2",
+          "role": "practice",
+          "intents": [
+            "Drop the orders with no price, keeping the result in orders.",
+            "Keep only orders that have a price, saving back to orders."
+          ],
+          "setups": [
+            "import pandas as pd\norders = pd.DataFrame({'item': ['a','b','c','d'], 'price': [2.5, None, 4.0, 10.0], 'qty': [4, 12, 0, 7], 'discount': [0.1, 0.0, None, 0.2]})",
+            "import pandas as pd\norders = pd.DataFrame({'item': ['x','y',None], 'price': [None, 3.0, 8.0], 'qty': [10, 13, 2], 'discount': [None, 0.5, 0.0]})"
+          ],
+          "reference": "orders = orders.dropna(subset=['price'])",
+          "traps": [
+            "orders.dropna(subset=['price'])",
+            "orders = orders.dropna()"
+          ]
+        },
+        {
+          "id": "pd-dropna-3",
+          "role": "practice",
+          "intents": [
+            "Drop the students with no grade, keeping the result in students.",
+            "Keep only students who have a grade, saving back to students."
+          ],
+          "setups": [
+            "import pandas as pd\nstudents = pd.DataFrame({'name': ['Ana','Ben','Cy','Di'], 'score': [72, 50, 38, 91], 'grade': ['B','C',None,'A']})",
+            "import pandas as pd\nstudents = pd.DataFrame({'name': ['Ed','Flo','Gus'], 'score': [51, 49, 79], 'grade': [None,'C','B']})"
+          ],
+          "reference": "students = students.dropna(subset=['grade'])",
+          "traps": [
+            "students.dropna(subset=['grade'])",
+            "students = students.dropna(subset=['score'])"
+          ]
+        },
+        {
+          "id": "pd-dropna-cold",
+          "role": "cold",
+          "intents": [
+            "Drop the contacts that have no email, keeping the result in contacts.",
+            "Keep only contacts with an email address, saving back to contacts."
+          ],
+          "setups": [
+            "import pandas as pd\ncontacts = pd.DataFrame({'name': ['Ana','Ben','Cy'], 'email': ['a@x.com', None, 'c@x.com'], 'phone': [None, '555', '556']})",
+            "import pandas as pd\ncontacts = pd.DataFrame({'name': ['Di','Ed'], 'email': [None, 'e@x.com'], 'phone': ['557', None]})"
+          ],
+          "reference": "contacts = contacts.dropna(subset=['email'])",
+          "traps": [
+            "contacts.dropna(subset=['email'])",
+            "contacts = contacts.dropna()"
+          ]
+        }
+      ]
     },
     {
       "id": "pd-filter",
       "kind": "line",
       "deck": "pandas",
-      "intents": [
-        "Keep only the rows where qty is above 10, in a new DataFrame called big.",
-        "Make big: the rows of df with qty over 10."
-      ],
-      "setups": [
-        "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
-        "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
-      ],
-      "reference": "big = df[df['qty'] > 10]",
-      "returns": "new",
+      "pattern": "Keep the rows that meet one condition",
       "rule": "The inner sentence makes a True/False mask; the outer [ ] keeps the True rows.",
-      "traps": [
-        "big = df[df['qty'] >= 10]",
-        "big = df['qty'] > 10"
+      "returns": "new",
+      "contrast": "gt-vs-ge",
+      "requires": [
+        "core-compare"
       ],
+      "options": {},
       "distractors": [
         {
           "tile": ">=",
@@ -64,37 +115,94 @@
         }
       ],
       "tiles": null,
-      "contrast": "gt-vs-ge",
-      "requires": [
-        "core-compare"
-      ],
-      "options": {},
       "tags": [
         "pandas"
       ],
       "source": "seed",
-      "version": 2
+      "version": 3,
+      "instances": [
+        {
+          "id": "pd-filter",
+          "role": "practice",
+          "intents": [
+            "Keep only the rows where qty is above 10, in a new DataFrame called big.",
+            "Make big: the rows of df with qty over 10."
+          ],
+          "setups": [
+            "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
+            "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
+          ],
+          "reference": "big = df[df['qty'] > 10]",
+          "traps": [
+            "big = df[df['qty'] >= 10]",
+            "big = df['qty'] > 10"
+          ]
+        },
+        {
+          "id": "pd-filter-2",
+          "role": "practice",
+          "intents": [
+            "Keep the orders with qty above 10, as busy.",
+            "Make busy: the rows of orders where qty is more than 10."
+          ],
+          "setups": [
+            "import pandas as pd\norders = pd.DataFrame({'item': ['a','b','c','d'], 'price': [2.5, None, 4.0, 10.0], 'qty': [4, 12, 0, 7], 'discount': [0.1, 0.0, None, 0.2]})",
+            "import pandas as pd\norders = pd.DataFrame({'item': ['x','y',None], 'price': [None, 3.0, 8.0], 'qty': [10, 13, 2], 'discount': [None, 0.5, 0.0]})"
+          ],
+          "reference": "busy = orders[orders['qty'] > 10]",
+          "traps": [
+            "busy = orders[orders['qty'] >= 10]",
+            "busy = orders['qty'] > 10"
+          ]
+        },
+        {
+          "id": "pd-filter-3",
+          "role": "practice",
+          "intents": [
+            "Keep the jobs where complete is less than planned, as late.",
+            "Make late: rows of jobs that completed fewer than planned."
+          ],
+          "setups": [
+            "import pandas as pd\njobs = pd.DataFrame({'job': ['j1','j2','j3'], 'planned': [100, 200, 150], 'complete': [80, 200, 50], 'shift': ['day','night','day']})",
+            "import pandas as pd\njobs = pd.DataFrame({'job': ['k1','k2'], 'planned': [60, 90], 'complete': [30, 90], 'shift': ['night', None]})"
+          ],
+          "reference": "late = jobs[jobs['complete'] < jobs['planned']]",
+          "traps": [
+            "late = jobs[jobs['complete'] <= jobs['planned']]",
+            "late = jobs['complete'] < jobs['planned']"
+          ]
+        },
+        {
+          "id": "pd-filter-cold",
+          "role": "cold",
+          "intents": [
+            "Keep the students who scored above 50, in a new DataFrame called passed.",
+            "Make passed: the rows of students with a score over 50."
+          ],
+          "setups": [
+            "import pandas as pd\nstudents = pd.DataFrame({'name': ['Ana','Ben','Cy','Di'], 'score': [72, 50, 38, 91]})",
+            "import pandas as pd\nstudents = pd.DataFrame({'name': ['Ed','Flo','Gus'], 'score': [51, 49, 50]})"
+          ],
+          "reference": "passed = students[students['score'] > 50]",
+          "traps": [
+            "passed = students[students['score'] >= 50]",
+            "passed = students['score'] > 50"
+          ]
+        }
+      ]
     },
     {
       "id": "pd-and",
       "kind": "line",
       "deck": "pandas",
-      "intents": [
-        "Keep the rows where qty is above 10 and below 20, in a new DataFrame called mid.",
-        "Make mid: rows of df with qty between 10 and 20, both ends excluded."
-      ],
-      "setups": [
-        "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
-        "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
-      ],
-      "reference": "mid = df[(df['qty'] > 10) & (df['qty'] < 20)]",
+      "pattern": "Keep the rows that meet two conditions",
+      "rule": "Masks combine with & and |, each comparison in its own brackets; 'and' doesn't work on columns.",
       "returns": "new",
-      "rule": "Masks combine with & and |, and each comparison needs its own brackets; 'and' doesn't work on columns.",
-      "traps": [
-        "mid = df[df['qty'] > 10 & df['qty'] < 20]",
-        "mid = df[(df['qty'] > 10) and (df['qty'] < 20)]",
-        "mid = df[(df['qty'] >= 10) & (df['qty'] <= 20)]"
+      "contrast": "gt-vs-ge",
+      "requires": [
+        "pd-filter"
       ],
+      "options": {},
       "distractors": [
         {
           "tile": "and",
@@ -102,169 +210,525 @@
         }
       ],
       "tiles": null,
-      "contrast": "gt-vs-ge",
-      "requires": [
-        "pd-filter"
-      ],
-      "options": {},
       "tags": [
         "pandas"
       ],
       "source": "seed",
-      "version": 2
+      "version": 3,
+      "instances": [
+        {
+          "id": "pd-and",
+          "role": "practice",
+          "intents": [
+            "Keep the rows where qty is above 10 and below 20, in a new DataFrame called mid.",
+            "Make mid: rows of df with qty between 10 and 20, both ends excluded."
+          ],
+          "setups": [
+            "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
+            "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
+          ],
+          "reference": "mid = df[(df['qty'] > 10) & (df['qty'] < 20)]",
+          "traps": [
+            "mid = df[df['qty'] > 10 & df['qty'] < 20]",
+            "mid = df[(df['qty'] > 10) and (df['qty'] < 20)]",
+            "mid = df[(df['qty'] >= 10) & (df['qty'] <= 20)]"
+          ]
+        },
+        {
+          "id": "pd-and-2",
+          "role": "practice",
+          "intents": [
+            "Keep the night-shift jobs that aren't finished (complete below planned), as night_open.",
+            "Make night_open: rows of jobs on the night shift where complete is less than planned."
+          ],
+          "setups": [
+            "import pandas as pd\njobs = pd.DataFrame({'job': ['j1','j2','j3'], 'planned': [100, 200, 150], 'complete': [80, 200, 50], 'shift': ['day','night','day']})",
+            "import pandas as pd\njobs = pd.DataFrame({'job': ['k1','k2'], 'planned': [60, 90], 'complete': [30, 90], 'shift': ['night', None]})"
+          ],
+          "reference": "night_open = jobs[(jobs['shift'] == 'night') & (jobs['complete'] < jobs['planned'])]",
+          "traps": [
+            "night_open = jobs[(jobs['shift'] == 'night') | (jobs['complete'] < jobs['planned'])]",
+            "night_open = jobs[(jobs['shift'] == 'night') and (jobs['complete'] < jobs['planned'])]"
+          ]
+        },
+        {
+          "id": "pd-and-3",
+          "role": "practice",
+          "intents": [
+            "Keep the students scoring at least 50 and below 80, as mid_scores.",
+            "Make mid_scores: rows of students with a score from 50 up to, but not including, 80."
+          ],
+          "setups": [
+            "import pandas as pd\nstudents = pd.DataFrame({'name': ['Ana','Ben','Cy','Di'], 'score': [72, 50, 38, 91], 'grade': ['B','C',None,'A']})",
+            "import pandas as pd\nstudents = pd.DataFrame({'name': ['Ed','Flo','Gus'], 'score': [51, 49, 79], 'grade': [None,'C','B']})"
+          ],
+          "reference": "mid_scores = students[(students['score'] >= 50) & (students['score'] < 80)]",
+          "traps": [
+            "mid_scores = students[(students['score'] > 50) & (students['score'] < 80)]",
+            "mid_scores = students[students['score'] >= 50 & students['score'] < 80]"
+          ]
+        },
+        {
+          "id": "pd-and-cold",
+          "role": "cold",
+          "intents": [
+            "Keep the sales with an amount above 100 and below 500, as mid.",
+            "Make mid: rows of sales where amount is between 100 and 500, ends excluded."
+          ],
+          "setups": [
+            "import pandas as pd\nsales = pd.DataFrame({'region': ['east','west','east','south'], 'amount': [120.0, None, 480.0, 500.0]})",
+            "import pandas as pd\nsales = pd.DataFrame({'region': ['north','north','west'], 'amount': [100.0, 250.0, None]})"
+          ],
+          "reference": "mid = sales[(sales['amount'] > 100) & (sales['amount'] < 500)]",
+          "traps": [
+            "mid = sales[(sales['amount'] >= 100) & (sales['amount'] <= 500)]",
+            "mid = sales[(sales['amount'] > 100) and (sales['amount'] < 500)]"
+          ]
+        }
+      ]
     },
     {
       "id": "pd-groupby",
       "kind": "line",
       "deck": "pandas",
-      "intents": [
-        "Get the average price for each category, as avg.",
-        "Store the mean price per category in avg."
-      ],
-      "setups": [
-        "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
-        "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
-      ],
-      "reference": "avg = df.groupby('category')['price'].mean()",
-      "returns": "new",
+      "pattern": "Summarise one column per group",
       "rule": "Group first, pick the column, then the verb that summarises.",
-      "traps": [
-        "avg = df['price'].mean()",
-        "avg = df.groupby('price')['category'].mean()"
-      ],
-      "distractors": [],
-      "tiles": null,
+      "returns": "new",
       "contrast": null,
       "requires": [],
       "options": {},
+      "distractors": [],
+      "tiles": null,
       "tags": [
         "pandas"
       ],
       "source": "seed",
-      "version": 2
+      "version": 3,
+      "instances": [
+        {
+          "id": "pd-groupby",
+          "role": "practice",
+          "intents": [
+            "Get the average price for each category, as avg.",
+            "Store the mean price per category in avg."
+          ],
+          "setups": [
+            "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
+            "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
+          ],
+          "reference": "avg = df.groupby('category')['price'].mean()",
+          "traps": [
+            "avg = df['price'].mean()",
+            "avg = df.groupby('price')['category'].mean()"
+          ]
+        },
+        {
+          "id": "pd-groupby-2",
+          "role": "practice",
+          "intents": [
+            "Get the highest score in each grade, as best.",
+            "Store the max score per grade in best."
+          ],
+          "setups": [
+            "import pandas as pd\nstudents = pd.DataFrame({'name': ['Ana','Ben','Cy','Di'], 'score': [72, 50, 38, 91], 'grade': ['B','C',None,'A']})",
+            "import pandas as pd\nstudents = pd.DataFrame({'name': ['Ed','Flo','Gus'], 'score': [51, 49, 79], 'grade': [None,'C','B']})"
+          ],
+          "reference": "best = students.groupby('grade')['score'].max()",
+          "traps": [
+            "best = students['score'].max()",
+            "best = students.groupby('score')['grade'].max()"
+          ]
+        },
+        {
+          "id": "pd-groupby-3",
+          "role": "practice",
+          "intents": [
+            "Get the average planned amount for each shift, as avg_planned.",
+            "Store the mean of planned per shift in avg_planned."
+          ],
+          "setups": [
+            "import pandas as pd\njobs = pd.DataFrame({'job': ['j1','j2','j3'], 'planned': [100, 200, 150], 'complete': [80, 200, 50], 'shift': ['day','night','day']})",
+            "import pandas as pd\njobs = pd.DataFrame({'job': ['k1','k2'], 'planned': [60, 90], 'complete': [30, 90], 'shift': ['night', None]})"
+          ],
+          "reference": "avg_planned = jobs.groupby('shift')['planned'].mean()",
+          "traps": [
+            "avg_planned = jobs['planned'].mean()",
+            "avg_planned = jobs.groupby('planned')['shift'].count()"
+          ]
+        },
+        {
+          "id": "pd-groupby-cold",
+          "role": "cold",
+          "intents": [
+            "Get the total amount for each region, as totals.",
+            "Store the sum of amount per region in totals."
+          ],
+          "setups": [
+            "import pandas as pd\nsales = pd.DataFrame({'region': ['east','west','east','south'], 'amount': [120.0, None, 480.0, 500.0]})",
+            "import pandas as pd\nsales = pd.DataFrame({'region': ['north','north','west'], 'amount': [100.0, 250.0, None]})"
+          ],
+          "reference": "totals = sales.groupby('region')['amount'].sum()",
+          "traps": [
+            "totals = sales['amount'].sum()",
+            "totals = sales.groupby('amount')['region'].sum()"
+          ]
+        }
+      ]
     },
     {
       "id": "pd-newcol",
       "kind": "line",
       "deck": "pandas",
-      "intents": [
-        "Add a column called total that is price times qty.",
-        "Give df a new column, total, equal to price multiplied by qty."
-      ],
-      "setups": [
-        "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
-        "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
-      ],
-      "reference": "df['total'] = df['price'] * df['qty']",
-      "returns": "new",
-      "rule": "New columns land with df['name'] = ..., not df.name.",
-      "traps": [
-        "df.total = df.price * df.qty",
-        "total = df['price'] * df['qty']"
-      ],
-      "distractors": [],
-      "tiles": null,
+      "pattern": "Make a calculated column",
+      "rule": "New columns land with df['name'] = ..., not df.name; the right side combines whole columns.",
+      "returns": "none_after_mutating",
       "contrast": null,
       "requires": [],
       "options": {},
+      "distractors": [],
+      "tiles": null,
       "tags": [
         "pandas"
       ],
       "source": "seed",
-      "version": 2
+      "version": 3,
+      "instances": [
+        {
+          "id": "pd-newcol",
+          "role": "practice",
+          "intents": [
+            "Add a column called total that is price times qty.",
+            "Give df a new column, total, equal to price multiplied by qty."
+          ],
+          "setups": [
+            "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
+            "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
+          ],
+          "reference": "df['total'] = df['price'] * df['qty']",
+          "traps": [
+            "df.total = df.price * df.qty",
+            "total = df['price'] * df['qty']"
+          ]
+        },
+        {
+          "id": "pd-newcol-2",
+          "role": "practice",
+          "intents": [
+            "Add a profit column to sales: revenue minus cost.",
+            "Give sales a new column, profit, equal to revenue less cost."
+          ],
+          "setups": [
+            "import pandas as pd\nsales = pd.DataFrame({'region': ['east','west','east','south'], 'revenue': [200.0, 150.0, None, 400.0], 'cost': [120.0, 160.0, 50.0, None], 'amount': [120.0, None, 480.0, 500.0]})",
+            "import pandas as pd\nsales = pd.DataFrame({'region': ['north','north','west'], 'revenue': [90.0, None, 300.0], 'cost': [None, 40.0, 100.0], 'amount': [100.0, 250.0, None]})"
+          ],
+          "reference": "sales['profit'] = sales['revenue'] - sales['cost']",
+          "traps": [
+            "sales.profit = sales.revenue - sales.cost",
+            "profit = sales['revenue'] - sales['cost']"
+          ]
+        },
+        {
+          "id": "pd-newcol-3",
+          "role": "practice",
+          "intents": [
+            "Add a remaining column to jobs: planned minus complete.",
+            "Give jobs a new column, remaining, equal to planned less complete."
+          ],
+          "setups": [
+            "import pandas as pd\njobs = pd.DataFrame({'job': ['j1','j2','j3'], 'planned': [100, 200, 150], 'complete': [80, 200, 50], 'shift': ['day','night','day']})",
+            "import pandas as pd\njobs = pd.DataFrame({'job': ['k1','k2'], 'planned': [60, 90], 'complete': [30, 90], 'shift': ['night', None]})"
+          ],
+          "reference": "jobs['remaining'] = jobs['planned'] - jobs['complete']",
+          "traps": [
+            "jobs.remaining = jobs.planned - jobs.complete",
+            "remaining = jobs['planned'] - jobs['complete']"
+          ]
+        },
+        {
+          "id": "pd-newcol-cold",
+          "role": "cold",
+          "intents": [
+            "Add a net column to orders: price times one minus discount.",
+            "Give orders a new column, net, equal to price multiplied by (1 - discount)."
+          ],
+          "setups": [
+            "import pandas as pd\norders = pd.DataFrame({'item': ['a','b','c','d'], 'price': [2.5, None, 4.0, 10.0], 'qty': [4, 12, 0, 7], 'discount': [0.1, 0.0, None, 0.2]})",
+            "import pandas as pd\norders = pd.DataFrame({'item': ['x','y',None], 'price': [None, 3.0, 8.0], 'qty': [10, 13, 2], 'discount': [None, 0.5, 0.0]})"
+          ],
+          "reference": "orders['net'] = orders['price'] * (1 - orders['discount'])",
+          "traps": [
+            "orders.net = orders.price * (1 - orders.discount)",
+            "net = orders['price'] * (1 - orders['discount'])"
+          ]
+        }
+      ]
     },
     {
       "id": "pd-loc",
       "kind": "line",
       "deck": "pandas",
-      "intents": [
-        "Set qty in row 0 of df to 99.",
-        "Change the qty value in the first row (label 0) to 99."
-      ],
-      "setups": [
-        "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
-        "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
-      ],
-      "reference": "df.loc[0, 'qty'] = 99",
-      "returns": "new",
-      "rule": "One cell is set with df.loc[row, column]; a chain like df['qty'][0] changes nothing under Copy-on-Write.",
-      "traps": [
-        "df['qty'][0] = 99",
-        "df.loc[0] = 99"
-      ],
-      "distractors": [],
-      "tiles": null,
+      "pattern": "Set one cell",
+      "rule": "One cell is set with df.loc[row, column]; a chain like df['col'][row] changes nothing under Copy-on-Write.",
+      "returns": "none_after_mutating",
       "contrast": null,
       "requires": [
         "pd-newcol"
       ],
       "options": {},
+      "distractors": [],
+      "tiles": null,
       "tags": [
         "pandas"
       ],
       "source": "seed",
-      "version": 2
+      "version": 3,
+      "instances": [
+        {
+          "id": "pd-loc",
+          "role": "practice",
+          "intents": [
+            "Set qty in row 0 of df to 99.",
+            "Change the qty value in the first row (label 0) to 99."
+          ],
+          "setups": [
+            "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
+            "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
+          ],
+          "reference": "df.loc[0, 'qty'] = 99",
+          "traps": [
+            "df['qty'][0] = 99",
+            "df.loc[0] = 99"
+          ]
+        },
+        {
+          "id": "pd-loc-2",
+          "role": "practice",
+          "intents": [
+            "Set complete in row 1 of jobs to 0.",
+            "Change the complete value in the row labelled 1 to 0."
+          ],
+          "setups": [
+            "import pandas as pd\njobs = pd.DataFrame({'job': ['j1','j2','j3'], 'planned': [100, 200, 150], 'complete': [80, 200, 50], 'shift': ['day','night','day']})",
+            "import pandas as pd\njobs = pd.DataFrame({'job': ['k1','k2'], 'planned': [60, 90], 'complete': [30, 90], 'shift': ['night', None]})"
+          ],
+          "reference": "jobs.loc[1, 'complete'] = 0",
+          "traps": [
+            "jobs['complete'][1] = 0",
+            "jobs.loc[1] = 0"
+          ]
+        },
+        {
+          "id": "pd-loc-3",
+          "role": "practice",
+          "intents": [
+            "Set grade in row 0 of students to 'A'.",
+            "Change the grade in the row labelled 0 to 'A'."
+          ],
+          "setups": [
+            "import pandas as pd\nstudents = pd.DataFrame({'name': ['Ana','Ben','Cy','Di'], 'score': [72, 50, 38, 91], 'grade': ['B','C',None,'A']})",
+            "import pandas as pd\nstudents = pd.DataFrame({'name': ['Ed','Flo','Gus'], 'score': [51, 49, 79], 'grade': [None,'C','B']})"
+          ],
+          "reference": "students.loc[0, 'grade'] = 'A'",
+          "traps": [
+            "students['grade'][0] = 'A'",
+            "students.loc[0] = 'A'"
+          ]
+        },
+        {
+          "id": "pd-loc-cold",
+          "role": "cold",
+          "intents": [
+            "Set price in row 2 of orders to 9.99.",
+            "Change the price in the row labelled 2 to 9.99."
+          ],
+          "setups": [
+            "import pandas as pd\norders = pd.DataFrame({'item': ['a','b','c','d'], 'price': [2.5, None, 4.0, 10.0], 'qty': [4, 12, 0, 7], 'discount': [0.1, 0.0, None, 0.2]})",
+            "import pandas as pd\norders = pd.DataFrame({'item': ['x','y',None], 'price': [None, 3.0, 8.0], 'qty': [10, 13, 2], 'discount': [None, 0.5, 0.0]})"
+          ],
+          "reference": "orders.loc[2, 'price'] = 9.99",
+          "traps": [
+            "orders['price'][2] = 9.99",
+            "orders.loc[2] = 9.99"
+          ]
+        }
+      ]
     },
     {
       "id": "pd-fillna",
       "kind": "line",
       "deck": "pandas",
-      "intents": [
-        "Replace missing prices with 0, keeping the result in the price column.",
-        "Fill the gaps in df's price column with 0."
-      ],
-      "setups": [
-        "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
-        "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
-      ],
-      "reference": "df['price'] = df['price'].fillna(0)",
-      "returns": "new",
+      "pattern": "Fill the gaps in one column",
       "rule": "Under Copy-on-Write, fixing a column in place does nothing; land the result back in the column.",
-      "traps": [
-        "df['price'].fillna(0, inplace=True)",
-        "df = df.fillna(0)",
-        "df['price'].fillna(0)"
-      ],
-      "distractors": [],
-      "tiles": null,
+      "returns": "new",
       "contrast": "land-new-frame",
       "requires": [],
       "options": {},
+      "distractors": [],
+      "tiles": null,
       "tags": [
         "pandas"
       ],
       "source": "seed",
-      "version": 2
+      "version": 3,
+      "instances": [
+        {
+          "id": "pd-fillna",
+          "role": "practice",
+          "intents": [
+            "Replace missing prices with 0, keeping the result in the price column.",
+            "Fill the gaps in df's price column with 0."
+          ],
+          "setups": [
+            "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
+            "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
+          ],
+          "reference": "df['price'] = df['price'].fillna(0)",
+          "traps": [
+            "df['price'].fillna(0, inplace=True)",
+            "df = df.fillna(0)",
+            "df['price'].fillna(0)"
+          ]
+        },
+        {
+          "id": "pd-fillna-2",
+          "role": "practice",
+          "intents": [
+            "Replace missing discounts with 0, keeping the result in the discount column.",
+            "Fill the gaps in the discount column of orders with 0."
+          ],
+          "setups": [
+            "import pandas as pd\norders = pd.DataFrame({'item': ['a','b','c','d'], 'price': [2.5, None, 4.0, 10.0], 'qty': [4, 12, 0, 7], 'discount': [0.1, 0.0, None, 0.2]})",
+            "import pandas as pd\norders = pd.DataFrame({'item': ['x','y',None], 'price': [None, 3.0, 8.0], 'qty': [10, 13, 2], 'discount': [None, 0.5, 0.0]})"
+          ],
+          "reference": "orders['discount'] = orders['discount'].fillna(0)",
+          "traps": [
+            "orders['discount'].fillna(0, inplace=True)",
+            "orders = orders.fillna(0)"
+          ]
+        },
+        {
+          "id": "pd-fillna-3",
+          "role": "practice",
+          "intents": [
+            "Replace missing grades with 'none', keeping the result in the grade column.",
+            "Fill the gaps in the grade column of students with the string 'none'."
+          ],
+          "setups": [
+            "import pandas as pd\nstudents = pd.DataFrame({'name': ['Ana','Ben','Cy','Di'], 'score': [72, 50, 38, 91], 'grade': ['B','C',None,'A']})",
+            "import pandas as pd\nstudents = pd.DataFrame({'name': ['Ed','Flo','Gus'], 'score': [51, 49, 79], 'grade': [None,'C','B']})"
+          ],
+          "reference": "students['grade'] = students['grade'].fillna('none')",
+          "traps": [
+            "students['grade'].fillna('none', inplace=True)",
+            "students['grade'].fillna('none')"
+          ]
+        },
+        {
+          "id": "pd-fillna-cold",
+          "role": "cold",
+          "intents": [
+            "Replace missing amounts with 0, keeping the result in the amount column.",
+            "Fill the gaps in the amount column of sales with 0."
+          ],
+          "setups": [
+            "import pandas as pd\nsales = pd.DataFrame({'region': ['east','west','east','south'], 'amount': [120.0, None, 480.0, 500.0]})",
+            "import pandas as pd\nsales = pd.DataFrame({'region': ['north','north','west'], 'amount': [100.0, 250.0, None]})"
+          ],
+          "reference": "sales['amount'] = sales['amount'].fillna(0)",
+          "traps": [
+            "sales['amount'].fillna(0, inplace=True)",
+            "sales['amount'].fillna(0)"
+          ]
+        }
+      ]
     },
     {
       "id": "pd-rename",
       "kind": "line",
       "deck": "pandas",
-      "intents": [
-        "Rename the column qty to quantity, keeping the result in df.",
-        "Change the qty column's name to quantity and save it back to df."
-      ],
-      "setups": [
-        "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
-        "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
-      ],
-      "reference": "df = df.rename(columns={'qty': 'quantity'})",
+      "pattern": "Rename columns",
+      "rule": "rename needs columns= and returns a new DataFrame; land it.",
       "returns": "new",
-      "rule": "rename needs columns= and returns a new DataFrame.",
-      "traps": [
-        "df.rename(columns={'qty': 'quantity'})",
-        "df = df.rename({'qty': 'quantity'})"
-      ],
-      "distractors": [],
-      "tiles": null,
       "contrast": "land-new-frame",
       "requires": [],
       "options": {},
+      "distractors": [],
+      "tiles": null,
       "tags": [
         "pandas"
       ],
       "source": "seed",
-      "version": 2
+      "version": 3,
+      "instances": [
+        {
+          "id": "pd-rename",
+          "role": "practice",
+          "intents": [
+            "Rename the column qty to quantity, keeping the result in df.",
+            "Change the qty column's name to quantity and save it back to df."
+          ],
+          "setups": [
+            "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
+            "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
+          ],
+          "reference": "df = df.rename(columns={'qty': 'quantity'})",
+          "traps": [
+            "df.rename(columns={'qty': 'quantity'})",
+            "df = df.rename({'qty': 'quantity'})"
+          ]
+        },
+        {
+          "id": "pd-rename-2",
+          "role": "practice",
+          "intents": [
+            "Rename the amount column of sales to total, keeping the result in sales.",
+            "Change amount's name to total in sales and save it back to sales."
+          ],
+          "setups": [
+            "import pandas as pd\nsales = pd.DataFrame({'region': ['east','west','east','south'], 'revenue': [200.0, 150.0, None, 400.0], 'cost': [120.0, 160.0, 50.0, None], 'amount': [120.0, None, 480.0, 500.0]})",
+            "import pandas as pd\nsales = pd.DataFrame({'region': ['north','north','west'], 'revenue': [90.0, None, 300.0], 'cost': [None, 40.0, 100.0], 'amount': [100.0, 250.0, None]})"
+          ],
+          "reference": "sales = sales.rename(columns={'amount': 'total'})",
+          "traps": [
+            "sales.rename(columns={'amount': 'total'})",
+            "sales = sales.rename({'amount': 'total'})"
+          ]
+        },
+        {
+          "id": "pd-rename-3",
+          "role": "practice",
+          "intents": [
+            "Rename complete to done and planned to target in jobs, keeping the result in jobs.",
+            "In jobs, change complete to done and planned to target, saving back to jobs."
+          ],
+          "setups": [
+            "import pandas as pd\njobs = pd.DataFrame({'job': ['j1','j2','j3'], 'planned': [100, 200, 150], 'complete': [80, 200, 50], 'shift': ['day','night','day']})",
+            "import pandas as pd\njobs = pd.DataFrame({'job': ['k1','k2'], 'planned': [60, 90], 'complete': [30, 90], 'shift': ['night', None]})"
+          ],
+          "reference": "jobs = jobs.rename(columns={'complete': 'done', 'planned': 'target'})",
+          "traps": [
+            "jobs.rename(columns={'complete': 'done', 'planned': 'target'})",
+            "jobs = jobs.rename(columns={'complete': 'done'})"
+          ]
+        },
+        {
+          "id": "pd-rename-cold",
+          "role": "cold",
+          "intents": [
+            "Rename the score column of students to points, keeping the result in students.",
+            "Change score's name to points in students and save it back."
+          ],
+          "setups": [
+            "import pandas as pd\nstudents = pd.DataFrame({'name': ['Ana','Ben','Cy','Di'], 'score': [72, 50, 38, 91], 'grade': ['B','C',None,'A']})",
+            "import pandas as pd\nstudents = pd.DataFrame({'name': ['Ed','Flo','Gus'], 'score': [51, 49, 79], 'grade': [None,'C','B']})"
+          ],
+          "reference": "students = students.rename(columns={'score': 'points'})",
+          "traps": [
+            "students.rename(columns={'score': 'points'})",
+            "students = students.rename({'score': 'points'})"
+          ]
+        }
+      ]
     }
   ]
 }

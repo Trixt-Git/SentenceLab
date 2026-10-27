@@ -5,6 +5,7 @@
 // started; Pyodide reloads on the next request, which is the accepted cost of not using the interrupt buffer.
 import type {
   CheckResult,
+  PartName,
   Phase,
   Request,
   RequestType,
@@ -80,6 +81,21 @@ export class PythonClient {
 
   parts(line: string): Promise<ResultOf['parts']> {
     return this.send({ type: 'parts', line }) as Promise<ResultOf['parts']>;
+  }
+
+  /** State of the world before and after `line` on `setup`. An empty line returns the same state twice. */
+  bench(setup: string, line = ''): Promise<ResultOf['bench']> {
+    return this.send({ type: 'bench', setup, line }) as Promise<ResultOf['bench']>;
+  }
+
+  /** The line with one top-level part replaced by ____, or null when the line has no such part. */
+  blank(line: string, part: PartName): Promise<ResultOf['blank']> {
+    return this.send({ type: 'blank', line, part }) as Promise<ResultOf['blank']>;
+  }
+
+  /** What the reference does to the first setup: which names it rebinds or mutates. */
+  effects(setup: string, reference: string): Promise<ResultOf['effects']> {
+    return this.send({ type: 'effects', setup, reference }) as Promise<ResultOf['effects']>;
   }
 
   /** Start from a clean interpreter. Called at the start of every session to clear module-level state. */
