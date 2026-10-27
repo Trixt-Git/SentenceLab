@@ -1,0 +1,107 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>SentenceLab Drill</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#fff;--fg:#1a1a1a;--mut:#666;--line:#ddd;--ok:#1a7f37;--bad:#c62828;--acc:#2457d6}
+@media(prefers-color-scheme:dark){:root{--bg:#161616;--fg:#eaeaea;--mut:#999;--line:#333;--ok:#4cc26a;--bad:#ff6b6b;--acc:#7aa2ff}}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif;max-width:720px;margin:0 auto;padding:16px}
+code,input,pre{font-family:ui-monospace,Menlo,monospace}
+.mut{color:var(--mut)} .ok{color:var(--ok)} .bad{color:var(--bad)}
+section{border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin:12px 0}
+section.off{opacity:.35;pointer-events:none}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin:0 0 8px}
+input{width:100%;box-sizing:border-box;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);font-size:15px}
+input.bad{border-color:var(--bad)} input.ok{border-color:var(--ok)}
+label{display:block;margin:6px 0 2px;font-size:13px;color:var(--mut)}
+kbd{border:1px solid var(--line);border-radius:4px;padding:0 5px;font-size:12px}
+pre{margin:4px 0;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%} td,th{border-bottom:1px solid var(--line);padding:3px 6px;text-align:left;font-size:13px}
+</style>
+<h1 style="font-size:18px">SentenceLab Drill <span id="pos" class="mut"></span>
+ <button id="mode" style="float:right"></button></h1>
+<p><span id="intent"></span></p>
+<pre id="state" class="mut"></pre>
+
+<section id="s1"><h2>1 · Physical effect</h2>
+ <kbd>1</kbd> Rebind <code>x = …</code> &nbsp; <kbd>2</kbd> Mutate <code>x.do(…)</code> &nbsp; <kbd>3</kbd> Emit <code>print(…)</code>
+ <div id="s1msg"></div></section>
+
+<section id="s2" class="off"><h2>2 · Grammatical parts</h2>
+ <div id="guided">
+  <label>Subject</label><input data-slot="subject">
+  <label>Verb</label><input data-slot="verb">
+  <label>Details</label><input data-slot="details">
+  <label>Landing (or "none")</label><input data-slot="landing">
+  <div class="mut">Enter on the last field to check.</div>
+ </div>
+ <div id="speed"><pre id="reveal" class="mut">Think it through, then press <kbd>Space</kbd> to reveal.</pre>
+  <div class="mut"><kbd>Enter</kbd> to continue</div></div>
+ <div id="s2msg"></div></section>
+
+<section id="s3" class="off"><h2>3 · Line entry</h2>
+ <input id="code" placeholder="[Landing] = [Subject].[Verb]([Details])" autocomplete="off" spellcheck="false">
+ <div id="s3msg"></div></section>
+
+<section id="s4" class="off"><h2>4 · Result</h2><div id="out"></div></section>
+
+<script>
+const $=s=>document.querySelector(s), api=(p,b)=>fetch('/api/drill/'+p,b&&{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json());
+let i=0,total=1,stage=1,mode=localStorage.mode||'guided',passed=false;
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const effects={1:'rebind',2:'mutate',3:'emit'};
+
+function setStage(n){stage=n;['s1','s2','s3','s4'].forEach((id,k)=>$('#'+id).classList.toggle('off',k+1>n));
+ $('#s4').classList.toggle('off',n<4);
+ if(n===2){$('#guided').hidden=mode!=='guided';$('#speed').hidden=mode!=='speed';if(mode==='guided')document.querySelector('[data-slot=subject]').focus();}
+ if(n===3)$('#code').focus();}
+function setMode(m){mode=m;try{localStorage.mode=m}catch{};$('#mode').textContent=(m==='guided'?'Guided':'Speed')+' mode (M)';if(stage===2)setStage(2);}
+
+async function load(n){
+ const d=await api(n);i=n;total=d.total;passed=false;
+ $('#pos').textContent=`${n+1}/${total} · ${d.domain}`;$('#intent').textContent=d.intent;
+ $('#state').textContent=d.state.map(v=>`${v.name}: ${v.type} = ${v.preview}`).join('\n');
+ for(const e of document.querySelectorAll('input')){e.value='';e.className='';}
+ $('#s1msg').textContent=$('#s2msg').textContent=$('#s3msg').textContent=$('#out').textContent='';
+ $('#reveal').innerHTML='Think it through, then press <kbd>Space</kbd> to reveal.';
+ setStage(1);}
+
+async function pickEffect(k){
+ const r=await api(i+'/effect',{effect:effects[k]});
+ $('#s1msg').innerHTML=r.ok?`<span class="ok">✓ ${r.answer}</span>`:`<span class="bad">✗ not ${effects[k]} — try again</span>`;
+ if(r.ok)setStage(2);}
+
+async function checkSlots(){
+ const slots={};document.querySelectorAll('[data-slot]').forEach(e=>slots[e.dataset.slot]=e.value);
+ const r=await api(i+'/slots',slots&&{slots});let all=true;
+ document.querySelectorAll('[data-slot]').forEach(e=>{const ok=r[e.dataset.slot];all=all&&ok;e.className=ok?'ok':'bad';});
+ if(all)setStage(3);}
+
+async function run(){
+ const r=await api(i+'/run',{code:$('#code').value});
+ let h='';
+ if(r.error)h+=`<p class="bad">${esc(r.error)}</p>`;
+ h+=`<p class="${r.passed?'ok':'bad'}">${r.passed?'✓ Passed':'✗ Not yet'}</p>`;
+ (r.hints||[]).forEach(t=>h+=`<p class="bad">${esc(t)}</p>`);
+ if(r.diff.length)h+='<table><tr><th>var<th>change<th>before<th>after</tr>'+r.diff.map(d=>`<tr><td>${esc(d.name)}<td>${d.change}<td>${esc(d.before||'')}<td>${esc(d.after||'')}</tr>`).join('')+'</table>';
+ else if(!r.error)h+='<p class="mut">State unchanged.</p>';
+ if(r.stdout)h+=`<p class="mut">stdout</p><pre>${esc(r.stdout)}</pre>`;
+ if(r.ret)h+=`<p class="mut">returned</p><pre>${esc(r.ret)}</pre>`;
+ if(r.passed){passed=true;h+=`<p>Reference: <code>${esc(r.reference_line)}</code></p><p class="mut"><kbd>Enter</kbd> for next drill</p>`;}
+ $('#out').innerHTML=h;$('#s4').classList.remove('off');}
+
+document.addEventListener('keydown',async e=>{
+ const typing=e.target.tagName==='INPUT';
+ if(e.key==='Enter'&&e.target.id==='code'){e.preventDefault();return run();}
+ if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.slot==='landing'){return checkSlots();}
+ if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.slot){e.preventDefault();const f=[...document.querySelectorAll('[data-slot]')];f[f.indexOf(e.target)+1].focus();return;}
+ if(typing)return;
+ if(stage===1&&effects[e.key])return pickEffect(e.key);
+ if(stage===2&&mode==='speed'&&e.key===' '){e.preventDefault();const r=await api(i+'/reveal');$('#reveal').textContent=Object.entries(r).map(([k,v])=>k.padEnd(8)+v).join('\n');return;}
+ if(stage===2&&mode==='speed'&&e.key==='Enter')return setStage(3);
+ if(e.key.toLowerCase()==='m')return setMode(mode==='guided'?'speed':'guided');
+ if(passed&&e.key==='Enter')return load((i+1)%total);
+});
+$('#mode').onclick=()=>setMode(mode==='guided'?'speed':'guided');
+setMode(mode);load(0);
+</script>
