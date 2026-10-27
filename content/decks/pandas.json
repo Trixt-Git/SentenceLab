@@ -1,0 +1,270 @@
+{
+  "deck": "pandas",
+  "schemaVersion": 1,
+  "notes": [
+    {
+      "id": "pd-dropna",
+      "kind": "line",
+      "deck": "pandas",
+      "intents": [
+        "Drop the rows where price is missing, and keep the result in df.",
+        "Keep only rows that have a price, saving the result back to df."
+      ],
+      "setups": [
+        "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
+        "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
+      ],
+      "reference": "df = df.dropna(subset=['price'])",
+      "returns": "new",
+      "rule": "dropna returns a new DataFrame; land it with df = ...",
+      "traps": [
+        "df.dropna(subset=['price'])",
+        "df = df.dropna()",
+        "df = df.dropna(subset=['price'], inplace=True)"
+      ],
+      "distractors": [
+        {
+          "tile": "inplace=",
+          "imitates": "subset="
+        }
+      ],
+      "tiles": null,
+      "contrast": "land-new-frame",
+      "requires": [],
+      "options": {},
+      "tags": [
+        "pandas"
+      ],
+      "source": "seed",
+      "version": 2
+    },
+    {
+      "id": "pd-filter",
+      "kind": "line",
+      "deck": "pandas",
+      "intents": [
+        "Keep only the rows where qty is above 10, in a new DataFrame called big.",
+        "Make big: the rows of df with qty over 10."
+      ],
+      "setups": [
+        "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
+        "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
+      ],
+      "reference": "big = df[df['qty'] > 10]",
+      "returns": "new",
+      "rule": "The inner sentence makes a True/False mask; the outer [ ] keeps the True rows.",
+      "traps": [
+        "big = df[df['qty'] >= 10]",
+        "big = df['qty'] > 10"
+      ],
+      "distractors": [
+        {
+          "tile": ">=",
+          "imitates": ">"
+        }
+      ],
+      "tiles": null,
+      "contrast": "gt-vs-ge",
+      "requires": [
+        "core-compare"
+      ],
+      "options": {},
+      "tags": [
+        "pandas"
+      ],
+      "source": "seed",
+      "version": 2
+    },
+    {
+      "id": "pd-and",
+      "kind": "line",
+      "deck": "pandas",
+      "intents": [
+        "Keep the rows where qty is above 10 and below 20, in a new DataFrame called mid.",
+        "Make mid: rows of df with qty between 10 and 20, both ends excluded."
+      ],
+      "setups": [
+        "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
+        "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
+      ],
+      "reference": "mid = df[(df['qty'] > 10) & (df['qty'] < 20)]",
+      "returns": "new",
+      "rule": "Masks combine with & and |, and each comparison needs its own brackets; 'and' doesn't work on columns.",
+      "traps": [
+        "mid = df[df['qty'] > 10 & df['qty'] < 20]",
+        "mid = df[(df['qty'] > 10) and (df['qty'] < 20)]",
+        "mid = df[(df['qty'] >= 10) & (df['qty'] <= 20)]"
+      ],
+      "distractors": [
+        {
+          "tile": "and",
+          "imitates": "&"
+        }
+      ],
+      "tiles": null,
+      "contrast": "gt-vs-ge",
+      "requires": [
+        "pd-filter"
+      ],
+      "options": {},
+      "tags": [
+        "pandas"
+      ],
+      "source": "seed",
+      "version": 2
+    },
+    {
+      "id": "pd-groupby",
+      "kind": "line",
+      "deck": "pandas",
+      "intents": [
+        "Get the average price for each category, as avg.",
+        "Store the mean price per category in avg."
+      ],
+      "setups": [
+        "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
+        "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
+      ],
+      "reference": "avg = df.groupby('category')['price'].mean()",
+      "returns": "new",
+      "rule": "Group first, pick the column, then the verb that summarises.",
+      "traps": [
+        "avg = df['price'].mean()",
+        "avg = df.groupby('price')['category'].mean()"
+      ],
+      "distractors": [],
+      "tiles": null,
+      "contrast": null,
+      "requires": [],
+      "options": {},
+      "tags": [
+        "pandas"
+      ],
+      "source": "seed",
+      "version": 2
+    },
+    {
+      "id": "pd-newcol",
+      "kind": "line",
+      "deck": "pandas",
+      "intents": [
+        "Add a column called total that is price times qty.",
+        "Give df a new column, total, equal to price multiplied by qty."
+      ],
+      "setups": [
+        "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
+        "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
+      ],
+      "reference": "df['total'] = df['price'] * df['qty']",
+      "returns": "new",
+      "rule": "New columns land with df['name'] = ..., not df.name.",
+      "traps": [
+        "df.total = df.price * df.qty",
+        "total = df['price'] * df['qty']"
+      ],
+      "distractors": [],
+      "tiles": null,
+      "contrast": null,
+      "requires": [],
+      "options": {},
+      "tags": [
+        "pandas"
+      ],
+      "source": "seed",
+      "version": 2
+    },
+    {
+      "id": "pd-loc",
+      "kind": "line",
+      "deck": "pandas",
+      "intents": [
+        "Set qty in row 0 of df to 99.",
+        "Change the qty value in the first row (label 0) to 99."
+      ],
+      "setups": [
+        "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
+        "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
+      ],
+      "reference": "df.loc[0, 'qty'] = 99",
+      "returns": "new",
+      "rule": "One cell is set with df.loc[row, column]; a chain like df['qty'][0] changes nothing under Copy-on-Write.",
+      "traps": [
+        "df['qty'][0] = 99",
+        "df.loc[0] = 99"
+      ],
+      "distractors": [],
+      "tiles": null,
+      "contrast": null,
+      "requires": [
+        "pd-newcol"
+      ],
+      "options": {},
+      "tags": [
+        "pandas"
+      ],
+      "source": "seed",
+      "version": 2
+    },
+    {
+      "id": "pd-fillna",
+      "kind": "line",
+      "deck": "pandas",
+      "intents": [
+        "Replace missing prices with 0, keeping the result in the price column.",
+        "Fill the gaps in df's price column with 0."
+      ],
+      "setups": [
+        "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
+        "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
+      ],
+      "reference": "df['price'] = df['price'].fillna(0)",
+      "returns": "new",
+      "rule": "Under Copy-on-Write, fixing a column in place does nothing; land the result back in the column.",
+      "traps": [
+        "df['price'].fillna(0, inplace=True)",
+        "df = df.fillna(0)",
+        "df['price'].fillna(0)"
+      ],
+      "distractors": [],
+      "tiles": null,
+      "contrast": "land-new-frame",
+      "requires": [],
+      "options": {},
+      "tags": [
+        "pandas"
+      ],
+      "source": "seed",
+      "version": 2
+    },
+    {
+      "id": "pd-rename",
+      "kind": "line",
+      "deck": "pandas",
+      "intents": [
+        "Rename the column qty to quantity, keeping the result in df.",
+        "Change the qty column's name to quantity and save it back to df."
+      ],
+      "setups": [
+        "import pandas as pd\ndf = pd.DataFrame({'category': ['a','b','a','c'], 'price': [10.0, None, 30.0, 5.0], 'qty': [3, 12, 20, 10]})",
+        "import pandas as pd\ndf = pd.DataFrame({'category': ['x','y',None], 'price': [None, 2.5, 4.0], 'qty': [10, 11, 1]})"
+      ],
+      "reference": "df = df.rename(columns={'qty': 'quantity'})",
+      "returns": "new",
+      "rule": "rename needs columns= and returns a new DataFrame.",
+      "traps": [
+        "df.rename(columns={'qty': 'quantity'})",
+        "df = df.rename({'qty': 'quantity'})"
+      ],
+      "distractors": [],
+      "tiles": null,
+      "contrast": "land-new-frame",
+      "requires": [],
+      "options": {},
+      "tags": [
+        "pandas"
+      ],
+      "source": "seed",
+      "version": 2
+    }
+  ]
+}

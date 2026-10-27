@@ -1,0 +1,322 @@
+{
+  "deck": "core",
+  "schemaVersion": 1,
+  "notes": [
+    {
+      "id": "core-compare",
+      "kind": "line",
+      "deck": "core",
+      "intents": [
+        "Check whether qty is above 10, keeping True or False in big_order.",
+        "Store in big_order whether qty is greater than 10."
+      ],
+      "setups": [
+        "qty = 12",
+        "qty = 10"
+      ],
+      "reference": "big_order = qty > 10",
+      "returns": "new",
+      "rule": "A comparison makes True or False; land it like any other result.",
+      "traps": [
+        "big_order = qty >= 10",
+        "qty > 10"
+      ],
+      "distractors": [],
+      "tiles": null,
+      "contrast": "gt-vs-ge",
+      "requires": [],
+      "options": {},
+      "tags": [
+        "python"
+      ],
+      "source": "seed",
+      "version": 2
+    },
+    {
+      "id": "core-unpack",
+      "kind": "line",
+      "deck": "core",
+      "intents": [
+        "Split pair into two names, first and second.",
+        "Unpack the two items of pair into first and second."
+      ],
+      "setups": [
+        "pair = (3, 'x')",
+        "pair = ('a', 'b')"
+      ],
+      "reference": "first, second = pair",
+      "returns": "new",
+      "rule": "Several names left of = take the items in order.",
+      "traps": [
+        "first = pair[0]",
+        "first, second = pair[1], pair[0]"
+      ],
+      "distractors": [],
+      "tiles": null,
+      "contrast": null,
+      "requires": [],
+      "options": {},
+      "tags": [
+        "python"
+      ],
+      "source": "seed",
+      "version": 2
+    },
+    {
+      "id": "core-append",
+      "kind": "line",
+      "deck": "core",
+      "intents": [
+        "Add 'kiwi' to the end of fruits.",
+        "Put 'kiwi' on the end of the fruits list, changing that list itself."
+      ],
+      "setups": [
+        "fruits = ['apple', 'pear']",
+        "fruits = []"
+      ],
+      "reference": "fruits.append('kiwi')",
+      "returns": "none_after_mutating",
+      "rule": "append changes the list and returns None; don't land it.",
+      "traps": [
+        "fruits = fruits.append('kiwi')",
+        "fruits.insert(0, 'kiwi')"
+      ],
+      "distractors": [],
+      "tiles": null,
+      "contrast": "mutate-vs-new",
+      "requires": [],
+      "options": {},
+      "tags": [
+        "python"
+      ],
+      "source": "seed",
+      "version": 2
+    },
+    {
+      "id": "core-sorted",
+      "kind": "line",
+      "deck": "core",
+      "intents": [
+        "Make a sorted copy of scores called ranked, leaving scores as it is.",
+        "Put the scores in order, lowest first, in a new list ranked; don't touch scores."
+      ],
+      "setups": [
+        "scores = [3, 1, 2]",
+        "scores = [5, 5, 0]"
+      ],
+      "reference": "ranked = sorted(scores)",
+      "returns": "new",
+      "rule": "sorted() gives a new list; .sort() changes the old one and returns None.",
+      "traps": [
+        "ranked = scores.sort()",
+        "scores.sort()"
+      ],
+      "distractors": [
+        {
+          "tile": ".sort",
+          "imitates": "sorted"
+        }
+      ],
+      "tiles": null,
+      "contrast": "mutate-vs-new",
+      "requires": [],
+      "options": {},
+      "tags": [
+        "python"
+      ],
+      "source": "seed",
+      "version": 2
+    },
+    {
+      "id": "core-lookup",
+      "kind": "line",
+      "deck": "core",
+      "intents": [
+        "Look up Ana's age in ages and keep it in age.",
+        "Get the value stored under 'Ana' in ages, as age."
+      ],
+      "setups": [
+        "ages = {'Ana': 31, 'Ben': 27}",
+        "ages = {'Ben': 1, 'Ana': 2}"
+      ],
+      "reference": "age = ages['Ana']",
+      "returns": "new",
+      "rule": "A dict key goes in square brackets as a value, here the string 'Ana'.",
+      "traps": [
+        "age = ages[Ana]",
+        "age = ages.Ana"
+      ],
+      "distractors": [],
+      "tiles": null,
+      "contrast": null,
+      "requires": [],
+      "options": {},
+      "tags": [
+        "python"
+      ],
+      "source": "seed",
+      "version": 2
+    },
+    {
+      "id": "core-set",
+      "kind": "line",
+      "deck": "core",
+      "intents": [
+        "Set Ben's age in ages to 28.",
+        "Change the value stored under 'Ben' in ages to 28."
+      ],
+      "setups": [
+        "ages = {'Ana': 31, 'Ben': 27}",
+        "ages = {'Ben': 1}"
+      ],
+      "reference": "ages['Ben'] = 28",
+      "returns": "new",
+      "rule": "One = stores; == only compares.",
+      "traps": [
+        "ages['Ben'] == 28",
+        "ages = {'Ben': 28}"
+      ],
+      "distractors": [
+        {
+          "tile": "==",
+          "imitates": "="
+        }
+      ],
+      "tiles": null,
+      "contrast": null,
+      "requires": [],
+      "options": {},
+      "tags": [
+        "python"
+      ],
+      "source": "seed",
+      "version": 2
+    },
+    {
+      "id": "core-len",
+      "kind": "line",
+      "deck": "core",
+      "intents": [
+        "Count how many orders there are and keep the number in n.",
+        "Store the number of items in orders as n."
+      ],
+      "setups": [
+        "orders = ['o1', 'o2', 'o3']",
+        "orders = []"
+      ],
+      "reference": "n = len(orders)",
+      "returns": "new",
+      "rule": "len() is a function you hand the list to, not a method on it.",
+      "traps": [
+        "n = orders.len()",
+        "n = orders.count()"
+      ],
+      "distractors": [
+        {
+          "tile": ".len",
+          "imitates": "len"
+        }
+      ],
+      "tiles": null,
+      "contrast": null,
+      "requires": [],
+      "options": {},
+      "tags": [
+        "python"
+      ],
+      "source": "seed",
+      "version": 2
+    },
+    {
+      "id": "core-augadd",
+      "kind": "line",
+      "deck": "core",
+      "intents": [
+        "Add 5 to total.",
+        "Increase total by 5."
+      ],
+      "setups": [
+        "total = 10",
+        "total = -2"
+      ],
+      "reference": "total += 5",
+      "returns": "new",
+      "rule": "+= computes and lands in one step.",
+      "traps": [
+        "total + 5",
+        "total == total + 5",
+        "total = 15"
+      ],
+      "distractors": [],
+      "tiles": null,
+      "contrast": null,
+      "requires": [],
+      "options": {},
+      "tags": [
+        "python"
+      ],
+      "source": "seed",
+      "version": 2
+    },
+    {
+      "id": "core-pop",
+      "kind": "line",
+      "deck": "core",
+      "intents": [
+        "Remove the last item from stack and keep it in top.",
+        "Take the item off the end of stack, storing it as top."
+      ],
+      "setups": [
+        "stack = [1, 2, 3]",
+        "stack = ['a']"
+      ],
+      "reference": "top = stack.pop()",
+      "returns": "new",
+      "rule": "pop() removes the item and returns it, so the line changes stack and lands in top.",
+      "traps": [
+        "top = stack[-1]",
+        "stack.pop()"
+      ],
+      "distractors": [],
+      "tiles": null,
+      "contrast": null,
+      "requires": [],
+      "options": {},
+      "tags": [
+        "python"
+      ],
+      "source": "seed",
+      "version": 2
+    },
+    {
+      "id": "core-comp",
+      "kind": "line",
+      "deck": "core",
+      "intents": [
+        "Make a new list, upper, with every name in names in capitals.",
+        "Build upper: each name from names, uppercased."
+      ],
+      "setups": [
+        "names = ['ana', 'ben']",
+        "names = ['cy']"
+      ],
+      "reference": "upper = [n.upper() for n in names]",
+      "returns": "new",
+      "rule": "String methods work on one string; a comprehension applies one to each.",
+      "traps": [
+        "upper = names.upper()",
+        "upper = ['ANA', 'BEN']"
+      ],
+      "distractors": [],
+      "tiles": null,
+      "contrast": null,
+      "requires": [],
+      "options": {},
+      "tags": [
+        "python"
+      ],
+      "source": "seed",
+      "version": 2
+    }
+  ]
+}

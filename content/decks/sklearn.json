@@ -1,0 +1,109 @@
+{
+  "deck": "sklearn",
+  "schemaVersion": 1,
+  "notes": [
+    {
+      "id": "sk-split",
+      "kind": "line",
+      "deck": "sklearn",
+      "intents": [
+        "Split X and y into train and test sets with 20% for testing and random_state 42.",
+        "Hold out 20% of X and y as a test set (random_state 42), unpacking into X_train, X_test, y_train, y_test."
+      ],
+      "setups": [
+        "import numpy as np\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.linear_model import LinearRegression\nX = np.arange(20).reshape(10, 2)\nmodel = LinearRegression()\ny = np.arange(10) * 2.0",
+        "import numpy as np\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.linear_model import LinearRegression\nX = np.arange(20).reshape(10, 2)\nmodel = LinearRegression()\ny = np.arange(10) * 3.0 + 1"
+      ],
+      "reference": "X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)",
+      "returns": "new",
+      "rule": "The four landings come back in the order X_train, X_test, y_train, y_test.",
+      "traps": [
+        "X_train, y_train, X_test, y_test = train_test_split(X, y, test_size=0.2, random_state=42)",
+        "X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=20, random_state=42)"
+      ],
+      "distractors": [],
+      "tiles": null,
+      "contrast": null,
+      "requires": [
+        "core-unpack"
+      ],
+      "options": {},
+      "tags": [
+        "scikit-learn"
+      ],
+      "source": "seed",
+      "version": 2
+    },
+    {
+      "id": "sk-fit",
+      "kind": "line",
+      "deck": "sklearn",
+      "intents": [
+        "Train model on the training data.",
+        "Fit model using X_train and y_train."
+      ],
+      "setups": [
+        "import numpy as np\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.linear_model import LinearRegression\nX = np.arange(20).reshape(10, 2)\nmodel = LinearRegression()\ny = np.arange(10) * 2.0\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)",
+        "import numpy as np\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.linear_model import LinearRegression\nX = np.arange(20).reshape(10, 2)\nmodel = LinearRegression()\ny = np.arange(10) * 3.0 + 1\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)"
+      ],
+      "reference": "model.fit(X_train, y_train)",
+      "returns": "same_after_mutating",
+      "rule": "Fit only on training data; fit changes the model itself.",
+      "traps": [
+        "model.fit(X, y)",
+        "model = LinearRegression()",
+        "model.predict(X_train)"
+      ],
+      "distractors": [
+        {
+          "tile": "X",
+          "imitates": "X_train"
+        }
+      ],
+      "tiles": null,
+      "contrast": null,
+      "requires": [
+        "sk-split"
+      ],
+      "options": {},
+      "tags": [
+        "scikit-learn"
+      ],
+      "source": "seed",
+      "version": 2
+    },
+    {
+      "id": "sk-predict",
+      "kind": "line",
+      "deck": "sklearn",
+      "intents": [
+        "Use the trained model to predict on the test set, keeping the results in preds.",
+        "Store model's predictions for X_test in preds."
+      ],
+      "setups": [
+        "import numpy as np\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.linear_model import LinearRegression\nX = np.arange(20).reshape(10, 2)\nmodel = LinearRegression()\ny = np.arange(10) * 2.0\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)\nmodel.fit(X_train, y_train)",
+        "import numpy as np\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.linear_model import LinearRegression\nX = np.arange(20).reshape(10, 2)\nmodel = LinearRegression()\ny = np.arange(10) * 3.0 + 1\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)\nmodel.fit(X_train, y_train)"
+      ],
+      "reference": "preds = model.predict(X_test)",
+      "returns": "new",
+      "rule": "predict returns new values; land them, and use the test set.",
+      "traps": [
+        "preds = model.predict(X_train)",
+        "preds = model.fit(X_train, y_train)",
+        "model.predict(X_test)"
+      ],
+      "distractors": [],
+      "tiles": null,
+      "contrast": null,
+      "requires": [
+        "sk-fit"
+      ],
+      "options": {},
+      "tags": [
+        "scikit-learn"
+      ],
+      "source": "seed",
+      "version": 2
+    }
+  ]
+}
