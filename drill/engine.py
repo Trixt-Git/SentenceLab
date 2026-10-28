@@ -12,6 +12,7 @@ import io
 import numpy as np
 import pandas as pd
 
+from diffdetail import MISSING, detail
 from drills import Drill
 
 _INJECTED = {"pd": pd, "np": np}
@@ -25,8 +26,14 @@ def preview(v):
     return r if len(r) <= _PREVIEW else r[:_PREVIEW - 1] + "…"
 
 
+def _state_preview(v):
+    if isinstance(v, pd.DataFrame):
+        return f"({v.shape[0]}×{v.shape[1]})\n" + v.head(6).to_string()
+    return preview(v)
+
+
 def describe(env):
-    return [{"name": k, "type": type(v).__name__, "preview": preview(v)}
+    return [{"name": k, "type": type(v).__name__, "preview": _state_preview(v)}
             for k, v in env.items()]
 
 
@@ -53,7 +60,8 @@ def _diff(before, after, ids):
     for k in sorted(set(before) | set(after)):
         if k not in before:
             rows.append({"name": k, "change": "added", "after": preview(after[k]),
-                         "note": "a new name now exists"})
+                         "note": "a new name now exists",
+                         "detail": detail(MISSING, after[k])})
         elif k not in after:
             rows.append({"name": k, "change": "removed", "before": preview(before[k])})
         else:
@@ -62,7 +70,8 @@ def _diff(before, after, ids):
             if b != a or rebound:
                 rows.append({"name": k, "change": "rebound" if rebound else "mutated",
                              "before": b, "after": a,
-                             "note": NOTES["rebound" if rebound else "mutated"]})
+                             "note": NOTES["rebound" if rebound else "mutated"],
+                             "detail": detail(before[k], after[k])})
     return rows
 
 

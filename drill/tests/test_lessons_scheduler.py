@@ -81,3 +81,22 @@ def test_mastery_and_history_reload(tmp_path):
     assert s.mastered("mutate")
     s2 = Scheduler(DRILLS, LESSONS, p)
     assert s2.mastered("mutate") and not s2.mastered("emit")
+
+
+def test_diff_detail_shapes():
+    from diffdetail import MISSING, detail
+    import numpy as np
+    import pandas as pd
+    d = detail([72, 88, 91], [72, 88, 91, 95])
+    assert ["95", "add"] in d["after"] and all(op == "eq" for _, op in d["before"])
+    d = detail({"a": 1, "b": 2}, {"a": 1, "b": 3, "c": 4})
+    assert ["'b': 2", "del"] in d["before"] and ["'c': 4", "add"] in d["after"]
+    d = detail(np.array([1.0, 2.0, np.nan]), np.array([1.0, 5.0, np.nan]))
+    assert sum(op == "add" for _, op in d["after"]) == 1
+    df = pd.DataFrame({"x": [1.0, np.nan, 3.0]})
+    t = detail(df, df.dropna())
+    assert [r["status"] for r in t["rows"]] == ["eq", "del", "eq"]
+    assert detail(MISSING, df)["rows"][0]["status"] == "add"
+    assert detail(1, 2) is None and detail([1], (1,)) is None
+    long_ = detail(list(range(50)), list(range(49)) + [99])
+    assert len(long_["before"]) < 20

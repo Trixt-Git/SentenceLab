@@ -31,9 +31,15 @@ table{border-collapse:collapse;width:100%} td,th{border-bottom:1px solid var(--l
 .tag{font-size:11px;text-transform:uppercase;letter-spacing:.04em;border:1px solid var(--line);border-radius:10px;padding:0 7px;color:var(--mut)}
 .row{display:flex;gap:6px;padding:2px 6px;border-radius:4px;margin:2px 0;overflow-wrap:anywhere}
 .sg{font-weight:700;width:1ch}
-.del{background:rgba(198,40,40,.12)} .del code{text-decoration:line-through;text-decoration-color:rgba(198,40,40,.6)} .del .sg{color:var(--bad)}
+.del{background:rgba(198,40,40,.12)} .del:not(.tk) code{text-decoration:line-through;text-decoration-color:rgba(198,40,40,.6)} .del .sg{color:var(--bad)}
 .add{background:rgba(26,127,55,.14)} .add .sg{color:var(--ok)}
 .note{margin-top:2px}
+.t-del{background:rgba(198,40,40,.35);border-radius:3px;text-decoration:line-through}
+.t-add{background:rgba(26,127,55,.4);border-radius:3px;font-weight:700;text-decoration:underline dotted}
+table.mini{font-size:12px;width:auto;min-width:50%} table.mini td,table.mini th{padding:2px 8px}
+.r-del td,.r-del th{background:rgba(198,40,40,.12);text-decoration:line-through;color:var(--bad)} .r-del td:last-child{text-decoration:none}
+.r-add td:not(:last-child){background:rgba(26,127,55,.14)}
+.c-add{background:rgba(26,127,55,.4);font-weight:700}
 .blank{width:9ch;display:inline-block;padding:2px 6px}
 </style>
 <h1 style="font-size:18px"><span id="pos"></span>
@@ -83,7 +89,15 @@ try{mode=localStorage.mode||'guided'}catch{}
 
 function setMode(m,user){mode=m;if(user)manual=true;try{localStorage.mode=m}catch{};$('#mode').textContent=(m==='guided'?'Guided':'Speed')+' mode (M)';if(!$('#drill').hidden)setStage(stage);}
 function banner(t){const b=$('#banner');b.hidden=!t;b.textContent=t||'';}
-function diffTable(diff){return diff.length?diff.map(d=>`<div class="chg"><div class="chg-h"><code>${esc(d.name)}</code><span class="tag">${d.change}</span></div>${d.before!==undefined?`<div class="row del"><span class="sg">−</span><code>${esc(d.before)}</code></div>`:''}${d.after!==undefined?`<div class="row add"><span class="sg">+</span><code>${esc(d.after)}</code></div>`:''}<div class="mut note">${esc(d.note||'')}</div></div>`).join(''):'<p class="mut">State unchanged.</p>';}
+const sl=v=>v.preview.startsWith('(')?`${v.name}: ${v.type} ${v.preview}`:`${v.name}: ${v.type} = ${v.preview}`;
+function toks(t){return t.map(([x,o])=>o==='eq'?esc(x):`<span class="t-${o}">${esc(x)}</span>`).join('');}
+function mini(t){const cell=([v,o])=>`<td class="c-${o}">${esc(v)}</td>`;
+ return `<table class="mini"><tr><th></th>${t.cols.map(c=>`<th>${esc(c)}</th>`).join('')}${t.cols_more?'<th>…</th>':''}<th></th></tr>`+t.rows.map(r=>`<tr class="r-${r.status}"><th>${esc(r.label)}</th>${r.cells.map(cell).join('')}${t.cols_more?'<td>…</td>':''}<td class="mut">${{del:'− removed',add:'+ added',eq:''}[r.status]}</td></tr>`).join('')+(t.rows_more?`<tr><td colspan="${t.cols.length+2}" class="mut">…${t.rows_more} more rows</td></tr>`:'')+'</table>';}
+function diffTable(diff){return diff.length?diff.map(d=>{const t=d.detail;let body;
+ if(t&&t.kind==='table')body=mini(t);
+ else if(t&&t.kind==='tokens')body=`<div class="row del tk"><span class="sg">−</span><code>${toks(t.before)}</code></div><div class="row add"><span class="sg">+</span><code>${toks(t.after)}</code></div>`;
+ else body=(d.before!==undefined?`<div class="row del"><span class="sg">−</span><code>${esc(d.before)}</code></div>`:'')+(d.after!==undefined?`<div class="row add"><span class="sg">+</span><code>${esc(d.after)}</code></div>`:'');
+ return `<div class="chg"><div class="chg-h"><code>${esc(d.name)}</code><span class="tag">${d.change}</span></div>${body}<div class="mut note">${esc(d.note||'')}</div></div>`;}).join(''):'<p class="mut">State unchanged.</p>';}
 function runBox(r){return `<div class="line"><code>${esc(r.line)}</code></div>${r.error?`<p class="bad">${esc(r.error)}</p>`:''}${diffTable(r.diff)}${r.stdout?`<pre>${esc(r.stdout)}</pre>`:''}`;}
 
 async function boot(){
@@ -106,9 +120,9 @@ function renderStage(){
  $('#pos').textContent=`Lesson ${ls+1}/${stageKeys().length} · ${L.effect}`;
  const b=$('#lbody');
  if(st==='predict'){const p=L.predict;
-  b.innerHTML=`<p class="mut">Predict</p><pre class="mut">${L.state.map(v=>`${v.name}: ${v.type} = ${v.preview}`).join('\n')}</pre><div class="line"><code>${esc(p.line)}</code></div><p>${esc(p.question)}</p>${opts(p.options)}<div id="fb"></div>`;}
+  b.innerHTML=`<p class="mut">Predict</p><pre class="mut">${L.state.map(sl).join('\n')}</pre><div class="line"><code>${esc(p.line)}</code></div><p>${esc(p.question)}</p>${opts(p.options)}<div id="fb"></div>`;}
  if(st==='contrast'){const c=L.contrast;
-  b.innerHTML=`<p class="mut">Compare</p><pre class="mut">${L.state.map(v=>`${v.name}: ${v.type} = ${v.preview}`).join('\n')}</pre><div class="cols"><div class="line"><b>A</b> <code>${esc(c.a)}</code></div><div class="line"><b>B</b> <code>${esc(c.b)}</code></div></div><p>${esc(c.question)}</p>${opts(c.options)}<div id="fb"></div>`;}
+  b.innerHTML=`<p class="mut">Compare</p><pre class="mut">${L.state.map(sl).join('\n')}</pre><div class="cols"><div class="line"><b>A</b> <code>${esc(c.a)}</code></div><div class="line"><b>B</b> <code>${esc(c.b)}</code></div></div><p>${esc(c.question)}</p>${opts(c.options)}<div id="fb"></div>`;}
  if(st==='worked'){const w=L.worked;
   b.innerHTML=`<p class="mut">Worked example: the four slots</p><div class="line"><code>${esc(w.line)}</code></div><table>${Object.entries(w.slots).map(([k,v])=>`<tr><td class="s-${k}"><b>${k}</b><td><code class="s-${k}">${esc(v)}</code></tr>`).join('')}</table><p>${esc(w.why)}</p>${opts(w.options)}<div id="fb"></div>`;}
  if(st.startsWith('faded')){const f=L.faded[+st.slice(5)];
@@ -148,7 +162,7 @@ function setStage(n){stage=n;['s1','s2','s3','s4'].forEach((id,k)=>$('#'+id).cla
 async function load(n,info){
  const d=await api('drill/'+n);i=n;total=d.total;passed=false;
  $('#pos').textContent=`${n+1}/${total} · ${d.domain}${d.plan?' · '+d.plan:''}`;$('#intent').textContent=d.intent;
- $('#state').textContent=d.state.map(v=>`${v.name}: ${v.type} = ${v.preview}`).join('\n');
+ $('#state').textContent=d.state.map(sl).join('\n');
  for(const e of document.querySelectorAll('#drill input')){e.value='';e.className='';}
  $('#s1msg').textContent=$('#s2msg').textContent=$('#s3msg').textContent=$('#out').textContent='';
  $('#reveal').innerHTML='Think it through, then press <kbd>Space</kbd> to reveal.';
