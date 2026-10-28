@@ -64,7 +64,7 @@ async function load(n){
  for(const e of document.querySelectorAll('input')){e.value='';e.className='';}
  $('#s1msg').textContent=$('#s2msg').textContent=$('#s3msg').textContent=$('#out').textContent='';
  $('#reveal').innerHTML='Think it through, then press <kbd>Space</kbd> to reveal.';
- setStage(1);}
+ document.activeElement.blur();setStage(1);}
 
 async function pickEffect(k){
  const r=await api(i+'/effect',{effect:effects[k]});
@@ -92,7 +92,7 @@ async function run(){
 
 document.addEventListener('keydown',async e=>{
  const typing=e.target.tagName==='INPUT';
- if(e.key==='Enter'&&e.target.id==='code'){e.preventDefault();return run();}
+ if(e.key==='Enter'&&e.target.id==='code'){e.preventDefault();return passed?load((i+1)%total):run();}
  if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.slot==='landing'){return checkSlots();}
  if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.slot){e.preventDefault();const f=[...document.querySelectorAll('[data-slot]')];f[f.indexOf(e.target)+1].focus();return;}
  if(typing)return;
