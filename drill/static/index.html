@@ -26,6 +26,14 @@ table{border-collapse:collapse;width:100%} td,th{border-bottom:1px solid var(--l
 .slot{display:inline-block;border-bottom:2px solid;margin-right:2px;padding:0 2px}
 .s-Subject{color:var(--s1)} .s-Verb{color:var(--s2)} .s-Details{color:var(--s3)} .s-Landing{color:var(--s4)}
 .banner{background:rgba(36,87,214,.1);border-radius:6px;padding:6px 10px;margin:8px 0}
+.chg{border:1px solid var(--line);border-radius:6px;padding:6px 8px;margin:6px 0;font-size:13px}
+.chg-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.tag{font-size:11px;text-transform:uppercase;letter-spacing:.04em;border:1px solid var(--line);border-radius:10px;padding:0 7px;color:var(--mut)}
+.row{display:flex;gap:6px;padding:2px 6px;border-radius:4px;margin:2px 0;overflow-wrap:anywhere}
+.sg{font-weight:700;width:1ch}
+.del{background:rgba(198,40,40,.12)} .del code{text-decoration:line-through;text-decoration-color:rgba(198,40,40,.6)} .del .sg{color:var(--bad)}
+.add{background:rgba(26,127,55,.14)} .add .sg{color:var(--ok)}
+.note{margin-top:2px}
 .blank{width:9ch;display:inline-block;padding:2px 6px}
 </style>
 <h1 style="font-size:18px"><span id="pos"></span>
@@ -75,7 +83,7 @@ try{mode=localStorage.mode||'guided'}catch{}
 
 function setMode(m,user){mode=m;if(user)manual=true;try{localStorage.mode=m}catch{};$('#mode').textContent=(m==='guided'?'Guided':'Speed')+' mode (M)';if(!$('#drill').hidden)setStage(stage);}
 function banner(t){const b=$('#banner');b.hidden=!t;b.textContent=t||'';}
-function diffTable(diff){return diff.length?'<table><tr><th>var<th>change<th>before<th>after<th></tr>'+diff.map(d=>`<tr><td>${esc(d.name)}<td>${d.change}<td>${esc(d.before||'')}<td>${esc(d.after||'')}<td class="mut">${esc(d.note||'')}</tr>`).join('')+'</table>':'<p class="mut">State unchanged.</p>';}
+function diffTable(diff){return diff.length?diff.map(d=>`<div class="chg"><div class="chg-h"><code>${esc(d.name)}</code><span class="tag">${d.change}</span></div>${d.before!==undefined?`<div class="row del"><span class="sg">−</span><code>${esc(d.before)}</code></div>`:''}${d.after!==undefined?`<div class="row add"><span class="sg">+</span><code>${esc(d.after)}</code></div>`:''}<div class="mut note">${esc(d.note||'')}</div></div>`).join(''):'<p class="mut">State unchanged.</p>';}
 function runBox(r){return `<div class="line"><code>${esc(r.line)}</code></div>${r.error?`<p class="bad">${esc(r.error)}</p>`:''}${diffTable(r.diff)}${r.stdout?`<pre>${esc(r.stdout)}</pre>`:''}`;}
 
 async function boot(){
