@@ -8,7 +8,7 @@ state diff shown is what Python actually did.
 from dataclasses import dataclass, field
 from typing import Callable
 
-from drills import _price_df
+from drills import _price_df, _scaler_env, _sklearn_env, _unfitted_env
 
 
 @dataclass
@@ -16,7 +16,7 @@ class Lesson:
     id: str
     title: str
     effect: str
-    before: str                      # drill id this lesson precedes
+    before: str                      # drill id this lesson precedes, or "explain"
     setup: Callable[[], dict]
     predict: dict                    # {line, question, options, answer}
     contrast: dict                   # {a, b, question, options, answer, explain}
@@ -125,6 +125,122 @@ LESSONS = [
                      "Variables cannot hold sums", "sum() requires print"], answer=0),
         faded=[dict(template="print(___(scores))", answers=[["sum"]]),
                dict(template="___(___(scores))", answers=[["print"], ["sum"]])],
+    ),
+    Lesson(
+        id="sk-fit", title="scikit-learn: fit trains the model in place", effect="mutate",
+        before="sk-fit",
+        setup=_unfitted_env,
+        predict=dict(
+            line="model.fit(X_train, y_train)",
+            question="After this line runs, what has changed?",
+            options=["model has learned from the data, in place",
+                     "X_train has been scaled",
+                     "a new fitted model is returned and model is untouched",
+                     "nothing: fit only checks the data"], answer=0),
+        contrast=dict(
+            a="model.fit(X_train, y_train)", b="fitted = model.fit(X_train, y_train)",
+            question="After line B, which names are fitted models?",
+            options=["only fitted", "both model and fitted (the same object)",
+                     "neither", "only model"], answer=1,
+            explain="fit trains the estimator in place and returns the same object. "
+                    "Unlike list.append it does not return None, but the habit that "
+                    "matters is the same: the model object itself holds what it learned."),
+        worked=dict(
+            line="model.fit(X_train, y_train)",
+            slots={"Subject": "model", "Verb": ".fit", "Details": "X_train, y_train",
+                   "Landing": "none"},
+            why="Why does fit need no Landing?",
+            options=["The model object itself holds what it learned",
+                     "fit returns the accuracy", "Landing is never needed in sklearn",
+                     "X_train is overwritten"], answer=0),
+        faded=[dict(template="model.___(X_train, y_train)", answers=[["fit", ".fit"]]),
+               dict(template="___.___(X_train, y_train)",
+                    answers=[["model"], ["fit", ".fit"]])],
+    ),
+    Lesson(
+        id="sk-predict", title="scikit-learn: predict returns a new array", effect="rebind",
+        before="sk-predict",
+        setup=_sklearn_env,
+        predict=dict(
+            line="preds = model.predict(X_test)",
+            question="After this line runs, what happened to model?",
+            options=["nothing: model is unchanged and preds holds a new array",
+                     "model was refitted", "model became preds",
+                     "X_test was overwritten"], answer=0),
+        contrast=dict(
+            a="preds = model.predict(X_test)", b="model.predict(X_test)",
+            question="Which line keeps the predictions?",
+            options=["the first", "the second", "both", "neither"], answer=0,
+            explain="predict returns a new array and leaves the model unchanged. With no "
+                    "name to land in, the predictions are shown once and then lost."),
+        worked=dict(
+            line="preds = model.predict(X_test)",
+            slots={"Subject": "model", "Verb": ".predict", "Details": "X_test",
+                   "Landing": "preds"},
+            why="Why does predict need a Landing when fit does not?",
+            options=["predict returns a new array; fit changes the model itself",
+                     "predict is slower", "fit returns nothing at all",
+                     "they work the same way"], answer=0),
+        faded=[dict(template="preds = model.___(X_test)",
+                    answers=[["predict", ".predict"]]),
+               dict(template="___ = model.___(X_test)",
+                    answers=[["<name>"], ["predict", ".predict"]])],
+    ),
+    Lesson(
+        id="sk-transform", title="scikit-learn: transform reuses what was learned",
+        effect="rebind", before="sk-transform",
+        setup=_scaler_env,
+        predict=dict(
+            line="X_test_s = scaler.transform(X_test)",
+            question="After this line runs, has the scaler changed?",
+            options=["no: transform only applies what it already learned",
+                     "yes: it relearns from X_test", "yes: it is reset",
+                     "X_test is scaled in place"], answer=0),
+        contrast=dict(
+            a="X_test_s = scaler.transform(X_test)",
+            b="X_test_s = scaler.fit_transform(X_test)",
+            question="Which line changes what the scaler learned?",
+            options=["the first", "the second", "both", "neither"], answer=1,
+            explain="fit_transform refits the scaler on whatever it is given. On test data "
+                    "that leaks information about the test set. Fit on training data, then "
+                    "only transform test data."),
+        worked=dict(
+            line="X_test_s = scaler.transform(X_test)",
+            slots={"Subject": "scaler", "Verb": ".transform", "Details": "X_test",
+                   "Landing": "X_test_s"},
+            why="Why transform and not fit_transform here?",
+            options=["the scaler already learned from training data; test data must not change it",
+                     "transform is faster", "fit_transform does not exist",
+                     "they give identical results and state"], answer=0),
+        faded=[dict(template="X_test_s = scaler.___(X_test)",
+                    answers=[["transform", ".transform"]]),
+               dict(template="___ = scaler.___(X_test)",
+                    answers=[["<name>"], ["transform", ".transform"]])],
+    ),
+    Lesson(
+        id="read", title="Reading a line you did not write", effect="rebind",
+        before="explain",
+        setup=lambda: {"nums": [3, 1, 2]},
+        predict=dict(
+            line="ranked = nums.sort()",
+            question="After this line runs, what is ranked?",
+            options=["[1, 2, 3]", "[3, 1, 2]", "None", "an error"], answer=2),
+        contrast=dict(
+            a="ranked = sorted(nums)", b="ranked = nums.sort()",
+            question="Which line puts the sorted list in ranked?",
+            options=["the first", "the second", "both", "neither"], answer=0,
+            explain="To read a line, check the Landing first: what catches the result, "
+                    "and can that verb return something? sort() returns None, so ranked "
+                    "catches None while nums is sorted in place."),
+        worked=dict(
+            line="ranked = nums.sort()",
+            slots={"Subject": "nums", "Verb": ".sort", "Details": "none", "Landing": "ranked"},
+            why="What is wrong with this line?",
+            options=["sort returns None, so ranked holds None while nums is sorted in place",
+                     "sort needs arguments", "ranked cannot be assigned",
+                     "nums is left unchanged"], answer=0),
+        faded=[dict(template="ranked = ___.sort()", answers=[["nums"]]),
+               dict(template="___ = ___.sort()", answers=[["<name>"], ["nums"]])],
     ),
 ]
 

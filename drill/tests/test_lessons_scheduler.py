@@ -13,7 +13,7 @@ IDS = {d.id for d in DRILLS}
 
 def test_lessons_reference_real_drills_and_effects():
     for l in LESSONS:
-        assert l.before in IDS
+        assert l.before in IDS | {"explain"}
         assert 0 <= l.predict["answer"] < len(l.predict["options"])
         assert 0 <= l.contrast["answer"] < len(l.contrast["options"])
         assert 0 <= l.worked["answer"] < len(l.worked["options"])
@@ -139,8 +139,36 @@ def test_explain_items_consistent():
 def test_explain_scheduling_and_history(tmp_path):
     p = tmp_path / "h.csv"
     s = Scheduler(DRILLS, LESSONS, EXPLAINS, p)
+    s.lesson_done("read")
     first = s.next("explain")
     assert first["kind"] == "explain"
     s.explain_done(first["id"], 2)
     assert s.next("explain")["id"] != first["id"]
     assert Scheduler(DRILLS, LESSONS, EXPLAINS, p).estats[first["id"]]["misses"] == 2
+
+
+def test_lesson_before_every_effect_group_and_domain(tmp_path):
+    ids = {l.before for l in LESSONS}
+    assert {"sk-fit", "sk-predict", "sk-transform", "explain"} <= ids
+    s = Scheduler(DRILLS, LESSONS, EXPLAINS, tmp_path / "h.csv")
+    n = s.next("explain")
+    assert n["kind"] == "lesson" and n["lesson"] == "read"
+    s.lesson_done("read")
+    assert s.next("explain")["kind"] == "explain"
+
+
+def test_every_drill_with_new_concept_has_lesson_first(tmp_path):
+    """Walking the blocked phase, each sklearn drill is preceded by its lesson."""
+    s = Scheduler(DRILLS, LESSONS, EXPLAINS, tmp_path / "h.csv")
+    order = []
+    for _ in range(60):
+        n = s.next()
+        if n["phase"] == "interleaved":
+            break
+        if n["kind"] == "lesson":
+            order.append("L:" + n["lesson"]); s.lesson_done(n["lesson"])
+        else:
+            order.append(n["id"]); s.record(next(d for d in DRILLS if d.id == n["id"]), True, True)
+    for drill_id, lesson_id in [("sk-fit", "sk-fit"), ("sk-predict", "sk-predict"),
+                                ("sk-transform", "sk-transform")]:
+        assert order.index("L:" + lesson_id) == order.index(drill_id) - 1
