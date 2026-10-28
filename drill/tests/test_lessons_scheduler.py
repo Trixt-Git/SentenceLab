@@ -100,3 +100,28 @@ def test_diff_detail_shapes():
     assert detail(1, 2) is None and detail([1], (1,)) is None
     long_ = detail(list(range(50)), list(range(49)) + [99])
     assert len(long_["before"]) < 20
+
+
+def test_diff_detail_series_array_string():
+    from diffdetail import detail
+    import numpy as np
+    import pandas as pd
+    t = detail(pd.Series([1, 2, 3], name="s"), pd.Series([1.5, 2, 3], name="s"))
+    assert t["kind"] == "table" and t["caption"] == "dtype int64 → float64"
+    t = detail(pd.Series([1, 2, 3]), pd.Series([1, 3]))
+    assert [r["status"] for r in t["rows"]].count("del") == 1
+    g = detail(np.array([[1, 2], [3, 4]]), np.array([[1, 9], [3, 4]]))
+    assert g["rows"][0]["cells"][1][:2] == ["9", "add"] and g["rows"][0]["cells"][1][2] == "was 2"
+    assert detail(np.zeros((2, 2)), np.zeros((3, 2)))["caption"] == "shape (2, 2) → (3, 2)"
+    big = detail(np.zeros((20, 20)), np.ones((20, 20)))
+    assert len(big["rows"]) == 8 and big["hidden_changes"] == 400 - 64
+    assert detail([[1, 2], [3, 4]], [[1, 2], [3, 5]])["kind"] == "table"
+    s = detail("the quick brown fox", "the quick red fox jumps")
+    assert s["caption"] == "2 words changed"
+    assert ["red", "add"] in s["after"] or any(t[1] == "add" and "red" in t[0] for t in s["after"])
+    ws = detail("a  b", "a b")
+    assert ws["caption"] == "whitespace changed" and "··" in "".join(t[0] for t in ws["before"])
+    long = detail("x " * 40 + "cat " + "y " * 40, "x " * 40 + "dog " + "y " * 40)
+    assert len("".join(t[0] for t in long["before"])) < 60
+    f = detail([0.1234567, 1.0], [0.1234568, 1.0])
+    assert f["before"][1][2] == "0.1234567"

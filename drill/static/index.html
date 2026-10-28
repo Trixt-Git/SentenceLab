@@ -90,12 +90,12 @@ try{mode=localStorage.mode||'guided'}catch{}
 function setMode(m,user){mode=m;if(user)manual=true;try{localStorage.mode=m}catch{};$('#mode').textContent=(m==='guided'?'Guided':'Speed')+' mode (M)';if(!$('#drill').hidden)setStage(stage);}
 function banner(t){const b=$('#banner');b.hidden=!t;b.textContent=t||'';}
 const sl=v=>v.preview.startsWith('(')?`${v.name}: ${v.type} ${v.preview}`:`${v.name}: ${v.type} = ${v.preview}`;
-function toks(t){return t.map(([x,o])=>o==='eq'?esc(x):`<span class="t-${o}">${esc(x)}</span>`).join('');}
-function mini(t){const cell=([v,o])=>`<td class="c-${o}">${esc(v)}</td>`;
- return `<table class="mini"><tr><th></th>${t.cols.map(c=>`<th>${esc(c)}</th>`).join('')}${t.cols_more?'<th>…</th>':''}<th></th></tr>`+t.rows.map(r=>`<tr class="r-${r.status}"><th>${esc(r.label)}</th>${r.cells.map(cell).join('')}${t.cols_more?'<td>…</td>':''}<td class="mut">${{del:'− removed',add:'+ added',eq:''}[r.status]}</td></tr>`).join('')+(t.rows_more?`<tr><td colspan="${t.cols.length+2}" class="mut">…${t.rows_more} more rows</td></tr>`:'')+'</table>';}
+function toks(t){return t.map(([x,o,ti])=>{const a=ti?` title="${esc(ti).replace(/"/g,'&quot;')}"`:'';return o==='eq'&&!ti?esc(x):`<span class="t-${o}"${a}>${esc(x)}</span>`;}).join('');}
+function mini(t){const cell=([v,o,ti])=>`<td class="c-${o}"${ti?` title="${esc(ti).replace(/"/g,'&quot;')}"`:''}>${esc(v)}</td>`;
+ return `<table class="mini"><tr><th></th>${t.cols.map(c=>`<th>${esc(c)}</th>`).join('')}${t.cols_more?'<th>…</th>':''}<th></th></tr>`+t.rows.map(r=>`<tr class="r-${r.status}"><th>${esc(r.label)}</th>${r.cells.map(cell).join('')}${t.cols_more?'<td>…</td>':''}<td class="mut">${{del:'− removed',add:'+ added',eq:''}[r.status]}</td></tr>`).join('')+(t.rows_more?`<tr><td colspan="${t.cols.length+2}" class="mut">…${t.rows_more} more rows</td></tr>`:'')+'</table>'+(t.hidden_changes?`<div class="mut note">+${t.hidden_changes} more changed cells not shown</div>`:'');}
 function diffTable(diff){return diff.length?diff.map(d=>{const t=d.detail;let body;
- if(t&&t.kind==='table')body=mini(t);
- else if(t&&t.kind==='tokens')body=`<div class="row del tk"><span class="sg">−</span><code>${toks(t.before)}</code></div><div class="row add"><span class="sg">+</span><code>${toks(t.after)}</code></div>`;
+ if(t&&t.kind==='table')body=(t.caption?`<div class="mut note">${esc(t.caption)}</div>`:'')+mini(t);
+ else if(t&&t.kind==='tokens')body=`<div class="row del tk"><span class="sg">−</span><code>${toks(t.before)}</code></div><div class="row add"><span class="sg">+</span><code>${toks(t.after)}</code></div>`+(t.caption?`<div class="mut note">${esc(t.caption)}</div>`:'');
  else body=(d.before!==undefined?`<div class="row del"><span class="sg">−</span><code>${esc(d.before)}</code></div>`:'')+(d.after!==undefined?`<div class="row add"><span class="sg">+</span><code>${esc(d.after)}</code></div>`:'');
  return `<div class="chg"><div class="chg-h"><code>${esc(d.name)}</code><span class="tag">${d.change}</span></div>${body}<div class="mut note">${esc(d.note||'')}</div></div>`;}).join(''):'<p class="mut">State unchanged.</p>';}
 function runBox(r){return `<div class="line"><code>${esc(r.line)}</code></div>${r.error?`<p class="bad">${esc(r.error)}</p>`:''}${diffTable(r.diff)}${r.stdout?`<pre>${esc(r.stdout)}</pre>`:''}`;}
