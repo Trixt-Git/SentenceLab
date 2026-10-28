@@ -28,7 +28,7 @@ def _sklearn_env():
     from sklearn.linear_model import LogisticRegression
     rng = np.random.RandomState(0)
     X = rng.randn(100, 4)
-    y = (X[:, 0] + X[:, 1] > 0).astype(int)
+    y = (X[:, 0] + X[:, 1] + rng.randn(100) * 0.8 > 0).astype(int)
     model = LogisticRegression().fit(X[:80], y[:80])
     return {"model": model, "X_test": X[80:], "y_test": y[80:]}
 
@@ -43,7 +43,7 @@ def _emitted_equals(stdout, ret, expected):
 def _sk_data():
     rng = np.random.RandomState(0)
     X = rng.randn(100, 4)
-    y = (X[:, 0] + X[:, 1] > 0).astype(int)
+    y = (X[:, 0] + X[:, 1] + rng.randn(100) * 0.8 > 0).astype(int)
     return X[:80], y[:80], X[80:], y[80:]
 
 

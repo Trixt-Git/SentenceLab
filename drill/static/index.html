@@ -43,12 +43,33 @@ table.mini{font-size:12px;width:auto;min-width:50%} table.mini td,table.mini th{
 .blank{width:9ch;display:inline-block;padding:2px 6px}
 </style>
 <h1 style="font-size:18px"><span id="pos"></span>
- <button id="mode" style="float:right"></button></h1>
+ <button id="mode" style="float:right"></button> <button id="xbtn" style="float:right;margin-right:6px">Explain a line (E)</button></h1>
 <div id="banner" class="banner" hidden></div>
 
 <div id="lesson" hidden>
  <h2 id="ltitle"></h2>
  <section><div id="lbody"></div></section>
+</div>
+
+<div id="explain" hidden>
+ <p class="mut">Explain this line: you did not write it, so read it.</p>
+ <pre id="xstate" class="mut"></pre>
+ <div class="line"><code id="xline"></code></div>
+ <section id="x1"><h2>1 · Physical effect</h2>
+  <kbd>1</kbd> Rebind &nbsp; <kbd>2</kbd> Mutate &nbsp; <kbd>3</kbd> Emit
+  <div id="x1msg"></div></section>
+ <section id="x2" class="off"><h2>2 · Grammatical parts</h2>
+  <div id="xguided">
+   <label>Subject</label><input data-xslot="subject">
+   <label>Verb</label><input data-xslot="verb">
+   <label>Details (or "none")</label><input data-xslot="details">
+   <label>Landing (or "none")</label><input data-xslot="landing">
+   <div class="mut">Enter on the last field to check.</div>
+  </div>
+  <div id="xspeed"><pre id="xreveal" class="mut">Name them in your head, then press <kbd>Space</kbd> to reveal.</pre>
+   <div class="mut"><kbd>Enter</kbd> to continue</div></div></section>
+ <section id="x3" class="off"><h2>3 · Predict</h2><p id="xq"></p><div id="xopts"></div><div id="x3msg"></div></section>
+ <section id="x4" class="off"><h2>4 · What happened</h2><div id="xout"></div></section>
 </div>
 
 <div id="drill" hidden>
@@ -84,12 +105,13 @@ const $=s=>document.querySelector(s);
 const api=(p,b)=>fetch('/api/'+p,b===undefined?undefined:{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json());
 const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const effects={1:'rebind',2:'mutate',3:'emit'};
+let X=null,xs=1,xmiss=0,xdone=false,forceExplain=false;
 let i=0,total=1,stage=1,mode='guided',passed=false,manual=false,L=null,ls=0,lanswered=false;
 try{mode=localStorage.mode||'guided'}catch{}
 
-function setMode(m,user){mode=m;if(user)manual=true;try{localStorage.mode=m}catch{};$('#mode').textContent=(m==='guided'?'Guided':'Speed')+' mode (M)';if(!$('#drill').hidden)setStage(stage);}
+function setMode(m,user){mode=m;if(user)manual=true;try{localStorage.mode=m}catch{};$('#mode').textContent=(m==='guided'?'Guided':'Speed')+' mode (M)';if(!$('#drill').hidden)setStage(stage);if(!$('#explain').hidden&&X)setX(xs);}
 function banner(t){const b=$('#banner');b.hidden=!t;b.textContent=t||'';}
-const sl=v=>v.preview.startsWith('(')?`${v.name}: ${v.type} ${v.preview}`:`${v.name}: ${v.type} = ${v.preview}`;
+const sl=v=>/^[(]/.test(v.preview)?`${v.name}: ${v.type} ${v.preview}`:`${v.name}: ${v.type} = ${v.preview}`;
 function toks(t){return t.map(([x,o,ti])=>{const a=ti?` title="${esc(ti).replace(/"/g,'&quot;')}"`:'';return o==='eq'&&!ti?esc(x):`<span class="t-${o}"${a}>${esc(x)}</span>`;}).join('');}
 function mini(t){const cell=([v,o,ti])=>`<td class="c-${o}"${ti?` title="${esc(ti).replace(/"/g,'&quot;')}"`:''}>${esc(v)}</td>`;
  return `<table class="mini"><tr><th></th>${t.cols.map(c=>`<th>${esc(c)}</th>`).join('')}${t.cols_more?'<th>…</th>':''}<th></th></tr>`+t.rows.map(r=>`<tr class="r-${r.status}"><th>${esc(r.label)}</th>${r.cells.map(cell).join('')}${t.cols_more?'<td>…</td>':''}<td class="mut">${{del:'− removed',add:'+ added',eq:''}[r.status]}</td></tr>`).join('')+(t.rows_more?`<tr><td colspan="${t.cols.length+2}" class="mut">…${t.rows_more} more rows</td></tr>`:'')+'</table>'+(t.hidden_changes?`<div class="mut note">+${t.hidden_changes} more changed cells not shown</div>`:'');}
@@ -98,11 +120,12 @@ function diffTable(diff){return diff.length?diff.map(d=>{const t=d.detail;let bo
  else if(t&&t.kind==='tokens')body=`<div class="row del tk"><span class="sg">−</span><code>${toks(t.before)}</code></div><div class="row add"><span class="sg">+</span><code>${toks(t.after)}</code></div>`+(t.caption?`<div class="mut note">${esc(t.caption)}</div>`:'');
  else body=(d.before!==undefined?`<div class="row del"><span class="sg">−</span><code>${esc(d.before)}</code></div>`:'')+(d.after!==undefined?`<div class="row add"><span class="sg">+</span><code>${esc(d.after)}</code></div>`:'');
  return `<div class="chg"><div class="chg-h"><code>${esc(d.name)}</code><span class="tag">${d.change}</span></div>${body}<div class="mut note">${esc(d.note||'')}</div></div>`;}).join(''):'<p class="mut">State unchanged.</p>';}
-function runBox(r){return `<div class="line"><code>${esc(r.line)}</code></div>${r.error?`<p class="bad">${esc(r.error)}</p>`:''}${diffTable(r.diff)}${r.stdout?`<pre>${esc(r.stdout)}</pre>`:''}`;}
+function runBox(r){return `<div class="line"><code>${esc(r.line)}</code></div>${r.error?`<p class="bad">${esc(r.error)}</p>`:''}${diffTable(r.diff)}${r.stdout?`<pre>${esc(r.stdout)}</pre>`:''}${r.ret?`<p class="mut">returned</p><pre>${esc(r.ret)}</pre>`:''}`;}
 
 async function boot(){
- const n=await api('next');
- $('#lesson').hidden=n.kind!=='lesson';$('#drill').hidden=n.kind!=='drill';
+ const n=await api('next'+(forceExplain?'?kind=explain':''));forceExplain=false;
+ $('#lesson').hidden=n.kind!=='lesson';$('#drill').hidden=n.kind!=='drill';$('#explain').hidden=n.kind!=='explain';
+ if(n.kind==='explain'){banner('Explain this line');return loadExplain(n.index);}
  if(n.kind==='lesson')return startLesson(n.lesson);
  const note=[];
  if(n.review)note.push('Review: you were sure about this one and missed it.');
@@ -154,6 +177,38 @@ async function lessonNext(){
  if(ls+1<stageKeys().length){ls++;renderStage();return;}
  await api(`lesson/${L.id}/done`,{});boot();}
 
+/* ---------------- explain ---------------- */
+function setX(n){xs=n;['x1','x2','x3','x4'].forEach((id,k)=>$('#'+id).classList.toggle('off',k+1>n));
+ $('#xguided').hidden=mode!=='guided';$('#xspeed').hidden=mode!=='speed';
+ if(n>=3)document.activeElement.blur();
+ if(n===2&&mode==='guided')document.querySelector('[data-xslot=subject]').focus();}
+async function loadExplain(k){
+ X=await api('explain/'+k);xmiss=0;xdone=false;
+ $('#pos').textContent=`Explain ${k+1}/${X.total} · ${X.domain}`;
+ $('#xstate').textContent=X.state.map(sl).join('\n');$('#xline').textContent=X.line;
+ $('#xq').textContent=X.question;$('#xopts').innerHTML=opts(X.options).replace(/data-o=/g,'data-xo=');
+ for(const e of document.querySelectorAll('#explain input')){e.value='';e.className='';}
+ $('#x1msg').textContent=$('#x3msg').textContent=$('#xout').textContent='';
+ $('#xreveal').innerHTML='Name them in your head, then press <kbd>Space</kbd> to reveal.';
+ document.activeElement.blur();setX(1);}
+async function xEffect(k){
+ const r=await api('explain/'+X.index+'/effect',{effect:effects[k]});
+ $('#x1msg').innerHTML=r.ok?`<span class="ok">✓ ${r.answer}</span>`:`<span class="bad">✗ not ${effects[k]}, look again</span>`;
+ if(r.ok)setX(2);else xmiss++;}
+async function xSlots(){
+ const slots={};document.querySelectorAll('[data-xslot]').forEach(e=>slots[e.dataset.xslot]=e.value);
+ const r=await api('explain/'+X.index+'/slots',{slots});let all=true;
+ document.querySelectorAll('[data-xslot]').forEach(e=>{const ok=r[e.dataset.xslot];all=all&&ok;e.className=ok?'ok':'bad';});
+ if(all)setX(3);else xmiss++;}
+async function xPick(o){
+ if(xdone)return;
+ const r=await api('explain/'+X.index+'/answer',{choice:o});
+ document.querySelectorAll('[data-xo]').forEach((b,j)=>{b.classList.toggle('right',r.ok&&j===r.answer);b.classList.toggle('wrong',!r.ok&&j===o);});
+ if(!r.ok){xmiss++;$('#x3msg').innerHTML='<p class="bad">✗ Not quite, try another</p>';return;}
+ xdone=true;$('#x3msg').innerHTML='<p class="ok">✓ Correct</p>';
+ $('#xout').innerHTML=r.runs.map(runBox).join('')+`<p>${esc(r.why)}</p><p class="mut"><kbd>Enter</kbd> for next</p>`;
+ setX(4);api('explain/'+X.index+'/done',{misses:xmiss});}
+
 /* ---------------- drills ---------------- */
 function setStage(n){stage=n;['s1','s2','s3','s4'].forEach((id,k)=>$('#'+id).classList.toggle('off',k+1>n));
  $('#guided').hidden=mode!=='guided';$('#speed').hidden=mode!=='speed';
@@ -192,6 +247,17 @@ async function run(confident){
 
 document.addEventListener('keydown',async e=>{
  const typing=e.target.tagName==='INPUT';
+ if(!$('#explain').hidden){
+  if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.xslot==='landing')return xSlots();
+  if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.xslot){e.preventDefault();const f=[...document.querySelectorAll('[data-xslot]')];f[f.indexOf(e.target)+1].focus();return;}
+  if(typing)return;
+  if(xs===1&&effects[e.key])return xEffect(e.key);
+  if(xs===2&&mode==='speed'&&e.key===' '){e.preventDefault();const r=await api('explain/'+X.index+'/reveal');$('#xreveal').textContent=Object.entries(r).map(([k,v])=>k.padEnd(8)+v).join('\n');return;}
+  if(xs===2&&mode==='speed'&&e.key==='Enter')return setX(3);
+  if(xs===3&&/^[1-4]$/.test(e.key))return xPick(+e.key-1);
+  if(xs===4&&e.key==='Enter')return boot();
+  if(e.key.toLowerCase()==='m')return setMode(mode==='guided'?'speed':'guided',true);
+  return;}
  if(!$('#lesson').hidden){
   if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.b!==undefined){e.preventDefault();return lanswered?lessonNext():checkBlanks();}
   if(typing)return;
@@ -208,8 +274,10 @@ document.addEventListener('keydown',async e=>{
  if(stage===2&&mode==='speed'&&e.key==='Enter')return setStage(3);
  if(e.key.toLowerCase()==='m')return setMode(mode==='guided'?'speed':'guided',true);
  if(passed&&e.key==='Enter')return boot();
+ if(e.key.toLowerCase()==='e'&&stage===1){forceExplain=true;return boot();}
 });
-document.addEventListener('click',e=>{const o=e.target.closest('.opt');if(o&&!$('#lesson').hidden)pick(+o.dataset.o);});
+document.addEventListener('click',e=>{const x=e.target.closest('[data-xo]');if(x&&!$('#explain').hidden)return xPick(+x.dataset.xo);const o=e.target.closest('.opt');if(o&&!$('#lesson').hidden)pick(+o.dataset.o);});
+$('#xbtn').onclick=()=>{forceExplain=true;boot();};
 $('#mode').onclick=()=>setMode(mode==='guided'?'speed':'guided',true);
 setMode(mode);boot();
 </script>

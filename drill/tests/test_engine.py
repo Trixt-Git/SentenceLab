@@ -64,3 +64,14 @@ def test_sorted_vs_sort():
 def test_diff_notes():
     r = run_line(D["py-append"], "scores = scores.append(95)")
     assert r["diff"][0]["note"] == "the name now points to a new object"
+
+
+def test_fit_shows_in_state_diff():
+    r = run_line(D["sk-fit"], "model.fit(X_train, y_train)")
+    row = r["diff"][0]
+    assert row["name"] == "model" and "not fitted" in row["before"] and "fitted" in row["after"]
+
+
+def test_scaler_refit_visible_in_diff():
+    r = run_line(D["sk-transform"], "X_test_s = scaler.fit_transform(X_test)")
+    assert any(row["name"] == "scaler" and row["change"] == "mutated" for row in r["diff"])

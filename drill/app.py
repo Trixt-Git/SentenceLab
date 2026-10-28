@@ -7,14 +7,15 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from drills import DRILLS, Drill
-from engine import check_blanks, check_slots, describe, run_line
+from drills import DRILLS
+from explain import EXPLAINS
+from engine import check_blanks, check_slots, describe, probe_runs, run_line
 from lessons import BY_ID, LESSONS
 from scheduler import Scheduler
 
 HERE = Path(__file__).parent
 app = FastAPI()
-sched = Scheduler(DRILLS, LESSONS, Path(os.environ.get("DRILL_HISTORY", HERE / "history.csv")))
+sched = Scheduler(DRILLS, LESSONS, EXPLAINS, Path(os.environ.get("DRILL_HISTORY", HERE / "history.csv")))
 BY_DRILL = {d.id: d for d in DRILLS}
 
 
@@ -55,8 +56,10 @@ def index():
 
 
 @app.get("/api/next")
-def next_item():
-    n = sched.next()
+def next_item(kind: str = ""):
+    n = sched.next(kind)
+    if n["kind"] == "explain":
+        n["index"] = next(k for k, x in enumerate(EXPLAINS) if x.id == n["id"])
     if n["kind"] == "drill":
         n["index"] = DRILLS.index(BY_DRILL[n["id"]])
         n["total"] = len(DRILLS)
@@ -130,10 +133,7 @@ def _public(l):
 
 
 def _runs(l, *lines):
-    probe = Drill(id="lesson", domain="", intent="", setup=l.setup, effect="any",
-                  grammar={}, reference_line="", verify=lambda *a: True)
-    return [dict(line=ln, **{k: r[k] for k in ("diff", "stdout", "ret", "error")})
-            for ln in lines for r in [run_line(probe, ln)]]
+    return probe_runs(l.setup, *lines)
 
 
 @app.get("/api/lesson/{lid}")
@@ -171,4 +171,59 @@ def check_lesson(lid: str, body: Check):
 @app.post("/api/lesson/{lid}/done")
 def lesson_done(lid: str):
     sched.lesson_done(lesson(lid).id)
+    return {"ok": True}
+
+
+# --------------------------------------------------------------- explain
+def exp(k: int):
+    if not 0 <= k < len(EXPLAINS):
+        raise HTTPException(404, "no such item")
+    return EXPLAINS[k]
+
+
+@app.get("/api/explain/{k}")
+def get_explain(k: int):
+    x = exp(k)
+    return {"index": k, "total": len(EXPLAINS), "id": x.id, "domain": x.domain,
+            "line": x.line, "question": x.question, "options": x.options,
+            "state": describe(x.setup())}
+
+
+@app.post("/api/explain/{k}/effect")
+def explain_effect(k: int, body: Effect):
+    x = exp(k)
+    return {"ok": body.effect == x.effect, "answer": x.effect}
+
+
+@app.post("/api/explain/{k}/slots")
+def explain_slots(k: int, body: Slots):
+    return check_slots(exp(k), body.slots)
+
+
+@app.get("/api/explain/{k}/reveal")
+def explain_reveal(k: int):
+    return {s: v[0] for s, v in exp(k).grammar.items()}
+
+
+class Pick(BaseModel):
+    choice: int
+
+
+@app.post("/api/explain/{k}/answer")
+def explain_answer(k: int, body: Pick):
+    x = exp(k)
+    ok = body.choice == x.answer
+    res = {"ok": ok, "answer": x.answer}
+    if ok:
+        res.update(why=x.why, runs=probe_runs(x.setup, x.line))
+    return res
+
+
+class Done(BaseModel):
+    misses: int = 0
+
+
+@app.post("/api/explain/{k}/done")
+def explain_done(k: int, body: Done):
+    sched.explain_done(exp(k).id, body.misses)
     return {"ok": True}

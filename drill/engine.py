@@ -21,7 +21,23 @@ NOTES = {"rebound": "the name now points to a new object",
          "mutated": "same object, changed in place"}
 
 
+def _is_estimator(v):
+    return hasattr(v, "get_params") and hasattr(v, "fit")
+
+
+def _fitted(v):
+    return any(k.endswith("_") and not k.startswith("__") for k in vars(v))
+
+
 def preview(v):
+    if _is_estimator(v):
+        if not _fitted(v):
+            return f"{type(v).__name__} (not fitted)"
+        for attr in ("mean_", "coef_"):         # a learned value, so refits are visible
+            if hasattr(v, attr):
+                first = float(np.asarray(getattr(v, attr)).ravel()[0])
+                return f"{type(v).__name__} (fitted, {attr}[0]={first:.4g})"
+        return f"{type(v).__name__} (fitted)"
     r = repr(v).replace("\n", " ")
     return r if len(r) <= _PREVIEW else r[:_PREVIEW - 1] + "…"
 
@@ -29,6 +45,10 @@ def preview(v):
 def _state_preview(v):
     if isinstance(v, pd.DataFrame):
         return f"({v.shape[0]}×{v.shape[1]})\n" + v.head(6).to_string()
+    if isinstance(v, np.ndarray):
+        return f"{v.shape} {v.dtype}"
+    if _is_estimator(v):
+        return "(fitted)" if _fitted(v) else "(not fitted)"
     return preview(v)
 
 
@@ -107,7 +127,8 @@ def run_line(drill: Drill, code: str) -> dict:
 
     after = {k: v for k, v in ns.items() if k not in _INJECTED and k != "__builtins__"}
     res["stdout"] = out.getvalue()
-    res["ret"] = None if ret is None else preview(ret)
+    res["ret"] = None if ret is None else (
+        ret.head(6).to_string() if isinstance(ret, pd.DataFrame) else preview(ret))
     res["diff"] = _diff(before, after, ids)
 
     ok = True
@@ -159,4 +180,15 @@ def check_blanks(blanks, answers):
         g = given.strip()
         out.append(("<name>" in accepted and bool(_IDENT.fullmatch(g)))
                    or _norm(g) in {_norm(a) for a in accepted})
+    return out
+
+
+def probe_runs(setup, *lines):
+    """Run lines against fresh copies of setup(); return diff/stdout/ret/error each."""
+    probe = Drill(id="probe", domain="", intent="", setup=setup, effect="any",
+                  grammar={}, reference_line="", verify=lambda *a: True)
+    out = []
+    for ln in lines:
+        r = run_line(probe, ln)
+        out.append({"line": ln, **{k: r[k] for k in ("diff", "stdout", "ret", "error")}})
     return out

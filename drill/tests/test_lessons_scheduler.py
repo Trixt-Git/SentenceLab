@@ -4,6 +4,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from drills import DRILLS
 from engine import check_blanks, run_line
+from explain import EXPLAINS
 from lessons import LESSONS
 from scheduler import Scheduler
 
@@ -42,7 +43,7 @@ def _drill(i):
 
 def test_blocked_phase_then_interleave(tmp_path):
     from lessons import LESSONS as LS
-    s = Scheduler(DRILLS, LS, tmp_path / "h.csv")
+    s = Scheduler(DRILLS, LS, EXPLAINS, tmp_path / "h.csv")
     seen = []
     for _ in range(40):
         n = s.next()
@@ -61,7 +62,7 @@ def test_blocked_phase_then_interleave(tmp_path):
 
 
 def test_confident_error_comes_back_first(tmp_path):
-    s = Scheduler(DRILLS, LESSONS, tmp_path / "h.csv")
+    s = Scheduler(DRILLS, LESSONS, EXPLAINS, tmp_path / "h.csv")
     for l in LESSONS:
         s.lesson_done(l.id)
     for d in DRILLS:
@@ -75,11 +76,11 @@ def test_confident_error_comes_back_first(tmp_path):
 
 def test_mastery_and_history_reload(tmp_path):
     p = tmp_path / "h.csv"
-    s = Scheduler(DRILLS, LESSONS, p)
+    s = Scheduler(DRILLS, LESSONS, EXPLAINS, p)
     for d in [d for d in DRILLS if d.effect == "mutate"]:
         s.record(d, True, True)
     assert s.mastered("mutate")
-    s2 = Scheduler(DRILLS, LESSONS, p)
+    s2 = Scheduler(DRILLS, LESSONS, EXPLAINS, p)
     assert s2.mastered("mutate") and not s2.mastered("emit")
 
 
@@ -125,3 +126,21 @@ def test_diff_detail_series_array_string():
     assert len("".join(t[0] for t in long["before"])) < 60
     f = detail([0.1234567, 1.0], [0.1234568, 1.0])
     assert f["before"][1][2] == "0.1234567"
+
+
+def test_explain_items_consistent():
+    from engine import check_slots, probe_runs
+    for x in EXPLAINS:
+        assert 0 <= x.answer < len(x.options)
+        assert all(check_slots(x, {k: v[0] for k, v in x.grammar.items()}).values())
+        assert not probe_runs(x.setup, x.line)[0]["error"], x.id
+
+
+def test_explain_scheduling_and_history(tmp_path):
+    p = tmp_path / "h.csv"
+    s = Scheduler(DRILLS, LESSONS, EXPLAINS, p)
+    first = s.next("explain")
+    assert first["kind"] == "explain"
+    s.explain_done(first["id"], 2)
+    assert s.next("explain")["id"] != first["id"]
+    assert Scheduler(DRILLS, LESSONS, EXPLAINS, p).estats[first["id"]]["misses"] == 2
