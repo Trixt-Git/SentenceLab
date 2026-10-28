@@ -45,3 +45,22 @@ def test_slots():
                                       "details": "95", "landing": "None"})
     assert all(ok.values())
     assert not check_slots(D["py-append"], {"subject": "x"})["subject"]
+
+
+def test_scaler_refit_fails():
+    r = run_line(D["sk-transform"], "X_test_s = scaler.fit_transform(X_test)")
+    assert not r["passed"]
+
+
+def test_pandas_inplace_not_a_rebind():
+    assert not run_line(D["pd-reassign"], "df.dropna(subset=['price'], inplace=True)")["passed"]
+
+
+def test_sorted_vs_sort():
+    assert not run_line(D["py-sorted"], "nums.sort()")["passed"]
+    assert not run_line(D["py-sort"], "nums = sorted(nums)")["passed"]
+
+
+def test_diff_notes():
+    r = run_line(D["py-append"], "scores = scores.append(95)")
+    assert r["diff"][0]["note"] == "the name now points to a new object"

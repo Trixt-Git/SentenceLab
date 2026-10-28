@@ -3,6 +3,7 @@
 NOTE: executes learner code with exec/eval in-process. Local use only.
 """
 import ast
+import re
 import builtins
 import contextlib
 import copy
@@ -15,6 +16,8 @@ from drills import Drill
 
 _INJECTED = {"pd": pd, "np": np}
 _PREVIEW = 80
+NOTES = {"rebound": "the name now points to a new object",
+         "mutated": "same object, changed in place"}
 
 
 def preview(v):
@@ -49,7 +52,8 @@ def _diff(before, after, ids):
     rows = []
     for k in sorted(set(before) | set(after)):
         if k not in before:
-            rows.append({"name": k, "change": "added", "after": preview(after[k])})
+            rows.append({"name": k, "change": "added", "after": preview(after[k]),
+                         "note": "a new name now exists"})
         elif k not in after:
             rows.append({"name": k, "change": "removed", "before": preview(before[k])})
         else:
@@ -57,7 +61,8 @@ def _diff(before, after, ids):
             rebound = id(after[k]) != ids[k]
             if b != a or rebound:
                 rows.append({"name": k, "change": "rebound" if rebound else "mutated",
-                             "before": b, "after": a})
+                             "before": b, "after": a,
+                             "note": NOTES["rebound" if rebound else "mutated"]})
     return rows
 
 
@@ -132,4 +137,17 @@ def check_slots(drill: Drill, slots: dict) -> dict:
         out[slot] = given in {_norm(a).strip(".") for a in accepted} or (
             slot == "landing" and given in {"", "none", "dropped"}
             and "none" in {_norm(a) for a in accepted})
+    return out
+
+
+_IDENT = re.compile(r"[A-Za-z_]\w*")
+
+
+def check_blanks(blanks, answers):
+    """answers: one accepted-list per blank; "<name>" accepts any identifier."""
+    out = []
+    for given, accepted in zip(blanks, answers):
+        g = given.strip()
+        out.append(("<name>" in accepted and bool(_IDENT.fullmatch(g)))
+                   or _norm(g) in {_norm(a) for a in accepted})
     return out

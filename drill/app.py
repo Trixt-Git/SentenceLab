@@ -1,25 +1,33 @@
 """Local drill server: `uvicorn app:app` from this directory."""
-import csv
-import time
+import os
+import re
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from drills import DRILLS
-from engine import check_slots, describe, run_line
+from drills import DRILLS, Drill
+from engine import check_blanks, check_slots, describe, run_line
+from lessons import BY_ID, LESSONS
+from scheduler import Scheduler
 
 HERE = Path(__file__).parent
-HISTORY = HERE / "history.csv"
 app = FastAPI()
-attempts: dict[str, int] = {}
+sched = Scheduler(DRILLS, LESSONS, Path(os.environ.get("DRILL_HISTORY", HERE / "history.csv")))
+BY_DRILL = {d.id: d for d in DRILLS}
 
 
 def get(i: int):
     if not 0 <= i < len(DRILLS):
         raise HTTPException(404, "no such drill")
     return DRILLS[i]
+
+
+def lesson(lid: str):
+    if lid not in BY_ID:
+        raise HTTPException(404, "no such lesson")
+    return BY_ID[lid]
 
 
 class Effect(BaseModel):
@@ -32,6 +40,13 @@ class Slots(BaseModel):
 
 class Code(BaseModel):
     code: str
+    confident: bool = True
+
+
+class Check(BaseModel):
+    stage: str
+    choice: int | None = None
+    blanks: list[str] = []
 
 
 @app.get("/")
@@ -39,10 +54,21 @@ def index():
     return FileResponse(HERE / "static" / "index.html")
 
 
+@app.get("/api/next")
+def next_item():
+    n = sched.next()
+    if n["kind"] == "drill":
+        n["index"] = DRILLS.index(BY_DRILL[n["id"]])
+        n["total"] = len(DRILLS)
+    return n
+
+
+# ---------------------------------------------------------------- drills
 @app.get("/api/drill/{i}")
 def drill(i: int):
     d = get(i)
     return {"index": i, "total": len(DRILLS), "id": d.id, "domain": d.domain,
+            "plan": d.plan, "effect_count": len({x.effect for x in DRILLS}),
             "intent": d.intent, "state": describe(d.setup())}
 
 
@@ -66,13 +92,83 @@ def reveal(i: int):
 def run(i: int, body: Code):
     d = get(i)
     res = run_line(d, body.code)
-    attempts[d.id] = attempts.get(d.id, 0) + 1
+    n = sched.record(d, res["passed"], body.confident)
+    res["attempt"] = n
     if res["passed"]:
         res["reference_line"] = d.reference_line
-        new = not HISTORY.exists()
-        with HISTORY.open("a", newline="") as f:
-            w = csv.writer(f)
-            if new:
-                w.writerow(["timestamp", "drill_id", "passed", "attempts"])
-            w.writerow([int(time.time()), d.id, True, attempts.pop(d.id)])
+    elif body.confident:
+        res["hints"].append("You marked this as sure. It will come back for review soon.")
     return res
+
+
+@app.post("/api/drill/{i}/hint")
+def hint(i: int):
+    """Tiered hints, unlocked by failed attempts: slots, partial line, full line."""
+    d = get(i)
+    fails = sched.failures(d.id)
+    if fails == 0:
+        return {"level": 0, "text": "Try a line first. Hints unlock after a failed attempt."}
+    if fails == 1:
+        g = d.grammar
+        return {"level": 1, "text": " · ".join(f"{k}: {v[0]}" for k, v in g.items())}
+    if fails == 2:
+        det = d.grammar["details"][0]
+        masked = d.reference_line.replace(det, "…") if det not in ("none", "nothing") else d.reference_line
+        return {"level": 2, "text": masked}
+    return {"level": 3, "text": d.reference_line}
+
+
+# --------------------------------------------------------------- lessons
+def _public(l):
+    strip = lambda d, *drop: {k: v for k, v in d.items() if k not in drop}
+    return {"id": l.id, "title": l.title, "effect": l.effect,
+            "state": describe(l.setup()),
+            "predict": strip(l.predict, "answer"),
+            "contrast": strip(l.contrast, "answer", "explain"),
+            "worked": strip(l.worked, "answer"),
+            "faded": [{"template": f["template"]} for f in l.faded]}
+
+
+def _runs(l, *lines):
+    probe = Drill(id="lesson", domain="", intent="", setup=l.setup, effect="any",
+                  grammar={}, reference_line="", verify=lambda *a: True)
+    return [dict(line=ln, **{k: r[k] for k in ("diff", "stdout", "ret", "error")})
+            for ln in lines for r in [run_line(probe, ln)]]
+
+
+@app.get("/api/lesson/{lid}")
+def get_lesson(lid: str):
+    return _public(lesson(lid))
+
+
+@app.post("/api/lesson/{lid}/check")
+def check_lesson(lid: str, body: Check):
+    l = lesson(lid)
+    st = body.stage
+    if st == "predict":
+        p = l.predict
+        return {"ok": body.choice == p["answer"], "answer": p["answer"],
+                "runs": _runs(l, p["line"])}
+    if st == "contrast":
+        c = l.contrast
+        return {"ok": body.choice == c["answer"], "answer": c["answer"],
+                "explain": c["explain"], "runs": _runs(l, c["a"], c["b"])}
+    if st == "worked":
+        w = l.worked
+        return {"ok": body.choice == w["answer"], "answer": w["answer"],
+                "runs": _runs(l, w["line"])}
+    m = re.fullmatch(r"faded(\d+)", st)
+    if m and int(m.group(1)) < len(l.faded):
+        f = l.faded[int(m.group(1))]
+        res = check_blanks(body.blanks, f["answers"])
+        full = f["template"]
+        for a in f["answers"]:
+            full = full.replace("___", a[0] if a[0] != "<name>" else "result", 1)
+        return {"ok": len(res) == len(f["answers"]) and all(res), "blanks": res, "line": full}
+    raise HTTPException(400, "bad stage")
+
+
+@app.post("/api/lesson/{lid}/done")
+def lesson_done(lid: str):
+    sched.lesson_done(lesson(lid).id)
+    return {"ok": True}

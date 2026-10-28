@@ -3,8 +3,8 @@
 <title>SentenceLab Drill</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-:root{--bg:#fff;--fg:#1a1a1a;--mut:#666;--line:#ddd;--ok:#1a7f37;--bad:#c62828;--acc:#2457d6}
-@media(prefers-color-scheme:dark){:root{--bg:#161616;--fg:#eaeaea;--mut:#999;--line:#333;--ok:#4cc26a;--bad:#ff6b6b;--acc:#7aa2ff}}
+:root{--bg:#fff;--fg:#1a1a1a;--mut:#666;--line:#ddd;--ok:#1a7f37;--bad:#c62828;--acc:#2457d6;--s1:#2457d6;--s2:#a14a00;--s3:#7b3fa0;--s4:#1a7f37}
+@media(prefers-color-scheme:dark){:root{--bg:#161616;--fg:#eaeaea;--mut:#999;--line:#333;--ok:#4cc26a;--bad:#ff6b6b;--acc:#7aa2ff;--s1:#7aa2ff;--s2:#ffb066;--s3:#cf9cf0;--s4:#4cc26a}}
 body{background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif;max-width:720px;margin:0 auto;padding:16px}
 code,input,pre{font-family:ui-monospace,Menlo,monospace}
 .mut{color:var(--mut)} .ok{color:var(--ok)} .bad{color:var(--bad)}
@@ -19,9 +19,25 @@ pre{margin:4px 0;white-space:pre-wrap}
 [hidden]{display:none!important}
 button{font:13px system-ui,sans-serif;padding:4px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);cursor:pointer}
 table{border-collapse:collapse;width:100%} td,th{border-bottom:1px solid var(--line);padding:3px 6px;text-align:left;font-size:13px}
+.opt{display:block;width:100%;text-align:left;margin:4px 0;padding:8px 10px;font-size:14px}
+.opt.right{border-color:var(--ok)} .opt.wrong{border-color:var(--bad)}
+.line{background:rgba(127,127,127,.12);border-radius:6px;padding:6px 10px;margin:6px 0}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px} @media(max-width:560px){.cols{grid-template-columns:1fr}}
+.slot{display:inline-block;border-bottom:2px solid;margin-right:2px;padding:0 2px}
+.s-Subject{color:var(--s1)} .s-Verb{color:var(--s2)} .s-Details{color:var(--s3)} .s-Landing{color:var(--s4)}
+.banner{background:rgba(36,87,214,.1);border-radius:6px;padding:6px 10px;margin:8px 0}
+.blank{width:9ch;display:inline-block;padding:2px 6px}
 </style>
-<h1 style="font-size:18px">SentenceLab Drill <span id="pos" class="mut"></span>
+<h1 style="font-size:18px"><span id="pos"></span>
  <button id="mode" style="float:right"></button></h1>
+<div id="banner" class="banner" hidden></div>
+
+<div id="lesson" hidden>
+ <h2 id="ltitle"></h2>
+ <section><div id="lbody"></div></section>
+</div>
+
+<div id="drill" hidden>
 <p><span id="intent"></span></p>
 <pre id="state" class="mut"></pre>
 
@@ -43,68 +59,135 @@ table{border-collapse:collapse;width:100%} td,th{border-bottom:1px solid var(--l
 
 <section id="s3" class="off"><h2>3 · Line entry</h2>
  <input id="code" placeholder="[Landing] = [Subject].[Verb]([Details])" autocomplete="off" spellcheck="false">
+ <div class="mut"><kbd>Enter</kbd> run, sure &nbsp; <kbd>Shift</kbd>+<kbd>Enter</kbd> run, unsure &nbsp; <kbd>Ctrl</kbd>+<kbd>H</kbd> hint</div>
  <div id="s3msg"></div></section>
 
 <section id="s4" class="off"><h2>4 · Result</h2><div id="out"></div></section>
+</div>
 
 <script>
-const $=s=>document.querySelector(s), api=(p,b)=>fetch('/api/drill/'+p,b&&{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json());
-let i=0,total=1,stage=1,mode=localStorage.mode||'guided',passed=false;
+const $=s=>document.querySelector(s);
+const api=(p,b)=>fetch('/api/'+p,b===undefined?undefined:{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json());
 const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const effects={1:'rebind',2:'mutate',3:'emit'};
+let i=0,total=1,stage=1,mode='guided',passed=false,manual=false,L=null,ls=0,lanswered=false;
+try{mode=localStorage.mode||'guided'}catch{}
 
+function setMode(m,user){mode=m;if(user)manual=true;try{localStorage.mode=m}catch{};$('#mode').textContent=(m==='guided'?'Guided':'Speed')+' mode (M)';if(!$('#drill').hidden)setStage(stage);}
+function banner(t){const b=$('#banner');b.hidden=!t;b.textContent=t||'';}
+function diffTable(diff){return diff.length?'<table><tr><th>var<th>change<th>before<th>after<th></tr>'+diff.map(d=>`<tr><td>${esc(d.name)}<td>${d.change}<td>${esc(d.before||'')}<td>${esc(d.after||'')}<td class="mut">${esc(d.note||'')}</tr>`).join('')+'</table>':'<p class="mut">State unchanged.</p>';}
+function runBox(r){return `<div class="line"><code>${esc(r.line)}</code></div>${r.error?`<p class="bad">${esc(r.error)}</p>`:''}${diffTable(r.diff)}${r.stdout?`<pre>${esc(r.stdout)}</pre>`:''}`;}
+
+async function boot(){
+ const n=await api('next');
+ $('#lesson').hidden=n.kind!=='lesson';$('#drill').hidden=n.kind!=='drill';
+ if(n.kind==='lesson')return startLesson(n.lesson);
+ const note=[];
+ if(n.review)note.push('Review: you were sure about this one and missed it.');
+ if(n.phase==='interleaved')note.push('Mixed practice');
+ if(n.mastered&&!manual&&mode==='guided'){setMode('speed');note.push('3 first-try passes in a row: switching to Speed mode.');}
+ banner(note.join(' · '));
+ load(n.index,n);}
+
+/* ---------------- lessons ---------------- */
+const STAGES=['predict','contrast','worked','faded0','faded1'];
+async function startLesson(id){L=await api('lesson/'+id);ls=0;$('#ltitle').textContent='Lesson · '+L.title;banner('');renderStage();}
+function stageKeys(n){return STAGES.slice(0,3).concat(L.faded.map((_,k)=>'faded'+k));}
+function renderStage(){
+ const st=stageKeys()[ls];lanswered=false;
+ $('#pos').textContent=`Lesson ${ls+1}/${stageKeys().length} · ${L.effect}`;
+ const b=$('#lbody');
+ if(st==='predict'){const p=L.predict;
+  b.innerHTML=`<p class="mut">Predict</p><pre class="mut">${L.state.map(v=>`${v.name}: ${v.type} = ${v.preview}`).join('\n')}</pre><div class="line"><code>${esc(p.line)}</code></div><p>${esc(p.question)}</p>${opts(p.options)}<div id="fb"></div>`;}
+ if(st==='contrast'){const c=L.contrast;
+  b.innerHTML=`<p class="mut">Compare</p><pre class="mut">${L.state.map(v=>`${v.name}: ${v.type} = ${v.preview}`).join('\n')}</pre><div class="cols"><div class="line"><b>A</b> <code>${esc(c.a)}</code></div><div class="line"><b>B</b> <code>${esc(c.b)}</code></div></div><p>${esc(c.question)}</p>${opts(c.options)}<div id="fb"></div>`;}
+ if(st==='worked'){const w=L.worked;
+  b.innerHTML=`<p class="mut">Worked example: the four slots</p><div class="line"><code>${esc(w.line)}</code></div><table>${Object.entries(w.slots).map(([k,v])=>`<tr><td class="s-${k}"><b>${k}</b><td><code class="s-${k}">${esc(v)}</code></tr>`).join('')}</table><p>${esc(w.why)}</p>${opts(w.options)}<div id="fb"></div>`;}
+ if(st.startsWith('faded')){const f=L.faded[+st.slice(5)];
+  const parts=f.template.split('___');
+  b.innerHTML=`<p class="mut">Fill the blank${parts.length>2?'s':''} (Enter to check)</p><div class="line"><code>${parts.map((p,k)=>esc(p)+(k<parts.length-1?'<input class="blank" data-b>':'')).join('')}</code></div><div id="fb"></div>`;
+  b.querySelector('[data-b]').focus();}
+}
+function opts(o){return o.map((t,k)=>`<button class="opt" data-o="${k}"><kbd>${k+1}</kbd> ${esc(t)}</button>`).join('');}
+async function pick(k){
+ if(lanswered)return;
+ const st=stageKeys()[ls];
+ const r=await api(`lesson/${L.id}/check`,{stage:st,choice:k});
+ lanswered=r.ok;
+ document.querySelectorAll('.opt').forEach((b,j)=>{b.classList.toggle('right',j===r.answer&&r.ok);b.classList.toggle('wrong',j===k&&!r.ok);});
+ let h=r.ok?'<p class="ok">✓ Correct</p>':'<p class="bad">✗ Not quite, try another</p>';
+ if(r.ok){
+  if(st==='contrast'){h+=`<div class="cols">${r.runs.map((x,j)=>`<div><b>${'AB'[j]}</b>${runBox(x)}</div>`).join('')}</div>`;}
+  else h+=r.runs.map(runBox).join('');
+  if(r.explain)h+=`<p>${esc(r.explain)}</p>`;
+  h+='<p class="mut"><kbd>Enter</kbd> to continue</p>';}
+ $('#fb').innerHTML=h;}
+async function checkBlanks(){
+ const st=stageKeys()[ls];const els=[...document.querySelectorAll('[data-b]')];
+ const r=await api(`lesson/${L.id}/check`,{stage:st,blanks:els.map(e=>e.value)});
+ els.forEach((e,k)=>e.className='blank '+(r.blanks[k]?'ok':'bad'));
+ lanswered=r.ok;
+ $('#fb').innerHTML=r.ok?'<p class="ok">✓ Correct</p><p class="mut"><kbd>Enter</kbd> to continue</p>':'<p class="bad">✗ Check the highlighted blanks</p>';}
+async function lessonNext(){
+ if(ls+1<stageKeys().length){ls++;renderStage();return;}
+ await api(`lesson/${L.id}/done`,{});boot();}
+
+/* ---------------- drills ---------------- */
 function setStage(n){stage=n;['s1','s2','s3','s4'].forEach((id,k)=>$('#'+id).classList.toggle('off',k+1>n));
- $('#s4').classList.toggle('off',n<4);
  $('#guided').hidden=mode!=='guided';$('#speed').hidden=mode!=='speed';
  if(n===2&&mode==='guided')document.querySelector('[data-slot=subject]').focus();
  if(n===3)$('#code').focus();}
-function setMode(m){mode=m;try{localStorage.mode=m}catch{};$('#mode').textContent=(m==='guided'?'Guided':'Speed')+' mode (M)';if(stage===2)setStage(2);}
-
-async function load(n){
- const d=await api(n);i=n;total=d.total;passed=false;
- $('#pos').textContent=`${n+1}/${total} · ${d.domain}`;$('#intent').textContent=d.intent;
+async function load(n,info){
+ const d=await api('drill/'+n);i=n;total=d.total;passed=false;
+ $('#pos').textContent=`${n+1}/${total} · ${d.domain}${d.plan?' · '+d.plan:''}`;$('#intent').textContent=d.intent;
  $('#state').textContent=d.state.map(v=>`${v.name}: ${v.type} = ${v.preview}`).join('\n');
- for(const e of document.querySelectorAll('input')){e.value='';e.className='';}
+ for(const e of document.querySelectorAll('#drill input')){e.value='';e.className='';}
  $('#s1msg').textContent=$('#s2msg').textContent=$('#s3msg').textContent=$('#out').textContent='';
  $('#reveal').innerHTML='Think it through, then press <kbd>Space</kbd> to reveal.';
  document.activeElement.blur();setStage(1);}
-
 async function pickEffect(k){
- const r=await api(i+'/effect',{effect:effects[k]});
- $('#s1msg').innerHTML=r.ok?`<span class="ok">✓ ${r.answer}</span>`:`<span class="bad">✗ not ${effects[k]} — try again</span>`;
+ const r=await api('drill/'+i+'/effect',{effect:effects[k]});
+ $('#s1msg').innerHTML=r.ok?`<span class="ok">✓ ${r.answer}</span>`:`<span class="bad">✗ not ${effects[k]}, try again</span>`;
  if(r.ok)setStage(2);}
-
 async function checkSlots(){
  const slots={};document.querySelectorAll('[data-slot]').forEach(e=>slots[e.dataset.slot]=e.value);
- const r=await api(i+'/slots',slots&&{slots});let all=true;
+ const r=await api('drill/'+i+'/slots',{slots});let all=true;
  document.querySelectorAll('[data-slot]').forEach(e=>{const ok=r[e.dataset.slot];all=all&&ok;e.className=ok?'ok':'bad';});
  if(all)setStage(3);}
-
-async function run(){
- const r=await api(i+'/run',{code:$('#code').value});
+async function hint(){const r=await api('drill/'+i+'/hint',{});$('#s3msg').innerHTML=`<p class="mut">Hint ${r.level}/3: <code>${esc(r.text)}</code></p>`;}
+async function run(confident){
+ const r=await api('drill/'+i+'/run',{code:$('#code').value,confident});
  let h='';
  if(r.error)h+=`<p class="bad">${esc(r.error)}</p>`;
- h+=`<p class="${r.passed?'ok':'bad'}">${r.passed?'✓ Passed':'✗ Not yet'}</p>`;
+ h+=`<p class="${r.passed?'ok':'bad'}">${r.passed?'✓ Passed':'✗ Not yet'}${r.passed&&r.attempt===1?' · first try':''}</p>`;
  (r.hints||[]).forEach(t=>h+=`<p class="bad">${esc(t).replace(/`([^`]+)`/g,'<code>$1</code>')}</p>`);
- if(r.diff.length)h+='<table><tr><th>var<th>change<th>before<th>after</tr>'+r.diff.map(d=>`<tr><td>${esc(d.name)}<td>${d.change}<td>${esc(d.before||'')}<td>${esc(d.after||'')}</tr>`).join('')+'</table>';
- else if(!r.error)h+='<p class="mut">State unchanged.</p>';
+ if(!r.error)h+=diffTable(r.diff);
  if(r.stdout)h+=`<p class="mut">stdout</p><pre>${esc(r.stdout)}</pre>`;
  if(r.ret)h+=`<p class="mut">returned</p><pre>${esc(r.ret)}</pre>`;
- if(r.passed){passed=true;h+=`<p>Reference: <code>${esc(r.reference_line)}</code></p><p class="mut"><kbd>Enter</kbd> for next drill</p>`;}
+ if(r.passed){passed=true;h+=`<p>Reference: <code>${esc(r.reference_line)}</code></p><p class="mut"><kbd>Enter</kbd> for next</p>`;}
+ else h+='<p class="mut"><kbd>Ctrl</kbd>+<kbd>H</kbd> for a hint</p>';
  $('#out').innerHTML=h;$('#s4').classList.remove('off');}
 
 document.addEventListener('keydown',async e=>{
  const typing=e.target.tagName==='INPUT';
- if(e.key==='Enter'&&e.target.id==='code'){e.preventDefault();return passed?load((i+1)%total):run();}
- if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.slot==='landing'){return checkSlots();}
+ if(!$('#lesson').hidden){
+  if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.b!==undefined){e.preventDefault();return lanswered?lessonNext():checkBlanks();}
+  if(typing)return;
+  if(/^[1-4]$/.test(e.key)&&document.querySelector('.opt'))return pick(+e.key-1);
+  if(e.key==='Enter'&&lanswered)return lessonNext();
+  return;}
+ if(e.key==='h'&&e.ctrlKey){e.preventDefault();return hint();}
+ if(e.key==='Enter'&&e.target.id==='code'){e.preventDefault();return passed?boot():run(!e.shiftKey);}
+ if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.slot==='landing')return checkSlots();
  if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.slot){e.preventDefault();const f=[...document.querySelectorAll('[data-slot]')];f[f.indexOf(e.target)+1].focus();return;}
  if(typing)return;
  if(stage===1&&effects[e.key])return pickEffect(e.key);
- if(stage===2&&mode==='speed'&&e.key===' '){e.preventDefault();const r=await api(i+'/reveal');$('#reveal').textContent=Object.entries(r).map(([k,v])=>k.padEnd(8)+v).join('\n');return;}
+ if(stage===2&&mode==='speed'&&e.key===' '){e.preventDefault();const r=await api('drill/'+i+'/reveal');$('#reveal').textContent=Object.entries(r).map(([k,v])=>k.padEnd(8)+v).join('\n');return;}
  if(stage===2&&mode==='speed'&&e.key==='Enter')return setStage(3);
- if(e.key.toLowerCase()==='m')return setMode(mode==='guided'?'speed':'guided');
- if(passed&&e.key==='Enter')return load((i+1)%total);
+ if(e.key.toLowerCase()==='m')return setMode(mode==='guided'?'speed':'guided',true);
+ if(passed&&e.key==='Enter')return boot();
 });
-$('#mode').onclick=()=>setMode(mode==='guided'?'speed':'guided');
-setMode(mode);load(0);
+document.addEventListener('click',e=>{const o=e.target.closest('.opt');if(o&&!$('#lesson').hidden)pick(+o.dataset.o);});
+$('#mode').onclick=()=>setMode(mode==='guided'?'speed':'guided',true);
+setMode(mode);boot();
 </script>
