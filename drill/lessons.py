@@ -1,7 +1,7 @@
 """Short lessons shown before the drills they support.
 
-Stage order (cognitive-apprenticeship style, fading support):
-  predict -> contrast pair -> labelled worked example -> faded x2
+Stage order (teach first, then check, then fade support):
+  teach -> labelled worked example -> contrast pair -> predict -> faded x2
 Contrast pairs and predictions are executed live against a real namespace, so the
 state diff shown is what Python actually did.
 """
@@ -20,6 +20,7 @@ class Lesson:
     setup: Callable[[], dict]
     predict: dict                    # {line, question, options, answer}
     contrast: dict                   # {a, b, question, options, answer, explain}
+    teach: dict                      # {points, example, rule}: shown first, before any question
     worked: dict                     # {line, slots, why, options, answer}
     faded: list = field(default_factory=list)  # [{template, answers}]
 
@@ -42,6 +43,10 @@ LESSONS = [
                      "The first creates a new list"], answer=1,
             explain=".append changes the list in place and returns None. Assigning that "
                     "None to scores throws the list away."),
+        teach=dict(
+            points=['Some operations change an object in place. The name stays attached to the same object; only its contents change.', 'Methods like .append, .sort and .fit work this way. They give back None (or the object itself), not a new result.', 'So there is nothing to catch: no assignment, and the Landing is empty.'],
+            example='scores.append(95)',
+            rule='Mutate: same object, changed in place. Landing: none.'),
         worked=dict(
             line="scores.append(95)",
             slots={"Subject": "scores", "Verb": ".append", "Details": "95", "Landing": "none"},
@@ -66,6 +71,10 @@ LESSONS = [
             options=["nums.sort()", "ranked = sorted(nums)", "Both", "Neither"], answer=1,
             explain="sort() mutates nums and returns None. sorted() returns a new list "
                     "that has to land in a name or it disappears."),
+        teach=dict(
+            points=['Some operations build a new object and leave the original alone.', 'sorted(nums) returns a new list. If nothing catches it, it is thrown away.', 'A name on the left of = catches it. That name is the Landing.'],
+            example='ranked = sorted(nums)',
+            rule='Rebind: a new object must land in a name.'),
         worked=dict(
             line="ranked = sorted(nums)",
             slots={"Subject": "nums", "Verb": "sorted", "Details": "none", "Landing": "ranked"},
@@ -90,6 +99,10 @@ LESSONS = [
             explain="Most pandas methods return a new DataFrame and leave the original "
                     "alone, so the result must land in a name. Prefer rebinding over "
                     "inplace=True, whose behaviour is harder to predict."),
+        teach=dict(
+            points=['Most pandas methods return a new DataFrame and leave the original unchanged.', 'df.dropna(...) on its own only displays the result; df keeps all its rows.', 'Catch the result: use a new name (clean_df = ...) or reuse the old one (df = ...). Avoid inplace=True, whose behaviour is harder to predict.'],
+            example="clean_df = df.dropna(subset=['price'])",
+            rule='pandas returns a new DataFrame: give it a name.'),
         worked=dict(
             line="clean_df = df.dropna(subset=['price'])",
             slots={"Subject": "df", "Verb": ".dropna", "Details": "subset=['price']",
@@ -117,6 +130,10 @@ LESSONS = [
             question="Which line shows you the value?",
             options=["the first", "the second", "both", "neither"], answer=0,
             explain="Emit shows a value and changes no state. Rebinding saves it silently."),
+        teach=dict(
+            points=['Sometimes you only want to look at a value, not keep it.', 'print(...) shows a value and changes nothing. In a notebook, a bare expression does the same.', 'The Landing is the screen (print / output), not a variable.'],
+            example='print(sum(scores))',
+            rule='Emit: show a value, change no state.'),
         worked=dict(
             line="print(sum(scores))",
             slots={"Subject": "scores", "Verb": "sum", "Details": "none", "Landing": "print"},
@@ -145,6 +162,10 @@ LESSONS = [
             explain="fit trains the estimator in place and returns the same object. "
                     "Unlike list.append it does not return None, but the habit that "
                     "matters is the same: the model object itself holds what it learned."),
+        teach=dict(
+            points=['scikit-learn methods come in three kinds: fit trains, predict and transform return new arrays.', 'fit changes the model object itself: what it learned is stored inside it.', 'It returns the same object, so you do not need to assign it. The change to look for is the model going from not fitted to fitted.'],
+            example='model.fit(X_train, y_train)',
+            rule='fit mutates the model: no Landing needed.'),
         worked=dict(
             line="model.fit(X_train, y_train)",
             slots={"Subject": "model", "Verb": ".fit", "Details": "X_train, y_train",
@@ -173,6 +194,10 @@ LESSONS = [
             options=["the first", "the second", "both", "neither"], answer=0,
             explain="predict returns a new array and leaves the model unchanged. With no "
                     "name to land in, the predictions are shown once and then lost."),
+        teach=dict(
+            points=['predict reads the model and returns a new array of labels. The model is unchanged.', 'The array must land in a name, or it is shown once and lost.', 'Rule of thumb: if a method gives you data back, give it a name.'],
+            example='preds = model.predict(X_test)',
+            rule='predict returns a new array: give it a name.'),
         worked=dict(
             line="preds = model.predict(X_test)",
             slots={"Subject": "model", "Verb": ".predict", "Details": "X_test",
@@ -204,6 +229,10 @@ LESSONS = [
             explain="fit_transform refits the scaler on whatever it is given. On test data "
                     "that leaks information about the test set. Fit on training data, then "
                     "only transform test data."),
+        teach=dict(
+            points=['A fitted scaler stores what it learned from the training data.', 'transform applies that stored knowledge to new data and returns a new array. The scaler is unchanged.', 'fit_transform refits first. On test data that leaks information about the test set, so use transform.'],
+            example='X_test_s = scaler.transform(X_test)',
+            rule='Fit on training data. Only transform test data.'),
         worked=dict(
             line="X_test_s = scaler.transform(X_test)",
             slots={"Subject": "scaler", "Verb": ".transform", "Details": "X_test",
@@ -232,6 +261,10 @@ LESSONS = [
             explain="To read a line, check the Landing first: what catches the result, "
                     "and can that verb return something? sort() returns None, so ranked "
                     "catches None while nums is sorted in place."),
+        teach=dict(
+            points=['When you read a line someone else wrote, check the Landing first: what catches the result?', 'Then ask whether the verb mutates (and returns None) or returns a new object.', 'The classic bug is a mutating verb whose None gets caught by a name.'],
+            example='ranked = sorted(nums)',
+            rule='Read the Landing first, then the verb.'),
         worked=dict(
             line="ranked = nums.sort()",
             slots={"Subject": "nums", "Verb": ".sort", "Details": "none", "Landing": "ranked"},

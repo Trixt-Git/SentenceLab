@@ -126,6 +126,7 @@ def _public(l):
     strip = lambda d, *drop: {k: v for k, v in d.items() if k not in drop}
     return {"id": l.id, "title": l.title, "effect": l.effect,
             "state": describe(l.setup()),
+            "teach": {**l.teach, "runs": _runs(l, l.teach["example"])},
             "predict": strip(l.predict, "answer"),
             "contrast": strip(l.contrast, "answer", "explain"),
             "worked": strip(l.worked, "answer"),

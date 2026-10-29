@@ -172,3 +172,11 @@ def test_every_drill_with_new_concept_has_lesson_first(tmp_path):
     for drill_id, lesson_id in [("sk-fit", "sk-fit"), ("sk-predict", "sk-predict"),
                                 ("sk-transform", "sk-transform")]:
         assert order.index("L:" + lesson_id) == order.index(drill_id) - 1
+
+
+def test_every_lesson_teaches_before_asking():
+    from app import _public
+    for l in LESSONS:
+        t = _public(l)["teach"]
+        assert len(t["points"]) >= 2 and t["rule"] and not t["runs"][0]["error"], l.id
+        assert "answer" not in str(t)
