@@ -68,7 +68,7 @@ LESSONS = [
                     "First, its answer can be saved in a [[variable|variable]]. For example, [[variable|ranked]] = [[verb|sorted]]([[subject|nums]]) saves a sorted copy of the list as [[variable|ranked]].",
                     "Second, the line can change the thing itself, so there is no separate answer to save. For example, [[subject|nums]][[verb|.sort]]() reorders nums directly.",
                     "Third, its answer can simply be shown on screen. For example, print([[verb|sum]]([[subject|nums]])) displays the total without saving it.",
-                    "Step 1 of every exercise asks which of these three a line does."],
+                    "After you write each line, the exercise asks which of these three it does."],
             example="ranked = sorted(nums)",
             slots={"Subject": "nums", "Verb": "sorted", "Details": "none", "Variable": "ranked"},
             rule="Before you write a line, decide whether its answer will be saved, changed in place, or only shown."),

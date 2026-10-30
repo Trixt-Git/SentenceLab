@@ -86,11 +86,19 @@ table.mini{font-size:12px;width:auto;min-width:50%} table.mini td,table.mini th{
 <p><span id="intent"></span></p>
 <pre id="state" class="mut"></pre>
 
-<section id="s1"><h2>1 · What happens to the answer?</h2>
+<section id="s3"><h2>1 · Write the line</h2>
+ <div class="legend"><span class="pt pt-Variable">variable</span> = <span class="pt pt-Subject">subject</span>.<span class="pt pt-Verb">verb</span>(<span class="pt pt-Details">details</span>)</div>
+ <input id="code" placeholder="Type your line here" autocomplete="off" spellcheck="false">
+ <div class="mut">Press <kbd>Enter</kbd> to run it, <kbd>Shift</kbd>+<kbd>Enter</kbd> if you are unsure, or <kbd>Ctrl</kbd>+<kbd>H</kbd> for a hint.</div>
+ <div id="s3msg"></div></section>
+
+<section id="s4" class="off"><h2>2 · What happened</h2><div id="out"></div></section>
+
+<section id="s1" class="off"><h2>3 · What happens to the answer?</h2>
  <div><kbd>1</kbd> The answer is saved in a variable, like <code>x = …</code></div><div><kbd>2</kbd> The line changes the thing itself, like <code>x.sort()</code></div><div><kbd>3</kbd> The answer is only shown, like <code>print(…)</code></div>
  <div id="s1msg"></div></section>
 
-<section id="s2" class="off"><h2>2 · The four parts of the line</h2>
+<section id="s2" class="off"><h2>4 · Break your line into its four parts</h2>
  <div id="guided">
   <label class="s-Subject">Subject</label><input data-slot="subject">
   <label class="s-Verb">Verb</label><input data-slot="verb">
@@ -101,14 +109,6 @@ table.mini{font-size:12px;width:auto;min-width:50%} table.mini td,table.mini th{
  <div id="speed"><pre id="reveal" class="mut">Think it through, then press <kbd>Space</kbd> to see the answer.</pre>
   <div class="mut">Press <kbd>Enter</kbd> to continue.</div></div>
  <div id="s2msg"></div></section>
-
-<section id="s3" class="off"><h2>3 · Write the line</h2>
- <div class="legend"><span class="pt pt-Variable">variable</span> = <span class="pt pt-Subject">subject</span>.<span class="pt pt-Verb">verb</span>(<span class="pt pt-Details">details</span>)</div>
- <input id="code" placeholder="Type your line here" autocomplete="off" spellcheck="false">
- <div class="mut">Press <kbd>Enter</kbd> to run it, <kbd>Shift</kbd>+<kbd>Enter</kbd> if you are unsure, or <kbd>Ctrl</kbd>+<kbd>H</kbd> for a hint.</div>
- <div id="s3msg"></div></section>
-
-<section id="s4" class="off"><h2>4 · What happened</h2><div id="out"></div></section>
 </div>
 
 <script>
@@ -118,7 +118,7 @@ const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[
 const effects={1:'rebind',2:'mutate',3:'emit'};
 const effLabel={rebind:'saved in a variable',mutate:'changes the thing itself',emit:'only shown'};
 let X=null,xs=1,xmiss=0,xdone=false,forceExplain=false;
-let i=0,total=1,stage=1,mode='guided',passed=false,manual=false,L=null,ls=0,lanswered=false;
+let i=0,total=1,stage=1,mode='guided',passed=false,finished=false,manual=false,L=null,ls=0,lanswered=false;
 try{mode=localStorage.mode||'guided'}catch{}
 
 function setMode(m,user){mode=m;if(user)manual=true;try{localStorage.mode=m}catch{};$('#mode').textContent=(m==='guided'?'Guided':'Speed')+' mode (M)';if(!$('#drill').hidden)setStage(stage);if(!$('#explain').hidden&&X)setX(xs);}
@@ -139,7 +139,7 @@ function colorLine(line,slots,lastVar){
 const sl=v=>v.line;
 const NONE_WORDS=['none','nothing','dropped'];
 const capw=k=>k[0].toUpperCase()+k.slice(1);
-let parts=null,intentText='';
+let parts=null,intentText='',refLine='';
 async function loadParts(kind){
  const r=await api(kind+'/'+(kind==='drill'?i:X.index)+'/reveal');
  parts={Subject:r.subject,Verb:r.verb,Details:r.details,Variable:r.variable};return parts;}
@@ -249,28 +249,35 @@ async function xPick(o){
  setX(4);api('explain/'+X.index+'/done',{misses:xmiss});}
 
 /* ---------------- drills ---------------- */
-function setStage(n){stage=n;['s1','s2','s3','s4'].forEach((id,k)=>$('#'+id).classList.toggle('off',k+1>n));
+function setStage(n){stage=n;['s3','s4','s1','s2'].forEach((id,k)=>$('#'+id).classList.toggle('off',k+1>n));
  $('#guided').hidden=mode!=='guided';$('#speed').hidden=mode!=='speed';
- if(n===2&&mode==='guided')document.querySelector('[data-slot=subject]').focus();
- if(n===3)$('#code').focus();}
+ if(n===4&&mode==='guided')document.querySelector('[data-slot=subject]').focus();
+ if(n===1)$('#code').focus();
+ if(n>=2)$('#code').blur();}
 async function load(n,info){
- const d=await api('drill/'+n);i=n;total=d.total;passed=false;
+ const d=await api('drill/'+n);i=n;total=d.total;passed=false;finished=false;
  $('#pos').textContent=`${n+1}/${total} · ${d.domain}${d.plan?' · '+d.plan:''}`;intentText=d.intent;parts=null;$('#intent').textContent=d.intent;
  $('#state').innerHTML=d.state.map(slHtml).join('\n');
  for(const e of document.querySelectorAll('#drill input')){e.value='';e.className='';}
  $('#s1msg').textContent=$('#s2msg').textContent=$('#s3msg').textContent=$('#out').textContent='';
  $('#reveal').innerHTML='Think it through, then press <kbd>Space</kbd> to see the answer.';
- document.activeElement.blur();setStage(1);}
+ setStage(1);}
 async function pickEffect(k){
  const r=await api('drill/'+i+'/effect',{effect:effects[k]});
  $('#s1msg').innerHTML=r.ok?`<span class="ok">✓ ${effLabel[r.answer]}</span>`:`<span class="bad">✗ That is not it. Try again.</span>`;
- if(r.ok)setStage(2);}
+  if(r.ok)setStage(4);}
 async function checkSlots(){
  const slots={};document.querySelectorAll('[data-slot]').forEach(e=>slots[e.dataset.slot]=e.value);
  const r=await api('drill/'+i+'/slots',{slots});let all=true;
  document.querySelectorAll('[data-slot]').forEach(e=>{const ok=r[e.dataset.slot];all=all&&ok;e.className=ok?'ok':'bad';});
- if(all){setStage(3);await lightUp();}}
+
+ if(all)await finish();}
 /* Once the learner has named the four parts, the instruction shows them in colour. */
+async function finish(){
+ finished=true;document.activeElement.blur();await lightUp();
+ const mine=$('#code').value.trim();
+ const same=mine.replace(/\s/g,'').replace(/"/g,"'")===refLine.replace(/\s/g,'').replace(/"/g,"'");
+ $('#yourline').innerHTML=`<p>Your line: <code>${colorLine(mine,parts)}</code></p>`+(same?'':`<p>One way to write it: <code>${colorLine(refLine,parts)}</code></p>`)+'<p class="mut">Press <kbd>Enter</kbd> for the next one.</p>';}
 async function lightUp(){await loadParts('drill');const p={...parts};delete p.Verb;$('#intent').innerHTML=colorLine(intentText,p,true);}
 async function hint(){const r=await api('drill/'+i+'/hint',{});
  const body=r.level===1?r.text.split(' · ').map(x=>{const [k,...v]=x.split(': ');return `<span class="pt pt-${capw(k)}">${esc(k)}</span>: ${esc(v.join(': '))}`;}).join(' · '):esc(r.text);
@@ -284,13 +291,9 @@ async function run(confident){
  if(!r.error)h+=diffTable(r.diff);
  if(r.stdout)h+=`<p class="mut">It printed:</p><pre>${esc(r.stdout)}</pre>`;
  if(r.ret)h+=`<p class="mut">The line gave back:</p><pre>${esc(r.ret)}</pre>`;
- if(r.passed){passed=true;if(!parts)await loadParts('drill');
-  const mine=$('#code').value.trim();
-  h+=`<p>Your line: <code>${colorLine(mine,parts)}</code></p>`;
-  if(mine.replace(/\s/g,'').replace(/"/g,"'")!==r.reference_line.replace(/\s/g,'').replace(/"/g,"'"))h+=`<p>One way to write it: <code>${colorLine(r.reference_line,parts)}</code></p>`;
-  h+='<p class="mut">Press <kbd>Enter</kbd> for the next one.</p>';}
+ if(r.passed){passed=true;refLine=r.reference_line;h+='<div id="yourline"></div>';}
  else h+='<p class="mut">Press <kbd>Ctrl</kbd>+<kbd>H</kbd> for a hint.</p>';
- $('#out').innerHTML=h;$('#s4').classList.remove('off');}
+ $('#out').innerHTML=h;if(r.passed){setStage(3);$('#s1msg').textContent='';}}
 
 document.addEventListener('keydown',async e=>{
  const typing=e.target.tagName==='INPUT';
@@ -311,16 +314,17 @@ document.addEventListener('keydown',async e=>{
   if(/^[1-4]$/.test(e.key)&&document.querySelector('.opt'))return pick(+e.key-1);
   if(e.key==='Enter'&&lanswered)return lessonNext();
   return;}
+ if(finished&&e.key==='Enter'){e.preventDefault();return boot();}
  if(e.key==='h'&&e.ctrlKey){e.preventDefault();return hint();}
- if(e.key==='Enter'&&e.target.id==='code'){e.preventDefault();return passed?boot():run(!e.shiftKey);}
+ if(e.key==='Enter'&&e.target.id==='code'){e.preventDefault();return finished?boot():(passed?null:run(!e.shiftKey));}
  if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.slot==='variable')return checkSlots();
  if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.slot){e.preventDefault();const f=[...document.querySelectorAll('[data-slot]')];f[f.indexOf(e.target)+1].focus();return;}
  if(typing)return;
- if(stage===1&&effects[e.key])return pickEffect(e.key);
- if(stage===2&&mode==='speed'&&e.key===' '){e.preventDefault();const r=await api('drill/'+i+'/reveal');$('#reveal').textContent=Object.entries(r).map(([k,v])=>k.padEnd(8)+v).join('\n');return;}
- if(stage===2&&mode==='speed'&&e.key==='Enter'){setStage(3);return lightUp();}
+ if(stage===3&&effects[e.key])return pickEffect(e.key);
+ if(stage===4&&mode==='speed'&&e.key===' '){e.preventDefault();const r=await api('drill/'+i+'/reveal');$('#reveal').textContent=Object.entries(r).map(([k,v])=>k.padEnd(8)+v).join('\n');return;}
+ if(stage===4&&mode==='speed'&&e.key==='Enter'){return finish();}
  if(e.key.toLowerCase()==='m')return setMode(mode==='guided'?'speed':'guided',true);
- if(passed&&e.key==='Enter')return boot();
+ if(finished&&e.key==='Enter')return boot();
  if(e.key.toLowerCase()==='e'&&stage===1){forceExplain=true;return boot();}
 });
 document.addEventListener('click',e=>{const x=e.target.closest('[data-xo]');if(x&&!$('#explain').hidden)return xPick(+x.dataset.xo);const o=e.target.closest('.opt');if(o&&!$('#lesson').hidden)pick(+o.dataset.o);});
