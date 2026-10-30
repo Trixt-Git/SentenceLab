@@ -63,7 +63,7 @@ def test_sorted_vs_sort():
 
 def test_diff_notes():
     r = run_line(D["py-append"], "scores = scores.append(95)")
-    assert r["diff"][0]["note"] == "scores now holds a different object"
+    assert r["diff"][0]["note"] == "scores now refers to a different object"
 
 
 def test_fit_shows_in_state_diff():

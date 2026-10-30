@@ -31,9 +31,9 @@ EXPLAINS = [
         grammar={"subject": ["scores"], "verb": [".append", "append"], "details": ["95"],
                  "variable": ["scores"]},
         question="After this line runs, what is scores?",
-        options=["[72, 88, 91, 95]", "None", "[72, 88, 91]", "an error"], answer=1,
-        why=".append changes the list itself and produces no result (None). Then scores = "
-            "stores that nothing, replacing your list."),
+        options=["[72, 88, 91, 95]", "None", "[72, 88, 91]", "An error"], answer=1,
+        why=".append changes the list itself and gives back nothing, which Python calls None. "
+            "Then scores = saves that None, so the list is lost."),
     Explain(
         id="ex-sort", domain="python",
         setup=lambda: {"nums": [3, 1, 2]},
@@ -42,7 +42,7 @@ EXPLAINS = [
                  "variable": ["none", "dropped"]},
         question="After this line runs, what is nums?",
         options=["[1, 2, 3]", "[3, 1, 2]", "None", "[]"], answer=0,
-        why="sort() reorders the list itself. The variable is empty because there is no separate result."),
+        why="sort() reorders the list itself, so there is no separate answer to save."),
     Explain(
         id="ex-df-bare", domain="pandas",
         setup=_price_df,
@@ -50,8 +50,8 @@ EXPLAINS = [
         grammar={"subject": ["df"], "verb": [".dropna", "dropna"],
                  "details": ["subset=['price']"], "variable": SHOWN},
         question="After this line runs, how many rows does df have?",
-        options=["2", "3", "0", "an error"], answer=1,
-        why="dropna builds a new table. With no variable it is only displayed, so df keeps "
+        options=["2", "3", "0", "An error"], answer=1,
+        why="dropna builds a new table. With no variable, it is only displayed, so df keeps "
             "all its rows."),
     Explain(
         id="ex-df-reassign", domain="pandas",
@@ -60,20 +60,20 @@ EXPLAINS = [
         grammar={"subject": ["df"], "verb": [".dropna", "dropna"],
                  "details": ["subset=['price']"], "variable": ["df"]},
         question="After this line runs, how many rows does df have?",
-        options=["2", "3", "0", "an error"], answer=0,
-        why="The variable is df, so the new table replaces the old one."),
+        options=["2", "3", "0", "An error"], answer=0,
+        why="The new table is saved as df, so it replaces the old one."),
     Explain(
         id="ex-scaler-leak", domain="sklearn",
         setup=_scaler_env,
         line="X_test_s = scaler.fit_transform(X_test)", effect="rebind",
         grammar={"subject": ["scaler"], "verb": [".fit_transform", "fit_transform"],
                  "details": ["X_test"], "variable": ["X_test_s"]},
-        question="What is wrong with this line, given scaler was already fitted on the training data?",
-        options=["Nothing: it scales X_test as intended",
-                 "It refits the scaler on the test data, changing what it learned",
-                 "It modifies X_test in place", "It raises an error"], answer=1,
-        why="fit_transform makes the scaler learn again from the test data, which mixes test "
-            "data into what it learned. Use scaler.transform(X_test) on test data."),
+        question="What is wrong with this line? The scaler has already learned from the training data.",
+        options=["Nothing, it scales X_test as intended",
+                 "It makes the scaler learn again from the test data",
+                 "It changes X_test in place", "It causes an error"], answer=1,
+        why="fit_transform makes the scaler learn again from the test data, which mixes the "
+            "test data into what it knows. Use scaler.transform(X_test) instead."),
     Explain(
         id="ex-print-sum", domain="python",
         setup=lambda: {"scores": [72, 88, 91]},
@@ -81,7 +81,7 @@ EXPLAINS = [
         grammar={"subject": ["scores"], "verb": ["sum"], "details": NONE,
                  "variable": SHOWN},
         question="After this line runs, what changed?",
-        options=["251 is shown; scores is unchanged", "scores becomes 251",
-                 "scores is emptied", "nothing is shown"], answer=0,
-        why="print shows a value and changes nothing."),
+        options=["251 is shown, and scores is unchanged", "scores becomes 251",
+                 "scores is emptied", "Nothing is shown"], answer=0,
+        why="print shows an answer without changing anything."),
 ]

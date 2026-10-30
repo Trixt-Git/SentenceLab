@@ -17,9 +17,9 @@ from drills import Drill
 
 _INJECTED = {"pd": pd, "np": np}
 _PREVIEW = 80
-NOTES = {"rebound": "{name} now holds a different object",
-         "mutated": "{name} still holds the same object; what is inside changed",
-         "added": "{name} is a new name"}
+NOTES = {"rebound": "{name} now refers to a different object",
+         "mutated": "{name} is the same object as before, but its contents changed",
+         "added": "{name} is a new variable"}
 
 
 def _is_estimator(v):
@@ -105,7 +105,7 @@ def run_line(drill: Drill, code: str) -> dict:
         res["error"] = f"SyntaxError: {e.msg}"
         return res
     if len(tree.body) != 1:
-        res["error"] = "Write exactly one statement."
+        res["error"] = "Please write just one line."
         return res
     node = tree.body[0]
     res["effect_used"] = detect_effect(node)
@@ -138,23 +138,23 @@ def run_line(drill: Drill, code: str) -> dict:
         if t not in after or id(after[t]) != ids[t]:
             ok = False
             res["hints"].append(
-                f"`{t}` now holds None, not your data. This verb changes the data itself and "
-                f"produces no result (None), and `{t} =` stored that nothing over your data. "
-                f"Drop the `{t} =`.")
+                f"`{t}` now holds None instead of your data. This verb changes the data itself "
+                f"and gives back nothing (None), and `{t} =` saved that nothing over your data. "
+                f"Remove the `{t} =`.")
     if drill.effect == "emit" and res["effect_used"] == "rebind":
         ok = False
-        res["hints"].append("This is an Emit drill: show the value, don't bind it.")
+        res["hints"].append("This line should only show the answer, not save it in a variable.")
     if drill.effect == "rebind" and res["effect_used"] != "rebind":
         ok = False
-        res["hints"].append("This is a Rebind drill: the result must land in a name.")
+        res["hints"].append("This line should save its answer in a variable.")
     try:
         ok = bool(drill.verify(before, after, res["stdout"], ret)) and ok
     except Exception as e:
         ok = False
-        res["hints"].append(f"State check failed: {type(e).__name__}")
+        res["hints"].append(f"The check could not finish ({type(e).__name__}).")
     res["passed"] = ok
     if not ok and not res["hints"]:
-        res["hints"].append("Ran, but the resulting state isn't what the intent asks for.")
+        res["hints"].append("The line ran, but the result is not what the instruction asks for.")
     return res
 
 

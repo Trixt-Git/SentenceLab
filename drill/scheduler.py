@@ -17,7 +17,9 @@ class Scheduler:
         self.drills, self.lessons, self.explains, self.path = drills, lessons, explains, path
         self.estats = {x.id: dict(passes=0, misses=0, last_t=0.0) for x in explains}
         self.picks = 0
-        self.lesson_before = {l.before: l for l in lessons}
+        self.lessons_before = {}
+        for l in lessons:
+            self.lessons_before.setdefault(l.before, []).append(l)
         self.stats = {d.id: dict(passes=0, last_ok=None, conf_wrong=False, last_t=0)
                       for d in drills}
         self.firsts = {}          # effect -> list of first-attempt outcomes
@@ -92,9 +94,9 @@ class Scheduler:
         return len(run) == MASTERY_RUN and all(run)
 
     def _explain(self):
-        lead = self.lesson_before.get("explain")
-        if lead and lead.id not in self.seen:
-            return {"kind": "lesson", "lesson": lead.id, "phase": "explain"}
+        for lead in self.lessons_before.get("explain", []):
+            if lead.id not in self.seen:
+                return {"kind": "lesson", "lesson": lead.id, "phase": "explain"}
         pick = min(self.explains, key=lambda x: (self.estats[x.id]["passes"] > 0,
                                                  -self.estats[x.id]["misses"],
                                                  self.estats[x.id]["last_t"]))
@@ -104,9 +106,9 @@ class Scheduler:
         if kind == "explain":
             return self._explain()
         for d in self.drills:
-            lesson = self.lesson_before.get(d.id)
-            if lesson and lesson.id not in self.seen:
-                return {"kind": "lesson", "lesson": lesson.id, "phase": "blocked"}
+            for lesson in self.lessons_before.get(d.id, []):
+                if lesson.id not in self.seen:
+                    return {"kind": "lesson", "lesson": lesson.id, "phase": "blocked"}
             if self.stats[d.id]["passes"] == 0:
                 return self._drill(d, "blocked")
 

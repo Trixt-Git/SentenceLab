@@ -100,7 +100,7 @@ def run(i: int, body: Code):
     if res["passed"]:
         res["reference_line"] = d.reference_line
     elif body.confident:
-        res["hints"].append("You marked this as sure. It will come back for review soon.")
+        res["hints"].append("You were sure about that one, so it will come back for review soon.")
     return res
 
 
@@ -110,7 +110,7 @@ def hint(i: int):
     d = get(i)
     fails = sched.failures(d.id)
     if fails == 0:
-        return {"level": 0, "text": "Try a line first. Hints unlock after a failed attempt."}
+        return {"level": 0, "text": "Give it a try first. Hints unlock after a wrong attempt."}
     if fails == 1:
         g = d.grammar
         return {"level": 1, "text": " · ".join(f"{k}: {v[0]}" for k, v in g.items())}

@@ -69,7 +69,7 @@ NONE = ["none", "nothing"]
 DRILLS = [
     Drill(
         id="py-title", domain="python", plan="text",
-        intent="Make a capitalised copy of name and call it title.",
+        intent="Turn name into title case, so that 'ada lovelace' becomes 'Ada Lovelace', and save it as title.",
         setup=lambda: {"name": "ada lovelace"},
         effect="rebind",
         grammar={"subject": ["name"], "verb": [".title", "title"],
@@ -79,7 +79,7 @@ DRILLS = [
     ),
     Drill(
         id="py-sum", domain="python", plan="total",
-        intent="Add up the numbers in scores and call the result total.",
+        intent="Add up the numbers in scores and save the answer as total.",
         setup=lambda: {"scores": [72, 88, 91]},
         effect="rebind",
         grammar={"subject": ["scores"], "verb": ["sum"], "details": NONE, "variable": ["total"]},
@@ -89,7 +89,7 @@ DRILLS = [
     # ---- mutate ----
     Drill(
         id="py-append", domain="python", plan="add-item",
-        intent="Append the integer 95 to the end of scores, in place.",
+        intent="Add 95 to the end of the scores list itself.",
         setup=lambda: {"scores": [72, 88, 91]},
         effect="mutate",
         grammar={"subject": ["scores"], "verb": [".append", "append"],
@@ -100,7 +100,7 @@ DRILLS = [
     ),
     Drill(
         id="py-sort", domain="python", plan="sort",
-        intent="Sort nums into ascending order, in place.",
+        intent="Sort the nums list itself, from smallest to largest.",
         setup=lambda: {"nums": [3, 1, 2]},
         effect="mutate",
         grammar={"subject": ["nums"], "verb": [".sort", "sort"],
@@ -111,7 +111,7 @@ DRILLS = [
     ),
     Drill(
         id="sk-fit", domain="sklearn", plan="train",
-        intent="Train model on X_train and y_train, in place.",
+        intent="Train model on X_train and y_train.",
         setup=_unfitted_env,
         effect="mutate",
         grammar={"subject": ["model"], "verb": [".fit", "fit"],
@@ -123,7 +123,7 @@ DRILLS = [
     # ---- rebind ----
     Drill(
         id="py-sorted", domain="python", plan="sort",
-        intent="Make a new ascending list from nums and call it ranked; leave nums as it is.",
+        intent="Make a sorted copy of nums and save it as ranked, leaving nums as it was.",
         setup=lambda: {"nums": [3, 1, 2]},
         effect="rebind",
         grammar={"subject": ["nums"], "verb": ["sorted"],
@@ -133,7 +133,7 @@ DRILLS = [
     ),
     Drill(
         id="pd-dropna", domain="pandas", plan="drop-missing",
-        intent="Remove rows from df where 'price' is missing; assign the result to clean_df.",
+        intent="Make a copy of df without the rows where price is missing, and save it as clean_df.",
         setup=_price_df,
         effect="rebind",
         grammar={"subject": ["df"], "verb": [".dropna", "dropna"],
@@ -145,7 +145,7 @@ DRILLS = [
     ),
     Drill(
         id="pd-reassign", domain="pandas", plan="drop-missing",
-        intent="Replace df with a version that has no rows where 'price' is missing (keep the name df).",
+        intent="Remove the rows where price is missing from df, and keep the name df.",
         setup=_price_df,
         effect="rebind",
         grammar={"subject": ["df"], "verb": [".dropna", "dropna"],
@@ -155,7 +155,7 @@ DRILLS = [
     ),
     Drill(
         id="sk-predict", domain="sklearn", plan="predict",
-        intent="Predict labels for X_test with model and save them as preds.",
+        intent="Use model to predict the labels for X_test, and save them as preds.",
         setup=lambda: _sklearn_env(),
         effect="rebind",
         grammar={"subject": ["model"], "verb": [".predict", "predict"],
@@ -166,7 +166,7 @@ DRILLS = [
     ),
     Drill(
         id="sk-transform", domain="sklearn", plan="scale",
-        intent="Scale X_test with the already-fitted scaler (do not refit it); save it as X_test_s.",
+        intent="Scale X_test using scaler, which has already learned from the training data, without making it learn again. Save the result as X_test_s.",
         setup=_scaler_env,
         effect="rebind",
         grammar={"subject": ["scaler"], "verb": [".transform", "transform"],
@@ -191,7 +191,7 @@ DRILLS = [
     ),
     Drill(
         id="sk-score", domain="sklearn", plan="evaluate",
-        intent="Output the mean accuracy of model on X_test and y_test without saving it to a variable.",
+        intent="Show how accurate model is on X_test and y_test, without saving the result.",
         setup=_sklearn_env,
         effect="emit",
         grammar={"subject": ["model"], "verb": [".score", "score"],

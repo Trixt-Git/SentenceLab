@@ -55,20 +55,20 @@ table.mini{font-size:12px;width:auto;min-width:50%} table.mini td,table.mini th{
  <p>What does this line do?</p>
  <pre id="xstate" class="mut"></pre>
  <div class="line"><code id="xline"></code></div>
- <section id="x1"><h2>1 · Physical effect</h2>
-  <kbd>1</kbd> Rebind &nbsp; <kbd>2</kbd> Mutate &nbsp; <kbd>3</kbd> Emit
+ <section id="x1"><h2>1 · What happens to the answer?</h2>
+  <div><kbd>1</kbd> The answer is saved in a variable</div><div><kbd>2</kbd> The line changes the thing itself</div><div><kbd>3</kbd> The answer is only shown</div>
   <div id="x1msg"></div></section>
- <section id="x2" class="off"><h2>2 · Grammatical parts</h2>
+ <section id="x2" class="off"><h2>2 · The four parts of the line</h2>
   <div id="xguided">
    <label>Subject</label><input data-xslot="subject">
    <label>Verb</label><input data-xslot="verb">
    <label>Details (or "none")</label><input data-xslot="details">
    <label>Variable (or "none")</label><input data-xslot="variable">
-   <div class="mut">Enter on the last field to check.</div>
+   <div class="mut">Press Enter in the last box to check your answers.</div>
   </div>
-  <div id="xspeed"><pre id="xreveal" class="mut">Name them in your head, then press <kbd>Space</kbd> to reveal.</pre>
-   <div class="mut"><kbd>Enter</kbd> to continue</div></div></section>
- <section id="x3" class="off"><h2>3 · Predict</h2><p id="xq"></p><div id="xopts"></div><div id="x3msg"></div></section>
+  <div id="xspeed"><pre id="xreveal" class="mut">Name the four parts in your head, then press <kbd>Space</kbd> to see them.</pre>
+   <div class="mut">Press <kbd>Enter</kbd> to continue.</div></div></section>
+ <section id="x3" class="off"><h2>3 · What will happen?</h2><p id="xq"></p><div id="xopts"></div><div id="x3msg"></div></section>
  <section id="x4" class="off"><h2>4 · What happened</h2><div id="xout"></div></section>
 </div>
 
@@ -76,28 +76,28 @@ table.mini{font-size:12px;width:auto;min-width:50%} table.mini td,table.mini th{
 <p><span id="intent"></span></p>
 <pre id="state" class="mut"></pre>
 
-<section id="s1"><h2>1 · Physical effect</h2>
- <kbd>1</kbd> Rebind <code>x = …</code> &nbsp; <kbd>2</kbd> Mutate <code>x.do(…)</code> &nbsp; <kbd>3</kbd> Emit <code>print(…)</code>
+<section id="s1"><h2>1 · What happens to the answer?</h2>
+ <div><kbd>1</kbd> The answer is saved in a variable, like <code>x = …</code></div><div><kbd>2</kbd> The line changes the thing itself, like <code>x.sort()</code></div><div><kbd>3</kbd> The answer is only shown, like <code>print(…)</code></div>
  <div id="s1msg"></div></section>
 
-<section id="s2" class="off"><h2>2 · Grammatical parts</h2>
+<section id="s2" class="off"><h2>2 · The four parts of the line</h2>
  <div id="guided">
   <label>Subject</label><input data-slot="subject">
   <label>Verb</label><input data-slot="verb">
   <label>Details (or "none")</label><input data-slot="details">
   <label>Variable (or "none")</label><input data-slot="variable">
-  <div class="mut">Enter on the last field to check.</div>
+  <div class="mut">Press Enter in the last box to check your answers.</div>
  </div>
- <div id="speed"><pre id="reveal" class="mut">Think it through, then press <kbd>Space</kbd> to reveal.</pre>
-  <div class="mut"><kbd>Enter</kbd> to continue</div></div>
+ <div id="speed"><pre id="reveal" class="mut">Think it through, then press <kbd>Space</kbd> to see the answer.</pre>
+  <div class="mut">Press <kbd>Enter</kbd> to continue.</div></div>
  <div id="s2msg"></div></section>
 
-<section id="s3" class="off"><h2>3 · Line entry</h2>
- <input id="code" placeholder="[Variable] = [Subject].[Verb]([Details])" autocomplete="off" spellcheck="false">
- <div class="mut"><kbd>Enter</kbd> run, sure &nbsp; <kbd>Shift</kbd>+<kbd>Enter</kbd> run, unsure &nbsp; <kbd>Ctrl</kbd>+<kbd>H</kbd> hint</div>
+<section id="s3" class="off"><h2>3 · Write the line</h2>
+ <input id="code" placeholder="variable = subject.verb(details)" autocomplete="off" spellcheck="false">
+ <div class="mut">Press <kbd>Enter</kbd> to run it, <kbd>Shift</kbd>+<kbd>Enter</kbd> if you are unsure, or <kbd>Ctrl</kbd>+<kbd>H</kbd> for a hint.</div>
  <div id="s3msg"></div></section>
 
-<section id="s4" class="off"><h2>4 · Result</h2><div id="out"></div></section>
+<section id="s4" class="off"><h2>4 · What happened</h2><div id="out"></div></section>
 </div>
 
 <script>
@@ -105,6 +105,7 @@ const $=s=>document.querySelector(s);
 const api=(p,b)=>fetch('/api/'+p,b===undefined?undefined:{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json());
 const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const effects={1:'rebind',2:'mutate',3:'emit'};
+const effLabel={rebind:'saved in a variable',mutate:'changes the thing itself',emit:'only shown'};
 let X=null,xs=1,xmiss=0,xdone=false,forceExplain=false;
 let i=0,total=1,stage=1,mode='guided',passed=false,manual=false,L=null,ls=0,lanswered=false;
 try{mode=localStorage.mode||'guided'}catch{}
@@ -119,8 +120,8 @@ function diffTable(diff){return diff.length?diff.map(d=>{const t=d.detail;let bo
  if(t&&t.kind==='table')body=(t.caption?`<div class="mut note">${esc(t.caption)}</div>`:'')+mini(t);
  else if(t&&t.kind==='tokens')body=`<div class="row del tk"><span class="sg">−</span><code>${toks(t.before)}</code></div><div class="row add"><span class="sg">+</span><code>${toks(t.after)}</code></div>`+(t.caption?`<div class="mut note">${esc(t.caption)}</div>`:'');
  else body=(d.before!==undefined?`<div class="row del"><span class="sg">−</span><code>${esc(d.before)}</code></div>`:'')+(d.after!==undefined?`<div class="row add"><span class="sg">+</span><code>${d.change==='added'?esc(d.name)+' = ':''}${esc(d.after)}</code></div>`:'');
- return `<div class="chg"><div class="chg-h"><code>${esc(d.name)}</code><span class="tag">${d.change}</span></div>${body}<div class="mut note">${esc(d.note||'')}</div></div>`;}).join(''):'<p class="mut">State unchanged.</p>';}
-function runBox(r){return `<div class="line"><code>${esc(r.line)}</code></div>${r.error?`<p class="bad">${esc(r.error)}</p>`:''}${diffTable(r.diff)}${r.stdout?`<pre>${esc(r.stdout)}</pre>`:''}${r.ret?`<p class="mut">returned</p><pre>${esc(r.ret)}</pre>`:''}`;}
+ return `<div class="chg"><div class="chg-h"><code>${esc(d.name)}</code><span class="tag">${({added:'new',mutated:'changed',rebound:'replaced'})[d.change]||d.change}</span></div>${body}<div class="mut note">${esc(d.note||'')}</div></div>`;}).join(''):'<p class="mut">Nothing changed.</p>';}
+function runBox(r){return `<div class="line"><code>${esc(r.line)}</code></div>${r.error?`<p class="bad">${esc(r.error)}</p>`:''}${diffTable(r.diff)}${r.stdout?`<pre>${esc(r.stdout)}</pre>`:''}${r.ret?`<p class="mut">The line gave back:</p><pre>${esc(r.ret)}</pre>`:''}`;}
 
 async function boot(){
  const n=await api('next'+(forceExplain?'?kind=explain':''));forceExplain=false;
@@ -128,9 +129,9 @@ async function boot(){
  if(n.kind==='explain'){banner('');return loadExplain(n.index);}
  if(n.kind==='lesson')return startLesson(n.lesson);
  const note=[];
- if(n.review)note.push('Review: you were sure about this one and missed it.');
+ if(n.review)note.push('Review: you were sure about this one last time, but it was wrong.');
  if(n.phase==='interleaved')note.push('Mixed practice');
- if(n.mastered&&!manual&&mode==='guided'){setMode('speed');note.push('3 first-try passes in a row: switching to Speed mode.');}
+ if(n.mastered&&!manual&&mode==='guided'){setMode('speed');note.push('You got three in a row on the first try, so we are switching to Speed mode.');}
  banner(note.join(' · '));
  load(n.index,n);}
 
@@ -147,16 +148,16 @@ function renderStage(){
  $('#pos').textContent=`Lesson · step ${ls+1} of ${stageKeys().length}`;
  const b={set innerHTML(x){scene(x);},querySelector:q=>$('#lbody').querySelector(q)};
  if(st==='teach'){const t=L.teach;lanswered=true;
-  b.innerHTML=`<p class="mut">The idea</p><ul>${t.points.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><p class="mut">Example</p>${t.runs.map(runBox).join('')}${t.slots?`<table>${Object.entries(t.slots).map(([k,v])=>`<tr><td class="s-${k}"><b>${k}</b><td><code class="s-${k}">${esc(v)}</code></tr>`).join('')}</table>`:''}<div class="banner"><b>Rule:</b> ${esc(t.rule)}</div><p class="mut"><kbd>Enter</kbd> to continue</p>`;}
+  b.innerHTML=`<p class="mut">The idea</p><ul>${t.points.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><p class="mut">Example</p>${t.runs.map(runBox).join('')}${t.slots?`<table>${Object.entries(t.slots).map(([k,v])=>`<tr><td class="s-${k}"><b>${k}</b><td><code class="s-${k}">${esc(v)}</code></tr>`).join('')}</table>`:''}<div class="banner"><b>Rule:</b> ${esc(t.rule)}</div><p class="mut">Press <kbd>Enter</kbd> to continue.</p>`;}
  if(st==='predict'){const p=L.predict;
   b.innerHTML=`<p class="mut">Check yourself</p><div class="line"><code>${esc(p.line)}</code></div><p>${esc(p.question)}</p>${opts(p.options)}<div id="fb"></div>`;}
  if(st==='contrast'){const c=L.contrast;
   b.innerHTML=`<p class="mut">Compare the two lines</p><div class="cols"><div class="line"><b>A</b> <code>${esc(c.a)}</code></div><div class="line"><b>B</b> <code>${esc(c.b)}</code></div></div><p>${esc(c.question)}</p>${opts(c.options)}<div id="fb"></div>`;}
  if(st==='worked'){const w=L.worked;
-  b.innerHTML=`<p class="mut">Worked example: the four slots</p><div class="line"><code>${esc(w.line)}</code></div><table>${Object.entries(w.slots).map(([k,v])=>`<tr><td class="s-${k}"><b>${k}</b><td><code class="s-${k}">${esc(v)}</code></tr>`).join('')}</table><p>${esc(w.why)}</p>${opts(w.options)}<div id="fb"></div>`;}
+  b.innerHTML=`<p class="mut">Worked example: the four parts</p><div class="line"><code>${esc(w.line)}</code></div><table>${Object.entries(w.slots).map(([k,v])=>`<tr><td class="s-${k}"><b>${k}</b><td><code class="s-${k}">${esc(v)}</code></tr>`).join('')}</table><p>${esc(w.why)}</p>${opts(w.options)}<div id="fb"></div>`;}
  if(st.startsWith('faded')){const f=L.faded[+st.slice(5)];
   const parts=f.template.split('___');
-  b.innerHTML=`<p class="mut">Fill the blank${parts.length>2?'s':''} (Enter to check)</p><div class="line"><code>${parts.map((p,k)=>esc(p)+(k<parts.length-1?'<input class="blank" data-b>':'')).join('')}</code></div><div id="fb"></div>`;
+  b.innerHTML=`<p class="mut">Fill in the blank${parts.length>2?'s':''}, then press Enter to check.</p><div class="line"><code>${parts.map((p,k)=>esc(p)+(k<parts.length-1?'<input class="blank" data-b>':'')).join('')}</code></div><div id="fb"></div>`;
   b.querySelector('[data-b]').focus();}
 }
 function opts(o){return o.map((t,k)=>`<button class="opt" data-o="${k}"><kbd>${k+1}</kbd> ${esc(t)}</button>`).join('');}
@@ -166,19 +167,19 @@ async function pick(k){
  const r=await api(`lesson/${L.id}/check`,{stage:st,choice:k});
  lanswered=r.ok;
  document.querySelectorAll('.opt').forEach((b,j)=>{b.classList.toggle('right',j===r.answer&&r.ok);b.classList.toggle('wrong',j===k&&!r.ok);});
- let h=r.ok?'<p class="ok">✓ Correct</p>':'<p class="bad">✗ Not quite, try another</p>';
+ let h=r.ok?'<p class="ok">✓ Correct</p>':'<p class="bad">✗ Not quite. Try another.</p>';
  if(r.ok){
   if(st==='contrast'){h+=`<div class="cols">${r.runs.map((x,j)=>`<div><b>${'AB'[j]}</b>${runBox(x)}</div>`).join('')}</div>`;}
   else h+=r.runs.map(runBox).join('');
   if(r.explain)h+=`<p>${esc(r.explain)}</p>`;
-  h+='<p class="mut"><kbd>Enter</kbd> to continue</p>';}
+  h+='<p class="mut">Press <kbd>Enter</kbd> to continue.</p>';}
  $('#fb').innerHTML=h;}
 async function checkBlanks(){
  const st=stageKeys()[ls];const els=[...document.querySelectorAll('[data-b]')];
  const r=await api(`lesson/${L.id}/check`,{stage:st,blanks:els.map(e=>e.value)});
  els.forEach((e,k)=>e.className='blank '+(r.blanks[k]?'ok':'bad'));
  lanswered=r.ok;
- $('#fb').innerHTML=r.ok?'<p class="ok">✓ Correct</p><p class="mut"><kbd>Enter</kbd> to continue</p>':'<p class="bad">✗ Check the highlighted blanks</p>';}
+ $('#fb').innerHTML=r.ok?'<p class="ok">✓ Correct</p><p class="mut">Press <kbd>Enter</kbd> to continue.</p>':'<p class="bad">✗ Check the highlighted blanks</p>';}
 async function lessonNext(){
  if(ls+1<stageKeys().length){ls++;renderStage();return;}
  await api(`lesson/${L.id}/done`,{});boot();}
@@ -195,11 +196,11 @@ async function loadExplain(k){
  $('#xq').textContent=X.question;$('#xopts').innerHTML=opts(X.options).replace(/data-o=/g,'data-xo=');
  for(const e of document.querySelectorAll('#explain input')){e.value='';e.className='';}
  $('#x1msg').textContent=$('#x3msg').textContent=$('#xout').textContent='';
- $('#xreveal').innerHTML='Name them in your head, then press <kbd>Space</kbd> to reveal.';
+ $('#xreveal').innerHTML='Name the four parts in your head, then press <kbd>Space</kbd> to see them.';
  document.activeElement.blur();setX(1);}
 async function xEffect(k){
  const r=await api('explain/'+X.index+'/effect',{effect:effects[k]});
- $('#x1msg').innerHTML=r.ok?`<span class="ok">✓ ${r.answer}</span>`:`<span class="bad">✗ not ${effects[k]}, look again</span>`;
+ $('#x1msg').innerHTML=r.ok?`<span class="ok">✓ ${effLabel[r.answer]}</span>`:`<span class="bad">✗ That is not it. Look again.</span>`;
  if(r.ok)setX(2);else xmiss++;}
 async function xSlots(){
  const slots={};document.querySelectorAll('[data-xslot]').forEach(e=>slots[e.dataset.xslot]=e.value);
@@ -210,9 +211,9 @@ async function xPick(o){
  if(xdone)return;
  const r=await api('explain/'+X.index+'/answer',{choice:o});
  document.querySelectorAll('[data-xo]').forEach((b,j)=>{b.classList.toggle('right',r.ok&&j===r.answer);b.classList.toggle('wrong',!r.ok&&j===o);});
- if(!r.ok){xmiss++;$('#x3msg').innerHTML='<p class="bad">✗ Not quite, try another</p>';return;}
+ if(!r.ok){xmiss++;$('#x3msg').innerHTML='<p class="bad">✗ Not quite. Try another.</p>';return;}
  xdone=true;$('#x3msg').innerHTML='<p class="ok">✓ Correct</p>';
- $('#xout').innerHTML=r.runs.map(runBox).join('')+`<p>${esc(r.why)}</p><p class="mut"><kbd>Enter</kbd> for next</p>`;
+ $('#xout').innerHTML=r.runs.map(runBox).join('')+`<p>${esc(r.why)}</p><p class="mut">Press <kbd>Enter</kbd> for the next one.</p>`;
  setX(4);api('explain/'+X.index+'/done',{misses:xmiss});}
 
 /* ---------------- drills ---------------- */
@@ -226,29 +227,29 @@ async function load(n,info){
  $('#state').textContent=d.state.map(sl).join('\n');
  for(const e of document.querySelectorAll('#drill input')){e.value='';e.className='';}
  $('#s1msg').textContent=$('#s2msg').textContent=$('#s3msg').textContent=$('#out').textContent='';
- $('#reveal').innerHTML='Think it through, then press <kbd>Space</kbd> to reveal.';
+ $('#reveal').innerHTML='Think it through, then press <kbd>Space</kbd> to see the answer.';
  document.activeElement.blur();setStage(1);}
 async function pickEffect(k){
  const r=await api('drill/'+i+'/effect',{effect:effects[k]});
- $('#s1msg').innerHTML=r.ok?`<span class="ok">✓ ${r.answer}</span>`:`<span class="bad">✗ not ${effects[k]}, try again</span>`;
+ $('#s1msg').innerHTML=r.ok?`<span class="ok">✓ ${effLabel[r.answer]}</span>`:`<span class="bad">✗ That is not it. Try again.</span>`;
  if(r.ok)setStage(2);}
 async function checkSlots(){
  const slots={};document.querySelectorAll('[data-slot]').forEach(e=>slots[e.dataset.slot]=e.value);
  const r=await api('drill/'+i+'/slots',{slots});let all=true;
  document.querySelectorAll('[data-slot]').forEach(e=>{const ok=r[e.dataset.slot];all=all&&ok;e.className=ok?'ok':'bad';});
  if(all)setStage(3);}
-async function hint(){const r=await api('drill/'+i+'/hint',{});$('#s3msg').innerHTML=`<p class="mut">Hint ${r.level}/3: <code>${esc(r.text)}</code></p>`;}
+async function hint(){const r=await api('drill/'+i+'/hint',{});$('#s3msg').innerHTML=`<p class="mut">Hint ${r.level} of 3: <code>${esc(r.text)}</code></p>`;}
 async function run(confident){
  const r=await api('drill/'+i+'/run',{code:$('#code').value,confident});
  let h='';
  if(r.error)h+=`<p class="bad">${esc(r.error)}</p>`;
- h+=`<p class="${r.passed?'ok':'bad'}">${r.passed?'✓ Passed':'✗ Not yet'}${r.passed&&r.attempt===1?' · first try':''}</p>`;
+ h+=`<p class="${r.passed?'ok':'bad'}">${r.passed?'✓ Correct':'✗ Not quite'}${r.passed&&r.attempt===1?' on the first try':''}</p>`;
  (r.hints||[]).forEach(t=>h+=`<p class="bad">${esc(t).replace(/`([^`]+)`/g,'<code>$1</code>')}</p>`);
  if(!r.error)h+=diffTable(r.diff);
- if(r.stdout)h+=`<p class="mut">stdout</p><pre>${esc(r.stdout)}</pre>`;
- if(r.ret)h+=`<p class="mut">returned</p><pre>${esc(r.ret)}</pre>`;
- if(r.passed){passed=true;h+=`<p>Reference: <code>${esc(r.reference_line)}</code></p><p class="mut"><kbd>Enter</kbd> for next</p>`;}
- else h+='<p class="mut"><kbd>Ctrl</kbd>+<kbd>H</kbd> for a hint</p>';
+ if(r.stdout)h+=`<p class="mut">It printed:</p><pre>${esc(r.stdout)}</pre>`;
+ if(r.ret)h+=`<p class="mut">The line gave back:</p><pre>${esc(r.ret)}</pre>`;
+ if(r.passed){passed=true;h+=`<p>One way to write it: <code>${esc(r.reference_line)}</code></p><p class="mut">Press <kbd>Enter</kbd> for the next one.</p>`;}
+ else h+='<p class="mut">Press <kbd>Ctrl</kbd>+<kbd>H</kbd> for a hint.</p>';
  $('#out').innerHTML=h;$('#s4').classList.remove('off');}
 
 document.addEventListener('keydown',async e=>{
