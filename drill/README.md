@@ -1,7 +1,7 @@
 # SentenceLab drill
 
-Single-line production practice: classify the effect (rebind / mutate / emit),
-name the four slots (Subject, Verb, Details, Variable), then type the line.
+Single-line production practice: write one line of Python, see what it did, say what
+happened to its answer, then name the four parts of your own line.
 
     pip install -r requirements.txt
     uvicorn app:app
