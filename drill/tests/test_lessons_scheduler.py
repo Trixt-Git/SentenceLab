@@ -149,7 +149,7 @@ def test_explain_scheduling_and_history(tmp_path):
 
 def test_lesson_before_every_effect_group_and_domain(tmp_path):
     ids = {l.before for l in LESSONS}
-    assert {"sk-fit", "sk-predict", "sk-transform", "explain"} <= ids
+    assert {"py-title", "py-append", "sk-fit", "sk-predict", "sk-transform", "explain"} <= ids
     s = Scheduler(DRILLS, LESSONS, EXPLAINS, tmp_path / "h.csv")
     n = s.next("explain")
     assert n["kind"] == "lesson" and n["lesson"] == "read"
@@ -179,4 +179,4 @@ def test_every_lesson_teaches_before_asking():
     for l in LESSONS:
         t = _public(l)["teach"]
         assert len(t["points"]) >= 2 and t["rule"] and not t["runs"][0]["error"], l.id
-        assert "answer" not in str(t)
+        assert "answer" not in t

@@ -16,7 +16,7 @@ def test_reference_line_passes(d):
 
 def test_mutate_rebind_to_none_fails():
     r = run_line(D["py-append"], "scores = scores.append(95)")
-    assert not r["passed"] and any("rebound" in h for h in r["hints"])
+    assert not r["passed"] and any("holds None" in h for h in r["hints"])
 
 
 def test_quote_style_irrelevant():
@@ -63,7 +63,7 @@ def test_sorted_vs_sort():
 
 def test_diff_notes():
     r = run_line(D["py-append"], "scores = scores.append(95)")
-    assert r["diff"][0]["note"] == "the name now points to a new object"
+    assert r["diff"][0]["note"] == "scores now holds a different object"
 
 
 def test_fit_shows_in_state_diff():

@@ -27,62 +27,71 @@ class Lesson:
 
 LESSONS = [
     Lesson(
-        id="mutate", title="Mutate: change the object, keep the name", effect="mutate",
-        before="py-append",
-        setup=lambda: {"scores": [72, 88, 91]},
-        predict=dict(
-            line="scores.append(95)",
-            question="After this line runs, what is scores?",
-            options=["[72, 88, 91]", "[72, 88, 91, 95]", "None", "an error"], answer=1),
-        contrast=dict(
-            a="scores.append(95)", b="scores = scores.append(95)",
-            question="What is different about scores afterwards?",
-            options=["Nothing: both give [72, 88, 91, 95]",
-                     "The second overwrites scores with None",
-                     "The second raises an error",
-                     "The first creates a new list"], answer=1,
-            explain=".append changes the list in place and returns None. Assigning that "
-                    "None to scores throws the list away."),
+        id="sentence", title="A line of Python is a sentence", effect="sentence",
+        before="py-title",
+        setup=lambda: {"name": "ada", "scores": [72, 88, 91, 88]},
         teach=dict(
-            points=['Some operations change an object in place. The name stays attached to the same object; only its contents change.', 'Methods like .append, .sort and .fit work this way. They give back None (or the object itself), not a new result.', 'So there is nothing to catch: no assignment, and the Landing is empty.'],
-            example='scores.append(95)',
-            rule='Mutate: same object, changed in place. Landing: none.'),
+            points=["Every line you will write here is a short sentence with four parts.",
+                    "Subject: what it works on. Here, name.",
+                    "Verb: what it does. Here, .upper (make it uppercase).",
+                    "Details: extra information the verb needs. Here, none.",
+                    "Landing: where the result goes, usually a name on the left of =. Here, shout.",
+                    "Some lines leave a part out, but the shape stays the same."],
+            example="shout = name.upper()",
+            slots={"Subject": "name", "Verb": ".upper", "Details": "none", "Landing": "shout"},
+            rule="Landing = Subject.Verb(Details)"),
         worked=dict(
-            line="scores.append(95)",
-            slots={"Subject": "scores", "Verb": ".append", "Details": "95", "Landing": "none"},
-            why="Why is Landing empty?",
-            options=["The list is changed in place, so nothing needs to catch a result",
-                     "append is slow", "Lists cannot be reassigned", "Because 95 is an int"],
-            answer=0),
-        faded=[dict(template="___.append(95)", answers=[["scores"]]),
-               dict(template="___.___(95)", answers=[["scores"], ["append", ".append"]])],
+            line="count = scores.count(88)",
+            slots={"Subject": "scores", "Verb": ".count", "Details": "88", "Landing": "count"},
+            why="Which part is the extra information the verb needs?",
+            options=["88", "scores", "count", ".count"], answer=0),
+        contrast=dict(
+            a="shout = name.upper()", b="name.upper()",
+            question="What does line B leave out?",
+            options=["the Landing: nothing stores the result", "the Subject", "the Verb",
+                     "the Details"], answer=0,
+            explain="Both lines do the same work. B has no Landing, so the result is shown "
+                    "(in a notebook) and then lost. A stores it as shout."),
+        predict=dict(
+            line="pos = scores.index(91)",
+            question="Which part is the Landing?",
+            options=["pos", "scores", ".index", "91"], answer=0),
+        faded=[dict(template="shout = ___.upper()", answers=[["name"]]),
+               dict(template="___ = ___.upper()", answers=[["<name>"], ["name"]])],
     ),
     Lesson(
-        id="rebind", title="Rebind: a new object must land in a name", effect="rebind",
-        before="py-sorted",
+        id="landing", title="The Landing: where does the result go?", effect="landing",
+        before="py-append",
         setup=lambda: {"nums": [3, 1, 2]},
-        predict=dict(
-            line="ranked = sorted(nums)",
-            question="After this line runs, what is nums?",
-            options=["[1, 2, 3]", "[3, 1, 2]", "None", "[]"], answer=1),
-        contrast=dict(
-            a="nums.sort()", b="ranked = sorted(nums)",
-            question="Which line leaves nums unchanged?",
-            options=["nums.sort()", "ranked = sorted(nums)", "Both", "Neither"], answer=1,
-            explain="sort() mutates nums and returns None. sorted() returns a new list "
-                    "that has to land in a name or it disappears."),
         teach=dict(
-            points=['Some operations build a new object and leave the original alone.', 'sorted(nums) returns a new list. If nothing catches it, it is thrown away.', 'A name on the left of = catches it. That name is the Landing.'],
-            example='ranked = sorted(nums)',
-            rule='Rebind: a new object must land in a name.'),
-        worked=dict(
-            line="ranked = sorted(nums)",
+            points=["The Landing answers one question: where does the result go?",
+                    "Stored: ranked = sorted(nums) gives the result a name.",
+                    "Nowhere: nums.sort() changes nums itself, so there is no separate result to store.",
+                    "Shown: print(sum(nums)) sends the result to the screen.",
+                    "The drills call these Rebind, Mutate and Emit. Step 1 asks which one a line is."],
+            example="ranked = sorted(nums)",
             slots={"Subject": "nums", "Verb": "sorted", "Details": "none", "Landing": "ranked"},
-            why="What happens if you drop 'ranked ='?",
-            options=["The sorted list is computed and thrown away", "nums gets sorted",
-                     "It raises an error", "ranked is created anyway"], answer=0),
-        faded=[dict(template="ranked = ___(nums)", answers=[["sorted"]]),
-               dict(template="___ = ___(nums)", answers=[["<name>"], ["sorted"]])],
+            rule="Ask first: is the result stored, changed in place, or shown?"),
+        worked=dict(
+            line="nums.sort()",
+            slots={"Subject": "nums", "Verb": ".sort", "Details": "none", "Landing": "none"},
+            why="Why is the Landing empty?",
+            options=["The verb changes nums itself, so there is nothing separate to store",
+                     "sort is slow", "Lists cannot be stored", "Because nums is short"],
+            answer=0),
+        contrast=dict(
+            a="ranked = sorted(nums)", b="nums.sort()",
+            question="Which line leaves nums as it was?",
+            options=["the first", "the second", "both", "neither"], answer=0,
+            explain="sorted builds a new sorted list and stores it as ranked, so nums is "
+                    "untouched. sort() reorders nums itself and stores nothing."),
+        predict=dict(
+            line="print(len(nums))",
+            question="Where does the result go?",
+            options=["stored under a name", "nowhere: the verb changes nums",
+                     "to the screen", "it is lost"], answer=2),
+        faded=[dict(template="___ = sorted(nums)", answers=[["<name>"]]),
+               dict(template="ranked = ___(nums)", answers=[["sorted"]])],
     ),
     Lesson(
         id="pandas", title="pandas returns a new DataFrame", effect="rebind",
@@ -96,13 +105,13 @@ LESSONS = [
             a="df.dropna(subset=['price'])", b="df = df.dropna(subset=['price'])",
             question="In which line does df lose the row with the missing price?",
             options=["the first", "the second", "both", "neither"], answer=1,
-            explain="Most pandas methods return a new DataFrame and leave the original "
-                    "alone, so the result must land in a name. Prefer rebinding over "
-                    "inplace=True, whose behaviour is harder to predict."),
+            explain="dropna builds a new table and leaves df alone. Only the second line has a Landing "
+                    "(df =), so only there does df lose the row. Prefer this to inplace=True, "
+                    "which is harder to predict."),
         teach=dict(
-            points=['Most pandas methods return a new DataFrame and leave the original unchanged.', 'df.dropna(...) on its own only displays the result; df keeps all its rows.', 'Catch the result: use a new name (clean_df = ...) or reuse the old one (df = ...). Avoid inplace=True, whose behaviour is harder to predict.'],
+            points=['Same four parts as before. The Subject is now a DataFrame (df).', 'Most pandas verbs build a new table instead of changing df. That new table is the result, so it needs a Landing.', "Details can be named options: subset=['price'] says which column to check."],
             example="clean_df = df.dropna(subset=['price'])",
-            rule='pandas returns a new DataFrame: give it a name.'),
+            rule='A pandas verb builds a new table: give it a Landing.'),
         worked=dict(
             line="clean_df = df.dropna(subset=['price'])",
             slots={"Subject": "df", "Verb": ".dropna", "Details": "subset=['price']",
@@ -115,33 +124,6 @@ LESSONS = [
                     answers=[["dropna", ".dropna"]]),
                dict(template="___ = df.___(subset=['price'])",
                     answers=[["<name>"], ["dropna", ".dropna"]])],
-    ),
-    Lesson(
-        id="emit", title="Emit: look at a value without changing anything", effect="emit",
-        before="pd-head",
-        setup=lambda: {"scores": [72, 88, 91]},
-        predict=dict(
-            line="print(sum(scores))",
-            question="After this line runs, what changed?",
-            options=["251 is shown; scores is unchanged", "scores becomes 251",
-                     "scores is emptied", "nothing is shown"], answer=0),
-        contrast=dict(
-            a="print(sum(scores))", b="total = sum(scores)",
-            question="Which line shows you the value?",
-            options=["the first", "the second", "both", "neither"], answer=0,
-            explain="Emit shows a value and changes no state. Rebinding saves it silently."),
-        teach=dict(
-            points=['Sometimes you only want to look at a value, not keep it.', 'print(...) shows a value and changes nothing. In a notebook, a bare expression does the same.', 'The Landing is the screen (print / output), not a variable.'],
-            example='print(sum(scores))',
-            rule='Emit: show a value, change no state.'),
-        worked=dict(
-            line="print(sum(scores))",
-            slots={"Subject": "scores", "Verb": "sum", "Details": "none", "Landing": "print"},
-            why="Why is Landing print rather than a variable?",
-            options=["The goal is to see the value, not keep it", "print is faster",
-                     "Variables cannot hold sums", "sum() requires print"], answer=0),
-        faded=[dict(template="print(___(scores))", answers=[["sum"]]),
-               dict(template="___(___(scores))", answers=[["print"], ["sum"]])],
     ),
     Lesson(
         id="sk-fit", title="scikit-learn: fit trains the model in place", effect="mutate",
@@ -159,13 +141,12 @@ LESSONS = [
             question="After line B, which names are fitted models?",
             options=["only fitted", "both model and fitted (the same object)",
                      "neither", "only model"], answer=1,
-            explain="fit trains the estimator in place and returns the same object. "
-                    "Unlike list.append it does not return None, but the habit that "
-                    "matters is the same: the model object itself holds what it learned."),
+            explain="fit teaches the model and hands the same model back, so model is fitted after "
+                    "either line. The point: fit changes its Subject, so it needs no Landing."),
         teach=dict(
-            points=['scikit-learn methods come in three kinds: fit trains, predict and transform return new arrays.', 'fit changes the model object itself: what it learned is stored inside it.', 'It returns the same object, so you do not need to assign it. The change to look for is the model going from not fitted to fitted.'],
+            points=['scikit-learn has three kinds of verbs: fit, predict and transform.', 'fit teaches the model. The model is the Subject and the data it learns from is the Details (X_train, y_train).', 'fit changes the model itself, so there is no separate result and the Landing is empty. You can see it worked: the model goes from not fitted to fitted.'],
             example='model.fit(X_train, y_train)',
-            rule='fit mutates the model: no Landing needed.'),
+            rule='fit changes its Subject: the Landing is empty.'),
         worked=dict(
             line="model.fit(X_train, y_train)",
             slots={"Subject": "model", "Verb": ".fit", "Details": "X_train, y_train",
@@ -192,12 +173,12 @@ LESSONS = [
             a="preds = model.predict(X_test)", b="model.predict(X_test)",
             question="Which line keeps the predictions?",
             options=["the first", "the second", "both", "neither"], answer=0,
-            explain="predict returns a new array and leaves the model unchanged. With no "
-                    "name to land in, the predictions are shown once and then lost."),
+            explain="predict builds a new result and leaves the model alone. Without a Landing "
+                    "the predictions are shown once and then lost."),
         teach=dict(
-            points=['predict reads the model and returns a new array of labels. The model is unchanged.', 'The array must land in a name, or it is shown once and lost.', 'Rule of thumb: if a method gives you data back, give it a name.'],
+            points=['predict is the second kind of verb: it reads the model and builds a new result, the predictions.', 'A new result needs a Landing: preds = model.predict(X_test).', 'The Details are just the data to predict on, X_test.'],
             example='preds = model.predict(X_test)',
-            rule='predict returns a new array: give it a name.'),
+            rule='predict builds a new result: give it a Landing.'),
         worked=dict(
             line="preds = model.predict(X_test)",
             slots={"Subject": "model", "Verb": ".predict", "Details": "X_test",
@@ -226,11 +207,10 @@ LESSONS = [
             b="X_test_s = scaler.fit_transform(X_test)",
             question="Which line changes what the scaler learned?",
             options=["the first", "the second", "both", "neither"], answer=1,
-            explain="fit_transform refits the scaler on whatever it is given. On test data "
-                    "that leaks information about the test set. Fit on training data, then "
-                    "only transform test data."),
+            explain="fit_transform makes the scaler learn again from whatever you give it. On test "
+                    "data that mixes the test set into what the scaler learned."),
         teach=dict(
-            points=['A fitted scaler stores what it learned from the training data.', 'transform applies that stored knowledge to new data and returns a new array. The scaler is unchanged.', 'fit_transform refits first. On test data that leaks information about the test set, so use transform.'],
+            points=['transform is the third kind of verb. The Subject is a scaler that already learned numbers from the training data.', 'scaler.transform(X_test) applies those numbers and builds a new result, so it needs a Landing.', 'fit_transform would first learn again from X_test, which mixes test data into the scaler. Fit on training data, only transform test data.'],
             example='X_test_s = scaler.transform(X_test)',
             rule='Fit on training data. Only transform test data.'),
         worked=dict(
@@ -258,18 +238,18 @@ LESSONS = [
             a="ranked = sorted(nums)", b="ranked = nums.sort()",
             question="Which line puts the sorted list in ranked?",
             options=["the first", "the second", "both", "neither"], answer=0,
-            explain="To read a line, check the Landing first: what catches the result, "
-                    "and can that verb return something? sort() returns None, so ranked "
-                    "catches None while nums is sorted in place."),
+            explain="nums.sort() reorders nums itself and produces no result (None). ranked = then "
+                    "stores that nothing, so ranked is None while nums is sorted. sorted(nums) "
+                    "builds a new list, and ranked stores it."),
         teach=dict(
-            points=['When you read a line someone else wrote, check the Landing first: what catches the result?', 'Then ask whether the verb mutates (and returns None) or returns a new object.', 'The classic bug is a mutating verb whose None gets caught by a name.'],
+            points=["Reading someone else's line uses the same four parts, found in a different order.", 'Start at the Landing, the left of =: is a result stored there, or not?', 'Then look at the Verb: does it change its Subject, or build something new? A mismatch is the classic bug.'],
             example='ranked = sorted(nums)',
-            rule='Read the Landing first, then the verb.'),
+            rule='Read the Landing first, then the Verb.'),
         worked=dict(
             line="ranked = nums.sort()",
             slots={"Subject": "nums", "Verb": ".sort", "Details": "none", "Landing": "ranked"},
             why="What is wrong with this line?",
-            options=["sort returns None, so ranked holds None while nums is sorted in place",
+            options=["sort changes nums and produces no result, so ranked holds None",
                      "sort needs arguments", "ranked cannot be assigned",
                      "nums is left unchanged"], answer=0),
         faded=[dict(template="ranked = ___.sort()", answers=[["nums"]]),

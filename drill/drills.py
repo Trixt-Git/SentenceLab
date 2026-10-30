@@ -67,6 +67,25 @@ LANDING_OUT = ["print", "print(...)", "stdout", "output", "display"]
 NONE = ["none", "nothing"]
 
 DRILLS = [
+    Drill(
+        id="py-title", domain="python", plan="text",
+        intent="Make a capitalised copy of name and call it title.",
+        setup=lambda: {"name": "ada lovelace"},
+        effect="rebind",
+        grammar={"subject": ["name"], "verb": [".title", "title"],
+                 "details": NONE, "landing": ["title"]},
+        reference_line="title = name.title()",
+        verify=lambda b, a, out, ret: a.get("title") == "Ada Lovelace" and a["name"] == "ada lovelace",
+    ),
+    Drill(
+        id="py-sum", domain="python", plan="total",
+        intent="Add up the numbers in scores and call the result total.",
+        setup=lambda: {"scores": [72, 88, 91]},
+        effect="rebind",
+        grammar={"subject": ["scores"], "verb": ["sum"], "details": NONE, "landing": ["total"]},
+        reference_line="total = sum(scores)",
+        verify=lambda b, a, out, ret: a.get("total") == 251,
+    ),
     # ---- mutate ----
     Drill(
         id="py-append", domain="python", plan="add-item",
@@ -182,3 +201,8 @@ DRILLS = [
         and _emitted_equals(out, ret, a["model"].score(a["X_test"], a["y_test"])),
     ),
 ]
+
+
+_ORDER = ["py-title", "py-sum", "py-append", "py-sort", "py-sorted", "pd-dropna",
+          "pd-reassign", "pd-head", "sk-fit", "sk-predict", "sk-transform", "sk-score"]
+DRILLS.sort(key=lambda d: _ORDER.index(d.id))

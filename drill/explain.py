@@ -32,8 +32,8 @@ EXPLAINS = [
                  "landing": ["scores"]},
         question="After this line runs, what is scores?",
         options=["[72, 88, 91, 95]", "None", "[72, 88, 91]", "an error"], answer=1,
-        why=".append changes the list in place and returns None; the assignment then "
-            "rebinds scores to that None."),
+        why=".append changes the list itself and produces no result (None). Then scores = "
+            "stores that nothing, replacing your list."),
     Explain(
         id="ex-sort", domain="python",
         setup=lambda: {"nums": [3, 1, 2]},
@@ -42,7 +42,7 @@ EXPLAINS = [
                  "landing": ["none", "dropped"]},
         question="After this line runs, what is nums?",
         options=["[1, 2, 3]", "[3, 1, 2]", "None", "[]"], answer=0,
-        why="sort() reorders the list in place. Nothing is returned worth keeping."),
+        why="sort() reorders the list itself. The Landing is empty because there is no separate result."),
     Explain(
         id="ex-df-bare", domain="pandas",
         setup=_price_df,
@@ -51,8 +51,8 @@ EXPLAINS = [
                  "details": ["subset=['price']"], "landing": LANDING_OUT},
         question="After this line runs, how many rows does df have?",
         options=["2", "3", "0", "an error"], answer=1,
-        why="dropna returns a new DataFrame. As a bare expression it is only displayed, "
-            "so df itself is unchanged."),
+        why="dropna builds a new table. With no Landing it is only displayed, so df keeps "
+            "all its rows."),
     Explain(
         id="ex-df-reassign", domain="pandas",
         setup=_price_df,
@@ -61,7 +61,7 @@ EXPLAINS = [
                  "details": ["subset=['price']"], "landing": ["df"]},
         question="After this line runs, how many rows does df have?",
         options=["2", "3", "0", "an error"], answer=0,
-        why="The new DataFrame lands back in the name df, replacing the old one."),
+        why="The Landing is df, so the new table replaces the old one."),
     Explain(
         id="ex-scaler-leak", domain="sklearn",
         setup=_scaler_env,
@@ -72,8 +72,8 @@ EXPLAINS = [
         options=["Nothing: it scales X_test as intended",
                  "It refits the scaler on the test data, changing what it learned",
                  "It modifies X_test in place", "It raises an error"], answer=1,
-        why="fit_transform refits the scaler, so test data leaks into what it learned. "
-            "Use scaler.transform(X_test) on test data."),
+        why="fit_transform makes the scaler learn again from the test data, which mixes test "
+            "data into what it learned. Use scaler.transform(X_test) on test data."),
     Explain(
         id="ex-print-sum", domain="python",
         setup=lambda: {"scores": [72, 88, 91]},
@@ -83,5 +83,5 @@ EXPLAINS = [
         question="After this line runs, what changed?",
         options=["251 is shown; scores is unchanged", "scores becomes 251",
                  "scores is emptied", "nothing is shown"], answer=0,
-        why="Emit shows a value and changes no state."),
+        why="print shows a value and changes nothing."),
 ]

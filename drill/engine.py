@@ -17,8 +17,9 @@ from drills import Drill
 
 _INJECTED = {"pd": pd, "np": np}
 _PREVIEW = 80
-NOTES = {"rebound": "the name now points to a new object",
-         "mutated": "same object, changed in place"}
+NOTES = {"rebound": "{name} now holds a different object",
+         "mutated": "{name} still holds the same object; what is inside changed",
+         "added": "{name} is a new name"}
 
 
 def _is_estimator(v):
@@ -80,7 +81,7 @@ def _diff(before, after, ids):
     for k in sorted(set(before) | set(after)):
         if k not in before:
             rows.append({"name": k, "change": "added", "after": preview(after[k]),
-                         "note": "a new name now exists",
+                         "note": NOTES["added"].format(name=k),
                          "detail": detail(MISSING, after[k])})
         elif k not in after:
             rows.append({"name": k, "change": "removed", "before": preview(before[k])})
@@ -90,7 +91,7 @@ def _diff(before, after, ids):
             if b != a or rebound:
                 rows.append({"name": k, "change": "rebound" if rebound else "mutated",
                              "before": b, "after": a,
-                             "note": NOTES["rebound" if rebound else "mutated"],
+                             "note": NOTES["rebound" if rebound else "mutated"].format(name=k),
                              "detail": detail(before[k], after[k])})
     return rows
 
@@ -137,8 +138,9 @@ def run_line(drill: Drill, code: str) -> dict:
         if t not in after or id(after[t]) != ids[t]:
             ok = False
             res["hints"].append(
-                f"`{t}` was rebound. In-place methods return None, so assigning "
-                f"their result overwrites `{t}`. Drop the assignment.")
+                f"`{t}` now holds None, not your data. This verb changes the data itself and "
+                f"produces no result (None), and `{t} =` stored that nothing over your data. "
+                f"Drop the `{t} =`.")
     if drill.effect == "emit" and res["effect_used"] == "rebind":
         ok = False
         res["hints"].append("This is an Emit drill: show the value, don't bind it.")

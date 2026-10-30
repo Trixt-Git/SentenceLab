@@ -143,7 +143,7 @@ function renderStage(){
  $('#pos').textContent=`Lesson ${ls+1}/${stageKeys().length} · ${L.effect}`;
  const b=$('#lbody');
  if(st==='teach'){const t=L.teach;lanswered=true;
-  b.innerHTML=`<p class="mut">The idea</p><ul>${t.points.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><p class="mut">Example</p><pre class="mut">${L.state.map(sl).join('\n')}</pre>${t.runs.map(runBox).join('')}<div class="banner"><b>Rule:</b> ${esc(t.rule)}</div><p class="mut"><kbd>Enter</kbd> to continue</p>`;}
+  b.innerHTML=`<p class="mut">The idea</p><ul>${t.points.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><p class="mut">Example</p><pre class="mut">${L.state.map(sl).join('\n')}</pre>${t.runs.map(runBox).join('')}${t.slots?`<table>${Object.entries(t.slots).map(([k,v])=>`<tr><td class="s-${k}"><b>${k}</b><td><code class="s-${k}">${esc(v)}</code></tr>`).join('')}</table>`:''}<div class="banner"><b>Rule:</b> ${esc(t.rule)}</div><p class="mut"><kbd>Enter</kbd> to continue</p>`;}
  if(st==='predict'){const p=L.predict;
   b.innerHTML=`<p class="mut">Check yourself</p><pre class="mut">${L.state.map(sl).join('\n')}</pre><div class="line"><code>${esc(p.line)}</code></div><p>${esc(p.question)}</p>${opts(p.options)}<div id="fb"></div>`;}
  if(st==='contrast'){const c=L.contrast;
