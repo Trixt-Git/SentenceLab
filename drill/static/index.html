@@ -12,7 +12,13 @@ section{border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin:
 section.off{opacity:.5;pointer-events:none}
 h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin:0 0 8px}
 input{width:100%;box-sizing:border-box;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);font-size:15px}
+input.ok,input.bad{color:var(--fg)}
 input.bad{border-color:var(--bad)} input.ok{border-color:var(--ok)}
+input.ok[data-slot=subject],input.ok[data-xslot=subject]{border-color:var(--s1)}
+input.ok[data-slot=verb],input.ok[data-xslot=verb]{border-color:var(--s2)}
+input.ok[data-slot=details],input.ok[data-xslot=details]{border-color:var(--s3)}
+input.ok[data-slot=variable],input.ok[data-xslot=variable]{border-color:var(--s4)}
+.legend{margin:2px 0 6px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
 label{display:block;margin:6px 0 2px;font-size:13px;color:var(--mut)}
 kbd{border:1px solid var(--line);border-radius:4px;padding:0 5px;font-size:12px}
 pre{margin:4px 0;white-space:pre-wrap}
@@ -97,7 +103,8 @@ table.mini{font-size:12px;width:auto;min-width:50%} table.mini td,table.mini th{
  <div id="s2msg"></div></section>
 
 <section id="s3" class="off"><h2>3 · Write the line</h2>
- <input id="code" placeholder="variable = subject.verb(details)" autocomplete="off" spellcheck="false">
+ <div class="legend"><span class="pt pt-Variable">variable</span> = <span class="pt pt-Subject">subject</span>.<span class="pt pt-Verb">verb</span>(<span class="pt pt-Details">details</span>)</div>
+ <input id="code" placeholder="Type your line here" autocomplete="off" spellcheck="false">
  <div class="mut">Press <kbd>Enter</kbd> to run it, <kbd>Shift</kbd>+<kbd>Enter</kbd> if you are unsure, or <kbd>Ctrl</kbd>+<kbd>H</kbd> for a hint.</div>
  <div id="s3msg"></div></section>
 
@@ -117,15 +124,25 @@ try{mode=localStorage.mode||'guided'}catch{}
 function setMode(m,user){mode=m;if(user)manual=true;try{localStorage.mode=m}catch{};$('#mode').textContent=(m==='guided'?'Guided':'Speed')+' mode (M)';if(!$('#drill').hidden)setStage(stage);if(!$('#explain').hidden&&X)setX(xs);}
 function banner(t){const b=$('#banner');b.hidden=!t;b.textContent=t||'';}
 const fmt=t=>esc(t).replace(/\[\[(save|change|show|subject|verb|details|variable)\|(.*?)\]\]/g,(m,k,x)=>`<span class="hl hl-${k}">${x}</span>`);
-function colorLine(line,slots){
+function colorLine(line,slots,lastVar){
  const spans=[];const order=['Variable','Verb','Subject','Details'];
- for(const k of order){const v=slots&&slots[k];if(!v||v==='none')continue;
-  const re=new RegExp((/^\w/.test(v)?'\\b':'')+v.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+(/\w$/.test(v)?'\\b':''),'g');let m;
-  while((m=re.exec(line))){const a=m.index,b=a+v.length;if(!spans.some(s=>a<s[1]&&b>s[0])){spans.push([a,b,k]);break;}}}
+ for(const k of order){const raw=slots&&slots[k];if(!raw||NONE_WORDS.includes(raw))continue;
+  for(const v of (k==='Details'?raw.split(',').map(x=>x.trim()):[raw])){if(!v)continue;
+  const re=new RegExp((/^\w/.test(v)?'\\b':'')+v.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+(/\w$/.test(v)?'\\b':''),'g');let m;const hits=[];
+  while((m=re.exec(line)))hits.push([m.index,m.index+v.length]);
+  const pickable=hits.filter(([a,b])=>!spans.some(s=>a<s[1]&&b>s[0]));
+  const pick=(k==='Variable'&&lastVar)?pickable[pickable.length-1]:pickable[0];
+  if(pick)spans.push([pick[0],pick[1],k]);}}
  spans.sort((x,y)=>x[0]-y[0]);let out='',pos=0;
  for(const [a,b,k] of spans){out+=esc(line.slice(pos,a))+`<span class="pt pt-${k}">${esc(line.slice(a,b))}</span>`;pos=b;}
  return out+esc(line.slice(pos));}
 const sl=v=>v.line;
+const NONE_WORDS=['none','nothing','dropped'];
+const capw=k=>k[0].toUpperCase()+k.slice(1);
+let parts=null,intentText='';
+async function loadParts(kind){
+ const r=await api(kind+'/'+(kind==='drill'?i:X.index)+'/reveal');
+ parts={Subject:r.subject,Verb:r.verb,Details:r.details,Variable:r.variable};return parts;}
 /* A starting value, with its name in the variable colour. */
 const slHtml=v=>`<span class="pt pt-Variable">${esc(v.name)}</span>${esc(v.line.slice(v.name.length))}`;
 function toks(t){return t.map(([x,o,ti])=>{const a=ti?` title="${esc(ti).replace(/"/g,'&quot;')}"`:'';return o==='eq'&&!ti?esc(x):`<span class="t-${o}"${a}>${esc(x)}</span>`;}).join('');}
@@ -135,7 +152,7 @@ function diffTable(diff){return diff.length?diff.map(d=>{const t=d.detail;let bo
  if(t&&t.kind==='table')body=(t.caption?`<div class="mut note">${esc(t.caption)}</div>`:'')+mini(t);
  else if(t&&t.kind==='tokens')body=`<div class="row del tk"><span class="sg">−</span><code>${toks(t.before)}</code></div><div class="row add"><span class="sg">+</span><code>${toks(t.after)}</code></div>`+(t.caption?`<div class="mut note">${esc(t.caption)}</div>`:'');
  else body=(d.before!==undefined?`<div class="row del"><span class="sg">−</span><code>${esc(d.before)}</code></div>`:'')+(d.after!==undefined?`<div class="row add"><span class="sg">+</span><code>${d.change==='added'?esc(d.name)+' = ':''}${esc(d.after)}</code></div>`:'');
- return `<div class="chg"><div class="chg-h"><code>${esc(d.name)}</code><span class="tag">${({added:'new',mutated:'changed',rebound:'replaced'})[d.change]||d.change}</span></div>${body}<div class="mut note">${esc(d.note||'')}</div></div>`;}).join(''):'<p class="mut">Nothing changed.</p>';}
+ return `<div class="chg"><div class="chg-h"><code class="pt pt-Variable">${esc(d.name)}</code><span class="tag">${({added:'new',mutated:'changed',rebound:'replaced'})[d.change]||d.change}</span></div>${body}<div class="mut note">${esc(d.note||'')}</div></div>`;}).join(''):'<p class="mut">Nothing changed.</p>';}
 function runBox(r,slots){return `<div class="line"><code>${slots?colorLine(r.line,slots):esc(r.line)}</code></div>${r.error?`<p class="bad">${esc(r.error)}</p>`:''}${diffTable(r.diff)}${r.stdout?`<pre>${esc(r.stdout)}</pre>`:''}${r.ret?`<p class="mut">The line gave back:</p><pre>${esc(r.ret)}</pre>`:''}`;}
 
 async function boot(){
@@ -207,7 +224,7 @@ function setX(n){xs=n;['x1','x2','x3','x4'].forEach((id,k)=>$('#'+id).classList.
 async function loadExplain(k){
  X=await api('explain/'+k);xmiss=0;xdone=false;
  $('#pos').textContent=`Explain ${k+1}/${X.total} · ${X.domain}`;
- $('#xstate').innerHTML=X.state.map(slHtml).join('\n');$('#xline').textContent=X.line;
+ $('#xstate').innerHTML=X.state.map(slHtml).join('\n');parts=null;$('#xline').textContent=X.line;
  $('#xq').textContent=X.question;$('#xopts').innerHTML=opts(X.options).replace(/data-o=/g,'data-xo=');
  for(const e of document.querySelectorAll('#explain input')){e.value='';e.className='';}
  $('#x1msg').textContent=$('#x3msg').textContent=$('#xout').textContent='';
@@ -221,7 +238,7 @@ async function xSlots(){
  const slots={};document.querySelectorAll('[data-xslot]').forEach(e=>slots[e.dataset.xslot]=e.value);
  const r=await api('explain/'+X.index+'/slots',{slots});let all=true;
  document.querySelectorAll('[data-xslot]').forEach(e=>{const ok=r[e.dataset.xslot];all=all&&ok;e.className=ok?'ok':'bad';});
- if(all)setX(3);else xmiss++;}
+ if(all){setX(3);await loadParts('explain');$('#xline').innerHTML=colorLine(X.line,parts);}else xmiss++;}
 async function xPick(o){
  if(xdone)return;
  const r=await api('explain/'+X.index+'/answer',{choice:o});
@@ -238,7 +255,7 @@ function setStage(n){stage=n;['s1','s2','s3','s4'].forEach((id,k)=>$('#'+id).cla
  if(n===3)$('#code').focus();}
 async function load(n,info){
  const d=await api('drill/'+n);i=n;total=d.total;passed=false;
- $('#pos').textContent=`${n+1}/${total} · ${d.domain}${d.plan?' · '+d.plan:''}`;$('#intent').textContent=d.intent;
+ $('#pos').textContent=`${n+1}/${total} · ${d.domain}${d.plan?' · '+d.plan:''}`;intentText=d.intent;parts=null;$('#intent').textContent=d.intent;
  $('#state').innerHTML=d.state.map(slHtml).join('\n');
  for(const e of document.querySelectorAll('#drill input')){e.value='';e.className='';}
  $('#s1msg').textContent=$('#s2msg').textContent=$('#s3msg').textContent=$('#out').textContent='';
@@ -252,8 +269,12 @@ async function checkSlots(){
  const slots={};document.querySelectorAll('[data-slot]').forEach(e=>slots[e.dataset.slot]=e.value);
  const r=await api('drill/'+i+'/slots',{slots});let all=true;
  document.querySelectorAll('[data-slot]').forEach(e=>{const ok=r[e.dataset.slot];all=all&&ok;e.className=ok?'ok':'bad';});
- if(all)setStage(3);}
-async function hint(){const r=await api('drill/'+i+'/hint',{});$('#s3msg').innerHTML=`<p class="mut">Hint ${r.level} of 3: <code>${esc(r.text)}</code></p>`;}
+ if(all){setStage(3);await lightUp();}}
+/* Once the learner has named the four parts, the instruction shows them in colour. */
+async function lightUp(){await loadParts('drill');const p={...parts};delete p.Verb;$('#intent').innerHTML=colorLine(intentText,p,true);}
+async function hint(){const r=await api('drill/'+i+'/hint',{});
+ const body=r.level===1?r.text.split(' · ').map(x=>{const [k,...v]=x.split(': ');return `<span class="pt pt-${capw(k)}">${esc(k)}</span>: ${esc(v.join(': '))}`;}).join(' · '):esc(r.text);
+ $('#s3msg').innerHTML=`<p class="mut">Hint ${r.level} of 3: <code>${body}</code></p>`;}
 async function run(confident){
  const r=await api('drill/'+i+'/run',{code:$('#code').value,confident});
  let h='';
@@ -263,7 +284,11 @@ async function run(confident){
  if(!r.error)h+=diffTable(r.diff);
  if(r.stdout)h+=`<p class="mut">It printed:</p><pre>${esc(r.stdout)}</pre>`;
  if(r.ret)h+=`<p class="mut">The line gave back:</p><pre>${esc(r.ret)}</pre>`;
- if(r.passed){passed=true;h+=`<p>One way to write it: <code>${esc(r.reference_line)}</code></p><p class="mut">Press <kbd>Enter</kbd> for the next one.</p>`;}
+ if(r.passed){passed=true;if(!parts)await loadParts('drill');
+  const mine=$('#code').value.trim();
+  h+=`<p>Your line: <code>${colorLine(mine,parts)}</code></p>`;
+  if(mine.replace(/\s/g,'').replace(/"/g,"'")!==r.reference_line.replace(/\s/g,'').replace(/"/g,"'"))h+=`<p>One way to write it: <code>${colorLine(r.reference_line,parts)}</code></p>`;
+  h+='<p class="mut">Press <kbd>Enter</kbd> for the next one.</p>';}
  else h+='<p class="mut">Press <kbd>Ctrl</kbd>+<kbd>H</kbd> for a hint.</p>';
  $('#out').innerHTML=h;$('#s4').classList.remove('off');}
 
@@ -275,7 +300,7 @@ document.addEventListener('keydown',async e=>{
   if(typing)return;
   if(xs===1&&effects[e.key])return xEffect(e.key);
   if(xs===2&&mode==='speed'&&e.key===' '){e.preventDefault();const r=await api('explain/'+X.index+'/reveal');$('#xreveal').textContent=Object.entries(r).map(([k,v])=>k.padEnd(8)+v).join('\n');return;}
-  if(xs===2&&mode==='speed'&&e.key==='Enter')return setX(3);
+  if(xs===2&&mode==='speed'&&e.key==='Enter'){setX(3);await loadParts('explain');$('#xline').innerHTML=colorLine(X.line,parts);return;}
   if(xs===3&&/^[1-4]$/.test(e.key))return xPick(+e.key-1);
   if(xs===4&&e.key==='Enter')return boot();
   if(e.key.toLowerCase()==='m')return setMode(mode==='guided'?'speed':'guided',true);
@@ -293,7 +318,7 @@ document.addEventListener('keydown',async e=>{
  if(typing)return;
  if(stage===1&&effects[e.key])return pickEffect(e.key);
  if(stage===2&&mode==='speed'&&e.key===' '){e.preventDefault();const r=await api('drill/'+i+'/reveal');$('#reveal').textContent=Object.entries(r).map(([k,v])=>k.padEnd(8)+v).join('\n');return;}
- if(stage===2&&mode==='speed'&&e.key==='Enter')return setStage(3);
+ if(stage===2&&mode==='speed'&&e.key==='Enter'){setStage(3);return lightUp();}
  if(e.key.toLowerCase()==='m')return setMode(mode==='guided'?'speed':'guided',true);
  if(passed&&e.key==='Enter')return boot();
  if(e.key.toLowerCase()==='e'&&stage===1){forceExplain=true;return boot();}

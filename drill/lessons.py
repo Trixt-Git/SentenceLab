@@ -75,7 +75,7 @@ LESSONS = [
         worked=dict(
             line="nums.sort()",
             slots={"Subject": "nums", "Verb": ".sort", "Details": "none", "Variable": "none"},
-            why="Why is the variable empty in this line?",
+            why="Why do we not need a variable here?",
             options=["The verb changes nums directly, so there is no separate answer to save",
                      "Because sort is slow", "Because lists cannot be saved",
                      "Because nums is short"], answer=0),
@@ -134,7 +134,7 @@ LESSONS = [
         teach=dict(
             points=["scikit-learn has three main [[verb|verbs]]: fit, predict and transform.",
                     "fit trains the model. The [[subject|model]] is the [[subject|subject]], and the data it learns from is the [[details|details]]: [[details|X_train and y_train]].",
-                    "fit changes the model directly, so there is no separate answer to save and the [[variable|variable]] is empty. You can see that it worked because the model goes from not fitted to fitted."],
+                    "fit changes the model directly, so there is no separate answer to save, and we do not need a [[variable|variable]]. You can see that it worked because the model goes from not fitted to fitted."],
             example="model.fit(X_train, y_train)",
             rule="fit changes the model itself, so it does not need a variable."),
         worked=dict(
