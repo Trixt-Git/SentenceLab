@@ -50,7 +50,7 @@ def test_every_lesson_step_goes_through_scene():
     html = (Path(__file__).resolve().parents[1] / "static" / "index.html").read_text()
     body = html[html.index("function renderStage"):html.index("function opts")]
     assert "L.state" not in body            # steps never draw state themselves
-    assert "function scene(" in html and html.count("L.state.map(sl)") == 1
+    assert "function scene(" in html and html.count("L.state.map(") == 1
     assert len(re.findall(r"b\.innerHTML=", body)) == 5   # teach, predict, contrast, worked, faded
 
 

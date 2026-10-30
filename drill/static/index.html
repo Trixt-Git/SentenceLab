@@ -126,6 +126,8 @@ function colorLine(line,slots){
  for(const [a,b,k] of spans){out+=esc(line.slice(pos,a))+`<span class="pt pt-${k}">${esc(line.slice(a,b))}</span>`;pos=b;}
  return out+esc(line.slice(pos));}
 const sl=v=>v.line;
+/* A starting value, with its name in the variable colour. */
+const slHtml=v=>`<span class="pt pt-Variable">${esc(v.name)}</span>${esc(v.line.slice(v.name.length))}`;
 function toks(t){return t.map(([x,o,ti])=>{const a=ti?` title="${esc(ti).replace(/"/g,'&quot;')}"`:'';return o==='eq'&&!ti?esc(x):`<span class="t-${o}"${a}>${esc(x)}</span>`;}).join('');}
 function mini(t){const cell=([v,o,ti])=>`<td class="c-${o}"${ti?` title="${esc(ti).replace(/"/g,'&quot;')}"`:''}>${esc(v)}</td>`;
  return `<table class="mini"><tr><th></th>${t.cols.map(c=>`<th>${esc(c)}</th>`).join('')}${t.cols_more?'<th>…</th>':''}<th></th></tr>`+t.rows.map(r=>`<tr class="r-${r.status}"><th>${esc(r.label)}</th>${r.cells.map(cell).join('')}${t.cols_more?'<td>…</td>':''}<td class="mut">${{del:'− removed',add:'+ added',eq:''}[r.status]}</td></tr>`).join('')+(t.rows_more?`<tr><td colspan="${t.cols.length+2}" class="mut">…${t.rows_more} more rows</td></tr>`:'')+'</table>'+(t.hidden_changes?`<div class="mut note">+${t.hidden_changes} more changed cells not shown</div>`:'');}
@@ -154,7 +156,7 @@ async function startLesson(id){L=await api('lesson/'+id);ls=0;$('#ltitle').textC
 function stageKeys(n){return STAGES.slice(0,4).concat(L.faded.map((_,k)=>'faded'+k));}
 /* Every lesson step is drawn through scene(): the starting values are always put on screen
    under the step's label, so no step can ask about something the learner cannot see. */
-const stateBlock=()=>`<pre class="mut">${L.state.map(sl).join('\n')}</pre>`;
+const stateBlock=()=>`<pre class="mut">${L.state.map(slHtml).join('\n')}</pre>`;
 function scene(html){$('#lbody').innerHTML=html.replace('</p>','</p>'+stateBlock());}
 function renderStage(){
  const st=stageKeys()[ls];lanswered=false;
@@ -205,7 +207,7 @@ function setX(n){xs=n;['x1','x2','x3','x4'].forEach((id,k)=>$('#'+id).classList.
 async function loadExplain(k){
  X=await api('explain/'+k);xmiss=0;xdone=false;
  $('#pos').textContent=`Explain ${k+1}/${X.total} · ${X.domain}`;
- $('#xstate').textContent=X.state.map(sl).join('\n');$('#xline').textContent=X.line;
+ $('#xstate').innerHTML=X.state.map(slHtml).join('\n');$('#xline').textContent=X.line;
  $('#xq').textContent=X.question;$('#xopts').innerHTML=opts(X.options).replace(/data-o=/g,'data-xo=');
  for(const e of document.querySelectorAll('#explain input')){e.value='';e.className='';}
  $('#x1msg').textContent=$('#x3msg').textContent=$('#xout').textContent='';
@@ -237,7 +239,7 @@ function setStage(n){stage=n;['s1','s2','s3','s4'].forEach((id,k)=>$('#'+id).cla
 async function load(n,info){
  const d=await api('drill/'+n);i=n;total=d.total;passed=false;
  $('#pos').textContent=`${n+1}/${total} · ${d.domain}${d.plan?' · '+d.plan:''}`;$('#intent').textContent=d.intent;
- $('#state').textContent=d.state.map(sl).join('\n');
+ $('#state').innerHTML=d.state.map(slHtml).join('\n');
  for(const e of document.querySelectorAll('#drill input')){e.value='';e.className='';}
  $('#s1msg').textContent=$('#s2msg').textContent=$('#s3msg').textContent=$('#out').textContent='';
  $('#reveal').innerHTML='Think it through, then press <kbd>Space</kbd> to see the answer.';
