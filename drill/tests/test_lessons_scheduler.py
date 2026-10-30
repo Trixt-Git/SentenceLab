@@ -139,6 +139,7 @@ def test_explain_items_consistent():
 def test_explain_scheduling_and_history(tmp_path):
     p = tmp_path / "h.csv"
     s = Scheduler(DRILLS, LESSONS, EXPLAINS, p)
+    s.lesson_done("read")
     first = s.next("explain")
     assert first["kind"] == "explain"
     s.explain_done(first["id"], 2)
@@ -148,8 +149,11 @@ def test_explain_scheduling_and_history(tmp_path):
 
 def test_lesson_before_every_effect_group_and_domain(tmp_path):
     ids = {l.before for l in LESSONS}
-    assert {"py-title", "py-append", "sk-fit", "sk-predict", "sk-transform"} <= ids
+    assert {"py-title", "py-append", "sk-fit", "sk-predict", "sk-transform", "explain"} <= ids
     s = Scheduler(DRILLS, LESSONS, EXPLAINS, tmp_path / "h.csv")
+    n = s.next("explain")
+    assert n["kind"] == "lesson" and n["lesson"] == "read"
+    s.lesson_done("read")
     assert s.next("explain")["kind"] == "explain"
 
 

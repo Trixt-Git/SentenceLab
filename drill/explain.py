@@ -1,4 +1,4 @@
-"""'Explain this line' items: read a line, then say what it does.
+"""'Explain this line' items: read a line you did not write, then say what it does.
 
 Three steps, no typing of code: classify the effect, name the four slots, predict the
 result. Several items are deliberately buggy or subtly different lines.
