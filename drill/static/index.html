@@ -3,8 +3,8 @@
 <title>SentenceLab Drill</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-:root{--bg:#fff;--fg:#1a1a1a;--mut:#666;--line:#ddd;--ok:#1a7f37;--bad:#c62828;--acc:#2457d6;--s1:#2457d6;--s2:#a14a00;--s3:#7b3fa0;--s4:#1a7f37;--o1:#0b6bcb;--o2:#b45309;--o3:#7e3fb0}
-@media(prefers-color-scheme:dark){:root{--bg:#161616;--fg:#eaeaea;--mut:#999;--line:#333;--ok:#4cc26a;--bad:#ff6b6b;--acc:#7aa2ff;--s1:#7aa2ff;--s2:#ffb066;--s3:#cf9cf0;--s4:#4cc26a;--o1:#6cb4ff;--o2:#ffb066;--o3:#d7a6f5}}
+:root{--bg:#fff;--fg:#1a1a1a;--mut:#666;--line:#ddd;--ok:#1a7f37;--bad:#c62828;--acc:#2457d6;--s1:inherit;--s2:inherit;--s3:inherit;--s4:#0b6bcb;--o1:#0b6bcb;--o2:inherit;--o3:inherit}
+@media(prefers-color-scheme:dark){:root{--bg:#161616;--fg:#eaeaea;--mut:#999;--line:#333;--ok:#4cc26a;--bad:#ff6b6b;--acc:#7aa2ff;--s1:inherit;--s2:inherit;--s3:inherit;--s4:#6cb4ff;--o1:#6cb4ff;--o2:inherit;--o3:inherit}}
 body{background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif;max-width:720px;margin:0 auto;padding:16px}
 code,input,pre{font-family:ui-monospace,Menlo,monospace}
 .mut{color:var(--mut)} .ok{color:var(--ok)} .bad{color:var(--bad)}
@@ -26,11 +26,10 @@ table{border-collapse:collapse;width:100%} td,th{border-bottom:1px solid var(--l
 .slot{display:inline-block;border-bottom:2px solid;margin-right:2px;padding:0 2px}
 .hl{font-weight:600;border-radius:3px;padding:0 2px}
 .hl-save{color:var(--o1);background:color-mix(in srgb,var(--o1) 14%,transparent)}
-.hl-change{color:var(--o2);background:color-mix(in srgb,var(--o2) 14%,transparent)}
-.hl-show{color:var(--o3);background:color-mix(in srgb,var(--o3) 14%,transparent)}
-.hl-subject{color:var(--s1)} .hl-verb{color:var(--s2)} .hl-details{color:var(--s3)} .hl-variable{color:var(--s4)}
+.hl-change,.hl-show,.hl-subject,.hl-verb,.hl-details{font-weight:600}
+.hl-variable{color:var(--s4)}
 .pt{font-weight:700;border-bottom:2px solid}
-.pt-Subject{color:var(--s1)} .pt-Verb{color:var(--s2)} .pt-Details{color:var(--s3)} .pt-Variable{color:var(--s4)}
+.pt-Variable{color:var(--s4)}
 .o-save{color:var(--o1)} .o-change{color:var(--o2)} .o-show{color:var(--o3)}
 .s-Subject{color:var(--s1)} .s-Verb{color:var(--s2)} .s-Details{color:var(--s3)} .s-Variable{color:var(--s4)}
 .banner{background:rgba(36,87,214,.1);border-radius:6px;padding:6px 10px;margin:8px 0}
@@ -122,7 +121,7 @@ function setMode(m,user){mode=m;if(user)manual=true;try{localStorage.mode=m}catc
 function banner(t){const b=$('#banner');b.hidden=!t;b.textContent=t||'';}
 const fmt=t=>esc(t).replace(/\[\[(save|change|show|subject|verb|details|variable)\|(.*?)\]\]/g,(m,k,x)=>`<span class="hl hl-${k}">${x}</span>`);
 function colorLine(line,slots){
- const spans=[];const order=['Variable','Verb','Subject','Details'];
+ const spans=[];const order=['Variable'];
  for(const k of order){const v=slots&&slots[k];if(!v||v==='none')continue;
   const re=new RegExp((/^\w/.test(v)?'\\b':'')+v.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+(/\w$/.test(v)?'\\b':''),'g');let m;
   while((m=re.exec(line))){const a=m.index,b=a+v.length;if(!spans.some(s=>a<s[1]&&b>s[0])){spans.push([a,b,k]);break;}}}
