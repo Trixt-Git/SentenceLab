@@ -32,9 +32,9 @@ LESSONS = [
         setup=lambda: {"name": "ada", "scores": [72, 88, 91, 88]},
         teach=dict(
             points=["Each line you write works like a short sentence, and a sentence has up to four parts.",
-                    "The [[subject|subject]] is the thing the line works on. In the line below, the subject is [[subject|name]].",
-                    "The [[verb|verb]] is what the line does to the subject. Here, [[verb|.upper]] makes the text uppercase.",
-                    "The [[details|details]] are anything extra the verb needs. .upper needs nothing extra, so there are no details.",
+                    "The [[subject|subject]] is the thing the line works on. In the line below, the [[subject|subject]] is [[subject|name]].",
+                    "The [[verb|verb]] is what the line does to the [[subject|subject]]. Here, [[verb|.upper]] makes the text uppercase.",
+                    "The [[details|details]] are anything extra the [[verb|verb]] needs. .upper needs nothing extra, so there are no [[details|details]].",
                     "The [[variable|variable]] is where the answer is saved. It is the name on the left of the =, which is [[variable|shout]] here.",
                     "Some lines skip a part, and that is fine."],
             example="shout = name.upper()",
@@ -65,7 +65,7 @@ LESSONS = [
         setup=lambda: {"nums": [3, 1, 2]},
         teach=dict(
             points=["After a line runs, one of three things can happen.",
-                    "First, its answer can be saved in a variable. For example, [[variable|ranked]] = [[verb|sorted]]([[subject|nums]]) saves a sorted copy of the list as ranked.",
+                    "First, its answer can be saved in a [[variable|variable]]. For example, [[variable|ranked]] = [[verb|sorted]]([[subject|nums]]) saves a sorted copy of the list as [[variable|ranked]].",
                     "Second, the line can change the thing itself, so there is no separate answer to save. For example, [[subject|nums]][[verb|.sort]]() reorders nums directly.",
                     "Third, its answer can simply be shown on screen. For example, print([[verb|sum]]([[subject|nums]])) displays the total without saving it.",
                     "Step 1 of every exercise asks which of these three a line does."],
@@ -98,9 +98,9 @@ LESSONS = [
         before="pd-dropna",
         setup=_price_df,
         teach=dict(
-            points=["This works just like before, except that the subject is now a table, df.",
-                    "Most pandas verbs build a new table and leave df alone. The new table is the answer, so it needs a variable to be saved in.",
-                    "The details can be named options. Here, [[details|subset=['price']]] tells [[verb|dropna]] which column to check."],
+            points=["This works just like before, except that the [[subject|subject]] is now a table, [[subject|df]].",
+                    "Most pandas [[verb|verbs]] build a new table and leave df alone. The new table is the answer, so it needs a [[variable|variable]] to be saved in.",
+                    "The [[details|details]] can be named options. Here, [[details|subset=['price']]] tells [[verb|dropna]] which column to check."],
             example="clean_df = df.dropna(subset=['price'])",
             rule="A pandas verb builds a new table, so save it in a variable."),
         worked=dict(
@@ -132,9 +132,9 @@ LESSONS = [
         before="sk-fit",
         setup=_unfitted_env,
         teach=dict(
-            points=["scikit-learn has three main verbs: fit, predict and transform.",
-                    "fit trains the model. The model is the subject, and the data it learns from is the details: [[details|X_train and y_train]].",
-                    "fit changes the model directly, so there is no separate answer to save and the variable is empty. You can see that it worked because the model goes from not fitted to fitted."],
+            points=["scikit-learn has three main [[verb|verbs]]: fit, predict and transform.",
+                    "fit trains the model. The [[subject|model]] is the [[subject|subject]], and the data it learns from is the [[details|details]]: [[details|X_train and y_train]].",
+                    "fit changes the model directly, so there is no separate answer to save and the [[variable|variable]] is empty. You can see that it worked because the model goes from not fitted to fitted."],
             example="model.fit(X_train, y_train)",
             rule="fit changes the model itself, so it does not need a variable."),
         worked=dict(
@@ -168,9 +168,9 @@ LESSONS = [
         before="sk-predict",
         setup=_sklearn_env,
         teach=dict(
-            points=["predict is the second verb. It reads the model and builds a new result: the predictions.",
-                    "A new result needs a variable, so you write [[variable|preds]] = [[subject|model]][[verb|.predict]]([[details|X_test]]).",
-                    "The details are just the data to predict on, which is [[details|X_test]]."],
+            points=["predict is the second [[verb|verb]]. It reads the model and builds a new result: the predictions.",
+                    "A new result needs a [[variable|variable]], so you write [[variable|preds]] = [[subject|model]][[verb|.predict]]([[details|X_test]]).",
+                    "The [[details|details]] are just the data to predict on, which is [[details|X_test]]."],
             example="preds = model.predict(X_test)",
             rule="predict makes something new, so save it in a variable."),
         worked=dict(
@@ -203,8 +203,8 @@ LESSONS = [
         before="sk-transform",
         setup=_scaler_env,
         teach=dict(
-            points=["transform is the third verb. Its subject is a scaler that has already learned some numbers from the training data.",
-                    "[[subject|scaler]][[verb|.transform]]([[details|X_test]]) applies those numbers to new data and builds a new result, so it needs a variable.",
+            points=["transform is the third [[verb|verb]]. Its [[subject|subject]] is a scaler that has already learned some numbers from the training data.",
+                    "[[subject|scaler]][[verb|.transform]]([[details|X_test]]) applies those numbers to new data and builds a new result, so it needs a [[variable|variable]].",
                     "fit_transform would learn from X_test all over again, which mixes the test data into the scaler. So fit on the training data, and only transform the test data."],
             example="X_test_s = scaler.transform(X_test)",
             rule="Fit on the training data, and only transform the test data."),
@@ -240,9 +240,9 @@ LESSONS = [
         setup=lambda: {"nums": [3, 1, 2]},
         teach=dict(
             points=["Sometimes you will be given a line and asked what it does.",
-                    "Start with the left side of the =. Is the answer saved in a variable?",
-                    "Then look at the verb. Does it change the thing it is called on, or does it make something new?",
-                    "A common mistake is saving the answer of a verb that changes things in place. For example, ranked = nums.sort() saves nothing useful."],
+                    "Start with the left side of the =. Is the answer saved in a [[variable|variable]]?",
+                    "Then look at the [[verb|verb]]. Does it change the thing it is called on, or does it make something new?",
+                    "A common mistake is saving the answer of a [[verb|verb]] that changes things in place. For example, ranked = nums.sort() saves nothing useful."],
             example="ranked = sorted(nums)",
             rule="Check the left side of the = first, then the verb."),
         worked=dict(
