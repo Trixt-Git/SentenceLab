@@ -31,12 +31,12 @@ LESSONS = [
         before="py-title",
         setup=lambda: {"name": "ada", "scores": [72, 88, 91, 88]},
         teach=dict(
-            points=["Every line you will write here is a short sentence with four parts.",
+            points=["Every line you write is a short sentence with four parts.",
                     "Subject: what it works on. Here, name.",
                     "Verb: what it does. Here, .upper (make it uppercase).",
                     "Details: extra information the verb needs. Here, none.",
                     "Variable: the name the result is saved into, on the left of =. Here, shout.",
-                    "Some lines leave a part out, but the shape stays the same."],
+                    "Some lines skip a part. That is fine."],
             example="shout = name.upper()",
             slots={"Subject": "name", "Verb": ".upper", "Details": "none", "Variable": "shout"},
             rule="Variable = Subject.Verb(Details)"),
@@ -64,11 +64,11 @@ LESSONS = [
         before="py-append",
         setup=lambda: {"nums": [3, 1, 2]},
         teach=dict(
-            points=["A line either saves its result into a variable, or it does not.",
+            points=["A line either saves its result in a variable, or it does not.",
                     "Saved: ranked = sorted(nums) saves the result in the variable ranked.",
                     "Not saved, changed in place: nums.sort() changes nums itself, so there is no separate result to save.",
                     "Not saved, shown: print(sum(nums)) shows the result on screen but does not save it.",
-                    "The drills call these Rebind, Mutate and Emit. Step 1 asks which one a line is."],
+                    "In the drills, step 1 asks which one a line is: Rebind (saved), Mutate (changed in place) or Emit (shown)."],
             example="ranked = sorted(nums)",
             slots={"Subject": "nums", "Verb": "sorted", "Details": "none", "Variable": "ranked"},
             rule="Ask first: is the result saved, changed in place, or just shown?"),
@@ -94,7 +94,7 @@ LESSONS = [
                dict(template="ranked = ___(nums)", answers=[["sorted"]])],
     ),
     Lesson(
-        id="pandas", title="pandas returns a new DataFrame", effect="rebind",
+        id="pandas", title="pandas makes a new table", effect="rebind",
         before="pd-dropna",
         setup=_price_df,
         predict=dict(
@@ -126,7 +126,7 @@ LESSONS = [
                     answers=[["<name>"], ["dropna", ".dropna"]])],
     ),
     Lesson(
-        id="sk-fit", title="scikit-learn: fit trains the model in place", effect="mutate",
+        id="sk-fit", title="scikit-learn: fit trains the model", effect="mutate",
         before="sk-fit",
         setup=_unfitted_env,
         predict=dict(
@@ -160,7 +160,7 @@ LESSONS = [
                     answers=[["model"], ["fit", ".fit"]])],
     ),
     Lesson(
-        id="sk-predict", title="scikit-learn: predict returns a new array", effect="rebind",
+        id="sk-predict", title="scikit-learn: predict gives you answers", effect="rebind",
         before="sk-predict",
         setup=_sklearn_env,
         predict=dict(
@@ -193,7 +193,7 @@ LESSONS = [
                     answers=[["<name>"], ["predict", ".predict"]])],
     ),
     Lesson(
-        id="sk-transform", title="scikit-learn: transform reuses what was learned",
+        id="sk-transform", title="scikit-learn: transform rescales new data",
         effect="rebind", before="sk-transform",
         setup=_scaler_env,
         predict=dict(
@@ -227,7 +227,7 @@ LESSONS = [
                     answers=[["<name>"], ["transform", ".transform"]])],
     ),
     Lesson(
-        id="read", title="Reading a line you did not write", effect="rebind",
+        id="read", title="What does this line do?", effect="rebind",
         before="explain",
         setup=lambda: {"nums": [3, 1, 2]},
         predict=dict(
@@ -242,9 +242,9 @@ LESSONS = [
                     "stores that nothing, so ranked is None while nums is sorted. sorted(nums) "
                     "builds a new list, and ranked stores it."),
         teach=dict(
-            points=["Reading someone else's line uses the same four parts, found in a different order.", 'Start at the left of =: is the result saved in a variable, or not?', 'Then look at the Verb: does it change its Subject, or build something new? A mismatch is the classic bug.'],
+            points=['Sometimes you are handed a line and asked what it does.', 'Look left of the = first. Is the result saved in a variable?', 'Then look at the verb. Does it change the thing it is called on, or make something new?', 'A verb that changes something, with a variable that saves its result, is a classic bug. Example: ranked = nums.sort().'],
             example='ranked = sorted(nums)',
-            rule='Read the left of = first, then the Verb.'),
+            rule='Left of the = first. Then the verb.'),
         worked=dict(
             line="ranked = nums.sort()",
             slots={"Subject": "nums", "Verb": ".sort", "Details": "none", "Variable": "ranked"},
