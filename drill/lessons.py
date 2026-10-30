@@ -82,7 +82,7 @@ LESSONS = [
         contrast=dict(
             a="ranked = sorted(nums)", b="nums.sort()",
             question="Which line leaves nums as it was?",
-            options=["The first one", "The second one", "Both", "Neither"], answer=0,
+            options=["Line A", "Line B", "Both", "Neither"], answer=0,
             explain="sorted(nums) builds a new sorted list and saves it as ranked, so nums is "
                     "untouched. nums.sort() reorders nums itself and saves nothing."),
         predict=dict(
@@ -114,8 +114,8 @@ LESSONS = [
         contrast=dict(
             a="df.dropna(subset=['price'])", b="df = df.dropna(subset=['price'])",
             question="In which line does df lose the row with the missing price?",
-            options=["The first one", "The second one", "Both", "Neither"], answer=1,
-            explain="dropna builds a new table and leaves df alone. Only the second line saves "
+            options=["Line A", "Line B", "Both", "Neither"], answer=1,
+            explain="dropna builds a new table and leaves df alone. Only line B saves "
                     "the new table back into df, so only there does df lose the row. You can "
                     "also use inplace=True, but it is harder to predict, so we avoid it."),
         predict=dict(
@@ -184,7 +184,7 @@ LESSONS = [
         contrast=dict(
             a="preds = model.predict(X_test)", b="model.predict(X_test)",
             question="Which line keeps the predictions?",
-            options=["The first one", "The second one", "Both", "Neither"], answer=0,
+            options=["Line A", "Line B", "Both", "Neither"], answer=0,
             explain="predict builds a new result and leaves the model alone. Without a "
                     "variable, the predictions are shown once and then lost."),
         predict=dict(
@@ -220,7 +220,7 @@ LESSONS = [
             a="X_test_s = scaler.transform(X_test)",
             b="X_test_s = scaler.fit_transform(X_test)",
             question="Which line changes what the scaler learned?",
-            options=["The first one", "The second one", "Both", "Neither"], answer=1,
+            options=["Line A", "Line B", "Both", "Neither"], answer=1,
             explain="fit_transform makes the scaler learn again from whatever you give it. "
                     "With test data, that mixes the test set into what the scaler knows."),
         predict=dict(
@@ -255,7 +255,7 @@ LESSONS = [
         contrast=dict(
             a="ranked = sorted(nums)", b="ranked = nums.sort()",
             question="Which line puts the sorted list in ranked?",
-            options=["The first one", "The second one", "Both", "Neither"], answer=0,
+            options=["Line A", "Line B", "Both", "Neither"], answer=0,
             explain="nums.sort() reorders nums itself and gives back nothing, which Python "
                     "calls None. So ranked = nums.sort() saves None, while nums ends up sorted. "
                     "sorted(nums) builds a new list, and ranked saves it."),

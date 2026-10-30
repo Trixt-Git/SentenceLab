@@ -54,3 +54,10 @@ def test_drill_instructions_are_plain_sentences():
     for d in DRILLS:
         assert d.intent.endswith("."), d.id
         assert len(d.intent.split()) <= 30, d.id
+
+
+def test_contrast_answers_use_the_labels_on_screen():
+    """Lines are labelled A and B on screen, so answers must say 'Line A' / 'Line B'."""
+    for l in LESSONS:
+        text = " ".join(l.contrast["options"] + [l.contrast["question"], l.contrast["explain"]])
+        assert not re.search(r"\b(first|second) (one|line)\b", text, re.I), l.id
