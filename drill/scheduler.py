@@ -92,9 +92,6 @@ class Scheduler:
         return len(run) == MASTERY_RUN and all(run)
 
     def _explain(self):
-        lead = self.lesson_before.get("explain")
-        if lead and lead.id not in self.seen:
-            return {"kind": "lesson", "lesson": lead.id, "phase": "explain"}
         pick = min(self.explains, key=lambda x: (self.estats[x.id]["passes"] > 0,
                                                  -self.estats[x.id]["misses"],
                                                  self.estats[x.id]["last_t"]))

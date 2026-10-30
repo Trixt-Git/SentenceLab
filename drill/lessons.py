@@ -226,35 +226,6 @@ LESSONS = [
                dict(template="___ = scaler.___(X_test)",
                     answers=[["<name>"], ["transform", ".transform"]])],
     ),
-    Lesson(
-        id="read", title="What does this line do?", effect="rebind",
-        before="explain",
-        setup=lambda: {"nums": [3, 1, 2]},
-        predict=dict(
-            line="ranked = nums.sort()",
-            question="After this line runs, what is ranked?",
-            options=["[1, 2, 3]", "[3, 1, 2]", "None", "an error"], answer=2),
-        contrast=dict(
-            a="ranked = sorted(nums)", b="ranked = nums.sort()",
-            question="Which line puts the sorted list in ranked?",
-            options=["the first", "the second", "both", "neither"], answer=0,
-            explain="nums.sort() reorders nums itself and produces no result (None). ranked = then "
-                    "stores that nothing, so ranked is None while nums is sorted. sorted(nums) "
-                    "builds a new list, and ranked stores it."),
-        teach=dict(
-            points=['Sometimes you are handed a line and asked what it does.', 'Look left of the = first. Is the result saved in a variable?', 'Then look at the verb. Does it change the thing it is called on, or make something new?', 'A verb that changes something, with a variable that saves its result, is a classic bug. Example: ranked = nums.sort().'],
-            example='ranked = sorted(nums)',
-            rule='Left of the = first. Then the verb.'),
-        worked=dict(
-            line="ranked = nums.sort()",
-            slots={"Subject": "nums", "Verb": ".sort", "Details": "none", "Variable": "ranked"},
-            why="What is wrong with this line?",
-            options=["sort changes nums and produces no result, so ranked holds None",
-                     "sort needs arguments", "ranked cannot be assigned",
-                     "nums is left unchanged"], answer=0),
-        faded=[dict(template="ranked = ___.sort()", answers=[["nums"]]),
-               dict(template="___ = ___.sort()", answers=[["<name>"], ["nums"]])],
-    ),
 ]
 
 BY_ID = {l.id: l for l in LESSONS}
