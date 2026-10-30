@@ -125,7 +125,7 @@ function colorLine(line,slots){
  spans.sort((x,y)=>x[0]-y[0]);let out='',pos=0;
  for(const [a,b,k] of spans){out+=esc(line.slice(pos,a))+`<span class="pt pt-${k}">${esc(line.slice(a,b))}</span>`;pos=b;}
  return out+esc(line.slice(pos));}
-const sl=v=>/^[(]/.test(v.preview)?`${v.name}: ${v.type} ${v.preview}`:`${v.name}: ${v.type} = ${v.preview}`;
+const sl=v=>v.line;
 function toks(t){return t.map(([x,o,ti])=>{const a=ti?` title="${esc(ti).replace(/"/g,'&quot;')}"`:'';return o==='eq'&&!ti?esc(x):`<span class="t-${o}"${a}>${esc(x)}</span>`;}).join('');}
 function mini(t){const cell=([v,o,ti])=>`<td class="c-${o}"${ti?` title="${esc(ti).replace(/"/g,'&quot;')}"`:''}>${esc(v)}</td>`;
  return `<table class="mini"><tr><th></th>${t.cols.map(c=>`<th>${esc(c)}</th>`).join('')}${t.cols_more?'<th>…</th>':''}<th></th></tr>`+t.rows.map(r=>`<tr class="r-${r.status}"><th>${esc(r.label)}</th>${r.cells.map(cell).join('')}${t.cols_more?'<td>…</td>':''}<td class="mut">${{del:'− removed',add:'+ added',eq:''}[r.status]}</td></tr>`).join('')+(t.rows_more?`<tr><td colspan="${t.cols.length+2}" class="mut">…${t.rows_more} more rows</td></tr>`:'')+'</table>'+(t.hidden_changes?`<div class="mut note">+${t.hidden_changes} more changed cells not shown</div>`:'');}

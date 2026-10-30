@@ -53,9 +53,21 @@ def _state_preview(v):
     return preview(v)
 
 
+def _state_line(k, v):
+    """How a starting value is shown: as code you could type where possible."""
+    if isinstance(v, pd.DataFrame):
+        r, c = v.shape
+        return f"{k}  # a table with {r} rows and {c} columns\n{v.head(6).to_string()}"
+    if isinstance(v, np.ndarray):
+        return f"{k}  # an array of numbers, shape {v.shape}"
+    if _is_estimator(v):
+        return f"{k}  # a {type(v).__name__} model, {'fitted' if _fitted(v) else 'not fitted'}"
+    return f"{k} = {preview(v)}"
+
+
 def describe(env):
-    return [{"name": k, "type": type(v).__name__, "preview": _state_preview(v)}
-            for k, v in env.items()]
+    return [{"name": k, "type": type(v).__name__, "preview": _state_preview(v),
+             "line": _state_line(k, v)} for k, v in env.items()]
 
 
 def detect_effect(node):

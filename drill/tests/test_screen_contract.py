@@ -52,3 +52,14 @@ def test_every_lesson_step_goes_through_scene():
     assert "L.state" not in body            # steps never draw state themselves
     assert "function scene(" in html and html.count("L.state.map(sl)") == 1
     assert len(re.findall(r"b\.innerHTML=", body)) == 5   # teach, predict, contrast, worked, faded
+
+
+def test_starting_values_are_shown_as_code():
+    from engine import describe
+    from lessons import LESSONS
+    for l in LESSONS:
+        for v in describe(l.setup()):
+            first = v["line"].splitlines()[0]
+            assert not re.search(r"^\w+:\s*\w+\s*=", first), first     # no "name: type = value"
+    lines = {v["name"]: v["line"] for v in describe({"nums": [3, 1, 2]})}
+    assert lines["nums"] == "nums = [3, 1, 2]"
