@@ -65,9 +65,9 @@ LESSONS = [
         setup=lambda: {"nums": [3, 1, 2]},
         teach=dict(
             points=["After a line runs, one of three things can happen.",
-                    "First, its answer can be [[save|saved in a variable]]. For example, [[save|ranked = sorted(nums)]] saves a sorted copy of the list as ranked.",
-                    "Second, the line can [[change|change the thing itself]], so there is no separate answer to save. For example, [[change|nums.sort()]] reorders nums directly.",
-                    "Third, its answer can simply be [[show|shown on screen]]. For example, [[show|print(sum(nums))]] displays the total without saving it.",
+                    "First, its answer can be saved in a variable. For example, [[variable|ranked]] = [[verb|sorted]]([[subject|nums]]) saves a sorted copy of the list as ranked.",
+                    "Second, the line can change the thing itself, so there is no separate answer to save. For example, [[subject|nums]][[verb|.sort]]() reorders nums directly.",
+                    "Third, its answer can simply be shown on screen. For example, print([[verb|sum]]([[subject|nums]])) displays the total without saving it.",
                     "Step 1 of every exercise asks which of these three a line does."],
             example="ranked = sorted(nums)",
             slots={"Subject": "nums", "Verb": "sorted", "Details": "none", "Variable": "ranked"},
@@ -100,7 +100,7 @@ LESSONS = [
         teach=dict(
             points=["This works just like before, except that the subject is now a table, df.",
                     "Most pandas verbs build a new table and leave df alone. The new table is the answer, so it needs a variable to be saved in.",
-                    "The details can be named options. Here, subset=['price'] tells dropna which column to check."],
+                    "The details can be named options. Here, [[details|subset=['price']]] tells [[verb|dropna]] which column to check."],
             example="clean_df = df.dropna(subset=['price'])",
             rule="A pandas verb builds a new table, so save it in a variable."),
         worked=dict(
@@ -133,7 +133,7 @@ LESSONS = [
         setup=_unfitted_env,
         teach=dict(
             points=["scikit-learn has three main verbs: fit, predict and transform.",
-                    "fit trains the model. The model is the subject, and the data it learns from is the details: X_train and y_train.",
+                    "fit trains the model. The model is the subject, and the data it learns from is the details: [[details|X_train and y_train]].",
                     "fit changes the model directly, so there is no separate answer to save and the variable is empty. You can see that it worked because the model goes from not fitted to fitted."],
             example="model.fit(X_train, y_train)",
             rule="fit changes the model itself, so it does not need a variable."),
@@ -169,8 +169,8 @@ LESSONS = [
         setup=_sklearn_env,
         teach=dict(
             points=["predict is the second verb. It reads the model and builds a new result: the predictions.",
-                    "A new result needs a variable, so you write preds = model.predict(X_test).",
-                    "The details are just the data to predict on, which is X_test."],
+                    "A new result needs a variable, so you write [[variable|preds]] = [[subject|model]][[verb|.predict]]([[details|X_test]]).",
+                    "The details are just the data to predict on, which is [[details|X_test]]."],
             example="preds = model.predict(X_test)",
             rule="predict makes something new, so save it in a variable."),
         worked=dict(
@@ -204,7 +204,7 @@ LESSONS = [
         setup=_scaler_env,
         teach=dict(
             points=["transform is the third verb. Its subject is a scaler that has already learned some numbers from the training data.",
-                    "scaler.transform(X_test) applies those numbers to new data and builds a new result, so it needs a variable.",
+                    "[[subject|scaler]][[verb|.transform]]([[details|X_test]]) applies those numbers to new data and builds a new result, so it needs a variable.",
                     "fit_transform would learn from X_test all over again, which mixes the test data into the scaler. So fit on the training data, and only transform the test data."],
             example="X_test_s = scaler.transform(X_test)",
             rule="Fit on the training data, and only transform the test data."),

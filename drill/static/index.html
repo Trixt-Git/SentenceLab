@@ -3,8 +3,8 @@
 <title>SentenceLab Drill</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-:root{--bg:#fff;--fg:#1a1a1a;--mut:#666;--line:#ddd;--ok:#1a7f37;--bad:#c62828;--acc:#2457d6;--s1:inherit;--s2:inherit;--s3:inherit;--s4:#0b6bcb;--o1:#0b6bcb;--o2:inherit;--o3:inherit}
-@media(prefers-color-scheme:dark){:root{--bg:#161616;--fg:#eaeaea;--mut:#999;--line:#333;--ok:#4cc26a;--bad:#ff6b6b;--acc:#7aa2ff;--s1:inherit;--s2:inherit;--s3:inherit;--s4:#6cb4ff;--o1:#6cb4ff;--o2:inherit;--o3:inherit}}
+:root{--bg:#fff;--fg:#1a1a1a;--mut:#666;--line:#ddd;--ok:#1a7f37;--bad:#c62828;--acc:#2457d6;--s1:#2457d6;--s2:#c2570c;--s3:#d6336c;--s4:#1a7f37}
+@media(prefers-color-scheme:dark){:root{--bg:#161616;--fg:#eaeaea;--mut:#999;--line:#333;--ok:#4cc26a;--bad:#ff6b6b;--acc:#7aa2ff;--s1:#7aa2ff;--s2:#ffb066;--s3:#ff8fb8;--s4:#4cc26a}}
 body{background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif;max-width:720px;margin:0 auto;padding:16px}
 code,input,pre{font-family:ui-monospace,Menlo,monospace}
 .mut{color:var(--mut)} .ok{color:var(--ok)} .bad{color:var(--bad)}
@@ -24,13 +24,10 @@ table{border-collapse:collapse;width:100%} td,th{border-bottom:1px solid var(--l
 .line{background:rgba(127,127,127,.12);border-radius:6px;padding:6px 10px;margin:6px 0}
 .cols{display:grid;grid-template-columns:1fr 1fr;gap:12px} @media(max-width:560px){.cols{grid-template-columns:1fr}}
 .slot{display:inline-block;border-bottom:2px solid;margin-right:2px;padding:0 2px}
-.hl{font-weight:600;border-radius:3px;padding:0 2px}
-.hl-save{color:var(--o1);background:color-mix(in srgb,var(--o1) 14%,transparent)}
-.hl-change,.hl-show,.hl-subject,.hl-verb,.hl-details{font-weight:600}
-.hl-variable{color:var(--s4)}
-.pt{font-weight:700;border-bottom:2px solid}
-.pt-Variable{color:var(--s4)}
-.o-save{color:var(--o1)} .o-change{color:var(--o2)} .o-show{color:var(--o3)}
+.hl{font-weight:700}
+.hl-subject{color:var(--s1)} .hl-verb{color:var(--s2)} .hl-details{color:var(--s3)} .hl-variable{color:var(--s4)}
+.pt{font-weight:700}
+.pt-Subject{color:var(--s1)} .pt-Verb{color:var(--s2)} .pt-Details{color:var(--s3)} .pt-Variable{color:var(--s4)}
 .s-Subject{color:var(--s1)} .s-Verb{color:var(--s2)} .s-Details{color:var(--s3)} .s-Variable{color:var(--s4)}
 .banner{background:rgba(36,87,214,.1);border-radius:6px;padding:6px 10px;margin:8px 0}
 .chg{border:1px solid var(--line);border-radius:6px;padding:6px 8px;margin:6px 0;font-size:13px}
@@ -63,7 +60,7 @@ table.mini{font-size:12px;width:auto;min-width:50%} table.mini td,table.mini th{
  <pre id="xstate" class="mut"></pre>
  <div class="line"><code id="xline"></code></div>
  <section id="x1"><h2>1 · What happens to the answer?</h2>
-  <div class="o-save"><kbd>1</kbd> The answer is <b>saved in a variable</b></div><div class="o-change"><kbd>2</kbd> The line <b>changes the thing itself</b></div><div class="o-show"><kbd>3</kbd> The answer is <b>only shown</b></div>
+  <div><kbd>1</kbd> The answer is saved in a variable</div><div><kbd>2</kbd> The line changes the thing itself</div><div><kbd>3</kbd> The answer is only shown</div>
   <div id="x1msg"></div></section>
  <section id="x2" class="off"><h2>2 · The four parts of the line</h2>
   <div id="xguided">
@@ -84,7 +81,7 @@ table.mini{font-size:12px;width:auto;min-width:50%} table.mini td,table.mini th{
 <pre id="state" class="mut"></pre>
 
 <section id="s1"><h2>1 · What happens to the answer?</h2>
- <div class="o-save"><kbd>1</kbd> The answer is <b>saved in a variable</b>, like <code>x = …</code></div><div class="o-change"><kbd>2</kbd> The line <b>changes the thing itself</b>, like <code>x.sort()</code></div><div class="o-show"><kbd>3</kbd> The answer is <b>only shown</b>, like <code>print(…)</code></div>
+ <div><kbd>1</kbd> The answer is saved in a variable, like <code>x = …</code></div><div><kbd>2</kbd> The line changes the thing itself, like <code>x.sort()</code></div><div><kbd>3</kbd> The answer is only shown, like <code>print(…)</code></div>
  <div id="s1msg"></div></section>
 
 <section id="s2" class="off"><h2>2 · The four parts of the line</h2>
@@ -121,7 +118,7 @@ function setMode(m,user){mode=m;if(user)manual=true;try{localStorage.mode=m}catc
 function banner(t){const b=$('#banner');b.hidden=!t;b.textContent=t||'';}
 const fmt=t=>esc(t).replace(/\[\[(save|change|show|subject|verb|details|variable)\|(.*?)\]\]/g,(m,k,x)=>`<span class="hl hl-${k}">${x}</span>`);
 function colorLine(line,slots){
- const spans=[];const order=['Variable'];
+ const spans=[];const order=['Variable','Verb','Subject','Details'];
  for(const k of order){const v=slots&&slots[k];if(!v||v==='none')continue;
   const re=new RegExp((/^\w/.test(v)?'\\b':'')+v.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+(/\w$/.test(v)?'\\b':''),'g');let m;
   while((m=re.exec(line))){const a=m.index,b=a+v.length;if(!spans.some(s=>a<s[1]&&b>s[0])){spans.push([a,b,k]);break;}}}
@@ -216,7 +213,7 @@ async function loadExplain(k){
  document.activeElement.blur();setX(1);}
 async function xEffect(k){
  const r=await api('explain/'+X.index+'/effect',{effect:effects[k]});
- $('#x1msg').innerHTML=r.ok?`<span class="o-${({rebind:'save',mutate:'change',emit:'show'})[r.answer]}"><b>✓ ${effLabel[r.answer]}</b></span>`:`<span class="bad">✗ That is not it. Look again.</span>`;
+ $('#x1msg').innerHTML=r.ok?`<span class="ok">✓ ${effLabel[r.answer]}</span>`:`<span class="bad">✗ That is not it. Look again.</span>`;
  if(r.ok)setX(2);else xmiss++;}
 async function xSlots(){
  const slots={};document.querySelectorAll('[data-xslot]').forEach(e=>slots[e.dataset.xslot]=e.value);
@@ -247,7 +244,7 @@ async function load(n,info){
  document.activeElement.blur();setStage(1);}
 async function pickEffect(k){
  const r=await api('drill/'+i+'/effect',{effect:effects[k]});
- $('#s1msg').innerHTML=r.ok?`<span class="o-${({rebind:'save',mutate:'change',emit:'show'})[r.answer]}"><b>✓ ${effLabel[r.answer]}</b></span>`:`<span class="bad">✗ That is not it. Try again.</span>`;
+ $('#s1msg').innerHTML=r.ok?`<span class="ok">✓ ${effLabel[r.answer]}</span>`:`<span class="bad">✗ That is not it. Try again.</span>`;
  if(r.ok)setStage(2);}
 async function checkSlots(){
  const slots={};document.querySelectorAll('[data-slot]').forEach(e=>slots[e.dataset.slot]=e.value);
