@@ -118,7 +118,7 @@ function mini(t){const cell=([v,o,ti])=>`<td class="c-${o}"${ti?` title="${esc(t
 function diffTable(diff){return diff.length?diff.map(d=>{const t=d.detail;let body;
  if(t&&t.kind==='table')body=(t.caption?`<div class="mut note">${esc(t.caption)}</div>`:'')+mini(t);
  else if(t&&t.kind==='tokens')body=`<div class="row del tk"><span class="sg">−</span><code>${toks(t.before)}</code></div><div class="row add"><span class="sg">+</span><code>${toks(t.after)}</code></div>`+(t.caption?`<div class="mut note">${esc(t.caption)}</div>`:'');
- else body=(d.before!==undefined?`<div class="row del"><span class="sg">−</span><code>${esc(d.before)}</code></div>`:'')+(d.after!==undefined?`<div class="row add"><span class="sg">+</span><code>${esc(d.after)}</code></div>`:'');
+ else body=(d.before!==undefined?`<div class="row del"><span class="sg">−</span><code>${esc(d.before)}</code></div>`:'')+(d.after!==undefined?`<div class="row add"><span class="sg">+</span><code>${d.change==='added'?esc(d.name)+' = ':''}${esc(d.after)}</code></div>`:'');
  return `<div class="chg"><div class="chg-h"><code>${esc(d.name)}</code><span class="tag">${d.change}</span></div>${body}<div class="mut note">${esc(d.note||'')}</div></div>`;}).join(''):'<p class="mut">State unchanged.</p>';}
 function runBox(r){return `<div class="line"><code>${esc(r.line)}</code></div>${r.error?`<p class="bad">${esc(r.error)}</p>`:''}${diffTable(r.diff)}${r.stdout?`<pre>${esc(r.stdout)}</pre>`:''}${r.ret?`<p class="mut">returned</p><pre>${esc(r.ret)}</pre>`:''}`;}
 
@@ -149,10 +149,10 @@ function renderStage(){
  if(st==='contrast'){const c=L.contrast;
   b.innerHTML=`<p class="mut">Compare the two lines</p><pre class="mut">${L.state.map(sl).join('\n')}</pre><div class="cols"><div class="line"><b>A</b> <code>${esc(c.a)}</code></div><div class="line"><b>B</b> <code>${esc(c.b)}</code></div></div><p>${esc(c.question)}</p>${opts(c.options)}<div id="fb"></div>`;}
  if(st==='worked'){const w=L.worked;
-  b.innerHTML=`<p class="mut">Worked example: the four slots</p><div class="line"><code>${esc(w.line)}</code></div><table>${Object.entries(w.slots).map(([k,v])=>`<tr><td class="s-${k}"><b>${k}</b><td><code class="s-${k}">${esc(v)}</code></tr>`).join('')}</table><p>${esc(w.why)}</p>${opts(w.options)}<div id="fb"></div>`;}
+  b.innerHTML=`<p class="mut">Worked example: the four slots</p><pre class="mut">${L.state.map(sl).join('\n')}</pre><div class="line"><code>${esc(w.line)}</code></div><table>${Object.entries(w.slots).map(([k,v])=>`<tr><td class="s-${k}"><b>${k}</b><td><code class="s-${k}">${esc(v)}</code></tr>`).join('')}</table><p>${esc(w.why)}</p>${opts(w.options)}<div id="fb"></div>`;}
  if(st.startsWith('faded')){const f=L.faded[+st.slice(5)];
   const parts=f.template.split('___');
-  b.innerHTML=`<p class="mut">Fill the blank${parts.length>2?'s':''} (Enter to check)</p><div class="line"><code>${parts.map((p,k)=>esc(p)+(k<parts.length-1?'<input class="blank" data-b>':'')).join('')}</code></div><div id="fb"></div>`;
+  b.innerHTML=`<p class="mut">Fill the blank${parts.length>2?'s':''} (Enter to check)</p><pre class="mut">${L.state.map(sl).join('\n')}</pre><div class="line"><code>${parts.map((p,k)=>esc(p)+(k<parts.length-1?'<input class="blank" data-b>':'')).join('')}</code></div><div id="fb"></div>`;
   b.querySelector('[data-b]').focus();}
 }
 function opts(o){return o.map((t,k)=>`<button class="opt" data-o="${k}"><kbd>${k+1}</kbd> ${esc(t)}</button>`).join('');}
