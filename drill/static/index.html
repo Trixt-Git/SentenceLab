@@ -138,21 +138,25 @@ async function boot(){
 const STAGES=['teach','worked','contrast','predict','faded0','faded1'];
 async function startLesson(id){L=await api('lesson/'+id);ls=0;$('#ltitle').textContent=L.title;banner('');renderStage();}
 function stageKeys(n){return STAGES.slice(0,4).concat(L.faded.map((_,k)=>'faded'+k));}
+/* Every lesson step is drawn through scene(): the starting values are always put on screen
+   under the step's label, so no step can ask about something the learner cannot see. */
+const stateBlock=()=>`<pre class="mut">${L.state.map(sl).join('\n')}</pre>`;
+function scene(html){$('#lbody').innerHTML=html.replace('</p>','</p>'+stateBlock());}
 function renderStage(){
  const st=stageKeys()[ls];lanswered=false;
  $('#pos').textContent=`Lesson · step ${ls+1} of ${stageKeys().length}`;
- const b=$('#lbody');
+ const b={set innerHTML(x){scene(x);},querySelector:q=>$('#lbody').querySelector(q)};
  if(st==='teach'){const t=L.teach;lanswered=true;
-  b.innerHTML=`<p class="mut">The idea</p><ul>${t.points.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><p class="mut">Example</p><pre class="mut">${L.state.map(sl).join('\n')}</pre>${t.runs.map(runBox).join('')}${t.slots?`<table>${Object.entries(t.slots).map(([k,v])=>`<tr><td class="s-${k}"><b>${k}</b><td><code class="s-${k}">${esc(v)}</code></tr>`).join('')}</table>`:''}<div class="banner"><b>Rule:</b> ${esc(t.rule)}</div><p class="mut"><kbd>Enter</kbd> to continue</p>`;}
+  b.innerHTML=`<p class="mut">The idea</p><ul>${t.points.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><p class="mut">Example</p>${t.runs.map(runBox).join('')}${t.slots?`<table>${Object.entries(t.slots).map(([k,v])=>`<tr><td class="s-${k}"><b>${k}</b><td><code class="s-${k}">${esc(v)}</code></tr>`).join('')}</table>`:''}<div class="banner"><b>Rule:</b> ${esc(t.rule)}</div><p class="mut"><kbd>Enter</kbd> to continue</p>`;}
  if(st==='predict'){const p=L.predict;
-  b.innerHTML=`<p class="mut">Check yourself</p><pre class="mut">${L.state.map(sl).join('\n')}</pre><div class="line"><code>${esc(p.line)}</code></div><p>${esc(p.question)}</p>${opts(p.options)}<div id="fb"></div>`;}
+  b.innerHTML=`<p class="mut">Check yourself</p><div class="line"><code>${esc(p.line)}</code></div><p>${esc(p.question)}</p>${opts(p.options)}<div id="fb"></div>`;}
  if(st==='contrast'){const c=L.contrast;
-  b.innerHTML=`<p class="mut">Compare the two lines</p><pre class="mut">${L.state.map(sl).join('\n')}</pre><div class="cols"><div class="line"><b>A</b> <code>${esc(c.a)}</code></div><div class="line"><b>B</b> <code>${esc(c.b)}</code></div></div><p>${esc(c.question)}</p>${opts(c.options)}<div id="fb"></div>`;}
+  b.innerHTML=`<p class="mut">Compare the two lines</p><div class="cols"><div class="line"><b>A</b> <code>${esc(c.a)}</code></div><div class="line"><b>B</b> <code>${esc(c.b)}</code></div></div><p>${esc(c.question)}</p>${opts(c.options)}<div id="fb"></div>`;}
  if(st==='worked'){const w=L.worked;
-  b.innerHTML=`<p class="mut">Worked example: the four slots</p><pre class="mut">${L.state.map(sl).join('\n')}</pre><div class="line"><code>${esc(w.line)}</code></div><table>${Object.entries(w.slots).map(([k,v])=>`<tr><td class="s-${k}"><b>${k}</b><td><code class="s-${k}">${esc(v)}</code></tr>`).join('')}</table><p>${esc(w.why)}</p>${opts(w.options)}<div id="fb"></div>`;}
+  b.innerHTML=`<p class="mut">Worked example: the four slots</p><div class="line"><code>${esc(w.line)}</code></div><table>${Object.entries(w.slots).map(([k,v])=>`<tr><td class="s-${k}"><b>${k}</b><td><code class="s-${k}">${esc(v)}</code></tr>`).join('')}</table><p>${esc(w.why)}</p>${opts(w.options)}<div id="fb"></div>`;}
  if(st.startsWith('faded')){const f=L.faded[+st.slice(5)];
   const parts=f.template.split('___');
-  b.innerHTML=`<p class="mut">Fill the blank${parts.length>2?'s':''} (Enter to check)</p><pre class="mut">${L.state.map(sl).join('\n')}</pre><div class="line"><code>${parts.map((p,k)=>esc(p)+(k<parts.length-1?'<input class="blank" data-b>':'')).join('')}</code></div><div id="fb"></div>`;
+  b.innerHTML=`<p class="mut">Fill the blank${parts.length>2?'s':''} (Enter to check)</p><div class="line"><code>${parts.map((p,k)=>esc(p)+(k<parts.length-1?'<input class="blank" data-b>':'')).join('')}</code></div><div id="fb"></div>`;
   b.querySelector('[data-b]').focus();}
 }
 function opts(o){return o.map((t,k)=>`<button class="opt" data-o="${k}"><kbd>${k+1}</kbd> ${esc(t)}</button>`).join('');}
