@@ -1,0 +1,334 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>SentenceLab Drill</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#fff;--fg:#1a1a1a;--mut:#666;--line:#ddd;--ok:#1a7f37;--bad:#c62828;--acc:#2457d6;--s1:#2457d6;--s2:#c2570c;--s3:#d6336c;--s4:#1a7f37}
+@media(prefers-color-scheme:dark){:root{--bg:#161616;--fg:#eaeaea;--mut:#999;--line:#333;--ok:#4cc26a;--bad:#ff6b6b;--acc:#7aa2ff;--s1:#7aa2ff;--s2:#ffb066;--s3:#ff8fb8;--s4:#4cc26a}}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif;max-width:720px;margin:0 auto;padding:16px}
+code,input,pre{font-family:ui-monospace,Menlo,monospace}
+.mut{color:var(--mut)} .ok{color:var(--ok)} .bad{color:var(--bad)}
+section{border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin:12px 0}
+section.off{opacity:.5;pointer-events:none}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin:0 0 8px}
+input{width:100%;box-sizing:border-box;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);font-size:15px}
+input.ok,input.bad{color:var(--fg)}
+input.bad{border-color:var(--bad)} input.ok{border-color:var(--ok)}
+input.ok[data-slot=subject],input.ok[data-xslot=subject]{border-color:var(--s1)}
+input.ok[data-slot=verb],input.ok[data-xslot=verb]{border-color:var(--s2)}
+input.ok[data-slot=details],input.ok[data-xslot=details]{border-color:var(--s3)}
+input.ok[data-slot=variable],input.ok[data-xslot=variable]{border-color:var(--s4)}
+.legend{margin:2px 0 6px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+label{display:block;margin:6px 0 2px;font-size:13px;color:var(--mut)}
+kbd{border:1px solid var(--line);border-radius:4px;padding:0 5px;font-size:12px}
+pre{margin:4px 0;white-space:pre-wrap}
+[hidden]{display:none!important}
+button{font:13px system-ui,sans-serif;padding:4px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);cursor:pointer}
+table{border-collapse:collapse;width:100%} td,th{border-bottom:1px solid var(--line);padding:3px 6px;text-align:left;font-size:13px}
+.opt{display:block;width:100%;text-align:left;margin:4px 0;padding:8px 10px;font-size:14px}
+.opt.right{border-color:var(--ok)} .opt.wrong{border-color:var(--bad)}
+.line{background:rgba(127,127,127,.12);border-radius:6px;padding:6px 10px;margin:6px 0}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px} @media(max-width:560px){.cols{grid-template-columns:1fr}}
+.slot{display:inline-block;border-bottom:2px solid;margin-right:2px;padding:0 2px}
+.hl{font-weight:700}
+.hl-subject{color:var(--s1)} .hl-verb{color:var(--s2)} .hl-details{color:var(--s3)} .hl-variable{color:var(--s4)}
+.pt{font-weight:700}
+.pt-Subject{color:var(--s1)} .pt-Verb{color:var(--s2)} .pt-Details{color:var(--s3)} .pt-Variable{color:var(--s4)}
+.s-Subject{color:var(--s1)} .s-Verb{color:var(--s2)} .s-Details{color:var(--s3)} .s-Variable{color:var(--s4)}
+.banner{background:rgba(36,87,214,.1);border-radius:6px;padding:6px 10px;margin:8px 0}
+.chg{border:1px solid var(--line);border-radius:6px;padding:6px 8px;margin:6px 0;font-size:13px}
+.chg-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.tag{font-size:11px;text-transform:uppercase;letter-spacing:.04em;border:1px solid var(--line);border-radius:10px;padding:0 7px;color:var(--mut)}
+.row{display:flex;gap:6px;padding:2px 6px;border-radius:4px;margin:2px 0;overflow-wrap:anywhere}
+.sg{font-weight:700;width:1ch}
+.del{background:rgba(198,40,40,.12)} .del:not(.tk) code{text-decoration:line-through;text-decoration-color:rgba(198,40,40,.6)} .del .sg{color:var(--bad)}
+.add{background:rgba(26,127,55,.14)} .add .sg{color:var(--ok)}
+.note{margin-top:2px}
+.t-del{background:rgba(198,40,40,.35);border-radius:3px;text-decoration:line-through}
+.t-add{background:rgba(26,127,55,.4);border-radius:3px;font-weight:700;text-decoration:underline dotted}
+table.mini{font-size:12px;width:auto;min-width:50%} table.mini td,table.mini th{padding:2px 8px}
+.r-del td,.r-del th{background:rgba(198,40,40,.12);text-decoration:line-through;color:var(--bad)} .r-del td:last-child{text-decoration:none}
+.r-add td:not(:last-child){background:rgba(26,127,55,.14)}
+.c-add{background:rgba(26,127,55,.4);font-weight:700}
+.blank{width:9ch;display:inline-block;padding:2px 6px}
+</style>
+<h1 style="font-size:18px"><span id="pos"></span>
+ <button id="mode" style="float:right"></button> <button id="xbtn" style="float:right;margin-right:6px">Explain a line (E)</button></h1>
+<div id="banner" class="banner" hidden></div>
+
+<div id="lesson" hidden>
+ <h2 id="ltitle"></h2>
+ <section><div id="lbody"></div></section>
+</div>
+
+<div id="explain" hidden>
+ <p>What does this line do?</p>
+ <pre id="xstate" class="mut"></pre>
+ <div class="line"><code id="xline"></code></div>
+ <section id="x1"><h2>1 · What happens to the answer?</h2>
+  <div><kbd>1</kbd> The answer is saved in a variable</div><div><kbd>2</kbd> The line changes the thing itself</div><div><kbd>3</kbd> The answer is only shown</div>
+  <div id="x1msg"></div></section>
+ <section id="x2" class="off"><h2>2 · The four parts of the line</h2>
+  <div id="xguided">
+   <label class="s-Subject">Subject</label><input data-xslot="subject">
+   <label class="s-Verb">Verb</label><input data-xslot="verb">
+   <label class="s-Details">Details (or "none")</label><input data-xslot="details">
+   <label class="s-Variable">Variable (or "none")</label><input data-xslot="variable">
+   <div class="mut">Press Enter in the last box to check your answers.</div>
+  </div>
+  <div id="xspeed"><pre id="xreveal" class="mut">Name the four parts in your head, then press <kbd>Space</kbd> to see them.</pre>
+   <div class="mut">Press <kbd>Enter</kbd> to continue.</div></div></section>
+ <section id="x3" class="off"><h2>3 · What will happen?</h2><p id="xq"></p><div id="xopts"></div><div id="x3msg"></div></section>
+ <section id="x4" class="off"><h2>4 · What happened</h2><div id="xout"></div></section>
+</div>
+
+<div id="drill" hidden>
+<p><span id="intent"></span></p>
+<pre id="state" class="mut"></pre>
+
+<section id="s3"><h2>1 · Write the line</h2>
+ <div class="legend"><span class="pt pt-Variable">variable</span> = <span class="pt pt-Subject">subject</span>.<span class="pt pt-Verb">verb</span>(<span class="pt pt-Details">details</span>)</div>
+ <input id="code" placeholder="Type your line here" autocomplete="off" spellcheck="false">
+ <div class="mut">Press <kbd>Enter</kbd> to run it, <kbd>Shift</kbd>+<kbd>Enter</kbd> if you are unsure, or <kbd>Ctrl</kbd>+<kbd>H</kbd> for a hint.</div>
+ <div id="s3msg"></div></section>
+
+<section id="s4" class="off"><h2>2 · What happened</h2><div id="out"></div></section>
+
+<section id="s1" class="off"><h2>3 · What happens to the answer?</h2>
+ <div><kbd>1</kbd> The answer is saved in a variable, like <code>x = …</code></div><div><kbd>2</kbd> The line changes the thing itself, like <code>x.sort()</code></div><div><kbd>3</kbd> The answer is only shown, like <code>print(…)</code></div>
+ <div id="s1msg"></div></section>
+
+<section id="s2" class="off"><h2>4 · Break your line into its four parts</h2>
+ <div id="guided">
+  <label class="s-Subject">Subject</label><input data-slot="subject">
+  <label class="s-Verb">Verb</label><input data-slot="verb">
+  <label class="s-Details">Details (or "none")</label><input data-slot="details">
+  <label class="s-Variable">Variable (or "none")</label><input data-slot="variable">
+  <div class="mut">Press Enter in the last box to check your answers.</div>
+ </div>
+ <div id="speed"><pre id="reveal" class="mut">Think it through, then press <kbd>Space</kbd> to see the answer.</pre>
+  <div class="mut">Press <kbd>Enter</kbd> to continue.</div></div>
+ <div id="s2msg"></div></section>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const api=(p,b)=>fetch('/api/'+p,b===undefined?undefined:{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json());
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const effects={1:'rebind',2:'mutate',3:'emit'};
+const effLabel={rebind:'saved in a variable',mutate:'changes the thing itself',emit:'only shown'};
+let X=null,xs=1,xmiss=0,xdone=false,forceExplain=false;
+let i=0,total=1,stage=1,mode='guided',passed=false,finished=false,manual=false,L=null,ls=0,lanswered=false;
+try{mode=localStorage.mode||'guided'}catch{}
+
+function setMode(m,user){mode=m;if(user)manual=true;try{localStorage.mode=m}catch{};$('#mode').textContent=(m==='guided'?'Guided':'Speed')+' mode (M)';if(!$('#drill').hidden)setStage(stage);if(!$('#explain').hidden&&X)setX(xs);}
+function banner(t){const b=$('#banner');b.hidden=!t;b.textContent=t||'';}
+const fmt=t=>esc(t).replace(/\[\[(save|change|show|subject|verb|details|variable)\|(.*?)\]\]/g,(m,k,x)=>`<span class="hl hl-${k}">${x}</span>`);
+function colorLine(line,slots,lastVar){
+ const spans=[];const order=['Variable','Verb','Subject','Details'];
+ for(const k of order){const raw=slots&&slots[k];if(!raw||NONE_WORDS.includes(raw))continue;
+  for(const v of (k==='Details'?raw.split(',').map(x=>x.trim()):[raw])){if(!v)continue;
+  const re=new RegExp((/^\w/.test(v)?'\\b':'')+v.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+(/\w$/.test(v)?'\\b':''),'g');let m;const hits=[];
+  while((m=re.exec(line)))hits.push([m.index,m.index+v.length]);
+  const pickable=hits.filter(([a,b])=>!spans.some(s=>a<s[1]&&b>s[0]));
+  const pick=(k==='Variable'&&lastVar)?pickable[pickable.length-1]:pickable[0];
+  if(pick)spans.push([pick[0],pick[1],k]);}}
+ spans.sort((x,y)=>x[0]-y[0]);let out='',pos=0;
+ for(const [a,b,k] of spans){out+=esc(line.slice(pos,a))+`<span class="pt pt-${k}">${esc(line.slice(a,b))}</span>`;pos=b;}
+ return out+esc(line.slice(pos));}
+const sl=v=>v.line;
+const NONE_WORDS=['none','nothing','dropped'];
+const capw=k=>k[0].toUpperCase()+k.slice(1);
+let parts=null,intentText='',refLine='';
+async function loadParts(kind){
+ const r=await api(kind+'/'+(kind==='drill'?i:X.index)+'/reveal');
+ parts={Subject:r.subject,Verb:r.verb,Details:r.details,Variable:r.variable};return parts;}
+/* A starting value, with its name in the variable colour. */
+const slHtml=v=>`<span class="pt pt-Variable">${esc(v.name)}</span>${esc(v.line.slice(v.name.length))}`;
+function toks(t){return t.map(([x,o,ti])=>{const a=ti?` title="${esc(ti).replace(/"/g,'&quot;')}"`:'';return o==='eq'&&!ti?esc(x):`<span class="t-${o}"${a}>${esc(x)}</span>`;}).join('');}
+function mini(t){const cell=([v,o,ti])=>`<td class="c-${o}"${ti?` title="${esc(ti).replace(/"/g,'&quot;')}"`:''}>${esc(v)}</td>`;
+ return `<table class="mini"><tr><th></th>${t.cols.map(c=>`<th>${esc(c)}</th>`).join('')}${t.cols_more?'<th>…</th>':''}<th></th></tr>`+t.rows.map(r=>`<tr class="r-${r.status}"><th>${esc(r.label)}</th>${r.cells.map(cell).join('')}${t.cols_more?'<td>…</td>':''}<td class="mut">${{del:'− removed',add:'+ added',eq:''}[r.status]}</td></tr>`).join('')+(t.rows_more?`<tr><td colspan="${t.cols.length+2}" class="mut">…${t.rows_more} more rows</td></tr>`:'')+'</table>'+(t.hidden_changes?`<div class="mut note">+${t.hidden_changes} more changed cells not shown</div>`:'');}
+function diffTable(diff){return diff.length?diff.map(d=>{const t=d.detail;let body;
+ if(t&&t.kind==='table')body=(t.caption?`<div class="mut note">${esc(t.caption)}</div>`:'')+mini(t);
+ else if(t&&t.kind==='tokens')body=`<div class="row del tk"><span class="sg">−</span><code>${toks(t.before)}</code></div><div class="row add"><span class="sg">+</span><code>${toks(t.after)}</code></div>`+(t.caption?`<div class="mut note">${esc(t.caption)}</div>`:'');
+ else body=(d.before!==undefined?`<div class="row del"><span class="sg">−</span><code>${esc(d.before)}</code></div>`:'')+(d.after!==undefined?`<div class="row add"><span class="sg">+</span><code>${d.change==='added'?esc(d.name)+' = ':''}${esc(d.after)}</code></div>`:'');
+ return `<div class="chg"><div class="chg-h"><code class="pt pt-Variable">${esc(d.name)}</code><span class="tag">${({added:'new',mutated:'changed',rebound:'replaced'})[d.change]||d.change}</span></div>${body}<div class="mut note">${esc(d.note||'')}</div></div>`;}).join(''):'<p class="mut">Nothing changed.</p>';}
+function runBox(r,slots){return `<div class="line"><code>${slots?colorLine(r.line,slots):esc(r.line)}</code></div>${r.error?`<p class="bad">${esc(r.error)}</p>`:''}${diffTable(r.diff)}${r.stdout?`<pre>${esc(r.stdout)}</pre>`:''}${r.ret?`<p class="mut">The line gave back:</p><pre>${esc(r.ret)}</pre>`:''}`;}
+
+async function boot(){
+ const n=await api('next'+(forceExplain?'?kind=explain':''));forceExplain=false;
+ $('#lesson').hidden=n.kind!=='lesson';$('#drill').hidden=n.kind!=='drill';$('#explain').hidden=n.kind!=='explain';
+ if(n.kind==='explain'){banner('');return loadExplain(n.index);}
+ if(n.kind==='lesson')return startLesson(n.lesson);
+ const note=[];
+ if(n.review)note.push('Review: you were sure about this one last time, but it was wrong.');
+ if(n.phase==='interleaved')note.push('Mixed practice');
+ if(n.mastered&&!manual&&mode==='guided'){setMode('speed');note.push('You got three in a row on the first try, so we are switching to Speed mode.');}
+ banner(note.join(' · '));
+ load(n.index,n);}
+
+/* ---------------- lessons ---------------- */
+const STAGES=['teach','worked','contrast','predict','faded0','faded1'];
+async function startLesson(id){L=await api('lesson/'+id);ls=0;$('#ltitle').textContent=L.title;banner('');renderStage();}
+function stageKeys(n){return STAGES.slice(0,4).concat(L.faded.map((_,k)=>'faded'+k));}
+/* Every lesson step is drawn through scene(): the starting values are always put on screen
+   under the step's label, so no step can ask about something the learner cannot see. */
+const stateBlock=()=>`<pre class="mut">${L.state.map(slHtml).join('\n')}</pre>`;
+function scene(html){$('#lbody').innerHTML=html.replace('</p>','</p>'+stateBlock());}
+function renderStage(){
+ const st=stageKeys()[ls];lanswered=false;
+ $('#pos').textContent=`Lesson · step ${ls+1} of ${stageKeys().length}`;
+ const b={set innerHTML(x){scene(x);},querySelector:q=>$('#lbody').querySelector(q)};
+ if(st==='teach'){const t=L.teach;lanswered=true;
+  b.innerHTML=`<p class="mut">The idea</p><ul>${t.points.map(x=>`<li>${fmt(x)}</li>`).join('')}</ul><p class="mut">Example</p>${t.runs.map(r=>runBox(r,t.slots)).join('')}${t.slots?`<table>${Object.entries(t.slots).map(([k,v])=>`<tr><td class="s-${k}"><b>${k}</b><td><code class="s-${k}">${esc(v)}</code></tr>`).join('')}</table>`:''}<div class="banner"><b>Rule:</b> ${esc(t.rule)}</div><p class="mut">Press <kbd>Enter</kbd> to continue.</p>`;}
+ if(st==='predict'){const p=L.predict;
+  b.innerHTML=`<p class="mut">Check yourself</p><div class="line"><code>${esc(p.line)}</code></div><p>${esc(p.question)}</p>${opts(p.options)}<div id="fb"></div>`;}
+ if(st==='contrast'){const c=L.contrast;
+  b.innerHTML=`<p class="mut">Compare the two lines</p><div class="cols"><div class="line"><b>A</b> <code>${esc(c.a)}</code></div><div class="line"><b>B</b> <code>${esc(c.b)}</code></div></div><p>${esc(c.question)}</p>${opts(c.options)}<div id="fb"></div>`;}
+ if(st==='worked'){const w=L.worked;
+  b.innerHTML=`<p class="mut">Worked example: the four parts</p><div class="line"><code>${colorLine(w.line,w.slots)}</code></div><table>${Object.entries(w.slots).map(([k,v])=>`<tr><td class="s-${k}"><b>${k}</b><td><code class="s-${k}">${esc(v)}</code></tr>`).join('')}</table><p>${esc(w.why)}</p>${opts(w.options)}<div id="fb"></div>`;}
+ if(st.startsWith('faded')){const f=L.faded[+st.slice(5)];
+  const parts=f.template.split('___');
+  b.innerHTML=`<p class="mut">Fill in the blank${parts.length>2?'s':''}, then press Enter to check.</p><div class="line"><code>${parts.map((p,k)=>esc(p)+(k<parts.length-1?'<input class="blank" data-b>':'')).join('')}</code></div><div id="fb"></div>`;
+  b.querySelector('[data-b]').focus();}
+}
+function opts(o){return o.map((t,k)=>`<button class="opt" data-o="${k}"><kbd>${k+1}</kbd> ${esc(t)}</button>`).join('');}
+async function pick(k){
+ if(lanswered)return;
+ const st=stageKeys()[ls];
+ const r=await api(`lesson/${L.id}/check`,{stage:st,choice:k});
+ lanswered=r.ok;
+ document.querySelectorAll('.opt').forEach((b,j)=>{b.classList.toggle('right',j===r.answer&&r.ok);b.classList.toggle('wrong',j===k&&!r.ok);});
+ let h=r.ok?'<p class="ok">✓ Correct</p>':'<p class="bad">✗ Not quite. Try another.</p>';
+ if(r.ok){
+  if(st==='contrast'){h+=`<div class="cols">${r.runs.map((x,j)=>`<div><b>${'AB'[j]}</b>${runBox(x)}</div>`).join('')}</div>`;}
+  else h+=r.runs.map(x=>runBox(x,st==='worked'?L.worked.slots:null)).join('');
+  if(r.explain)h+=`<p>${esc(r.explain)}</p>`;
+  h+='<p class="mut">Press <kbd>Enter</kbd> to continue.</p>';}
+ $('#fb').innerHTML=h;}
+async function checkBlanks(){
+ const st=stageKeys()[ls];const els=[...document.querySelectorAll('[data-b]')];
+ const r=await api(`lesson/${L.id}/check`,{stage:st,blanks:els.map(e=>e.value)});
+ els.forEach((e,k)=>e.className='blank '+(r.blanks[k]?'ok':'bad'));
+ lanswered=r.ok;
+ $('#fb').innerHTML=r.ok?'<p class="ok">✓ Correct</p><p class="mut">Press <kbd>Enter</kbd> to continue.</p>':'<p class="bad">✗ Check the highlighted blanks</p>';}
+async function lessonNext(){
+ if(ls+1<stageKeys().length){ls++;renderStage();return;}
+ await api(`lesson/${L.id}/done`,{});boot();}
+
+/* ---------------- explain ---------------- */
+function setX(n){xs=n;['x1','x2','x3','x4'].forEach((id,k)=>$('#'+id).classList.toggle('off',k+1>n));
+ $('#xguided').hidden=mode!=='guided';$('#xspeed').hidden=mode!=='speed';
+ if(n>=3)document.activeElement.blur();
+ if(n===2&&mode==='guided')document.querySelector('[data-xslot=subject]').focus();}
+async function loadExplain(k){
+ X=await api('explain/'+k);xmiss=0;xdone=false;
+ $('#pos').textContent=`Explain ${k+1}/${X.total} · ${X.domain}`;
+ $('#xstate').innerHTML=X.state.map(slHtml).join('\n');parts=null;$('#xline').textContent=X.line;
+ $('#xq').textContent=X.question;$('#xopts').innerHTML=opts(X.options).replace(/data-o=/g,'data-xo=');
+ for(const e of document.querySelectorAll('#explain input')){e.value='';e.className='';}
+ $('#x1msg').textContent=$('#x3msg').textContent=$('#xout').textContent='';
+ $('#xreveal').innerHTML='Name the four parts in your head, then press <kbd>Space</kbd> to see them.';
+ document.activeElement.blur();setX(1);}
+async function xEffect(k){
+ const r=await api('explain/'+X.index+'/effect',{effect:effects[k]});
+ $('#x1msg').innerHTML=r.ok?`<span class="ok">✓ ${effLabel[r.answer]}</span>`:`<span class="bad">✗ That is not it. Look again.</span>`;
+ if(r.ok)setX(2);else xmiss++;}
+async function xSlots(){
+ const slots={};document.querySelectorAll('[data-xslot]').forEach(e=>slots[e.dataset.xslot]=e.value);
+ const r=await api('explain/'+X.index+'/slots',{slots});let all=true;
+ document.querySelectorAll('[data-xslot]').forEach(e=>{const ok=r[e.dataset.xslot];all=all&&ok;e.className=ok?'ok':'bad';});
+ if(all){setX(3);await loadParts('explain');$('#xline').innerHTML=colorLine(X.line,parts);}else xmiss++;}
+async function xPick(o){
+ if(xdone)return;
+ const r=await api('explain/'+X.index+'/answer',{choice:o});
+ document.querySelectorAll('[data-xo]').forEach((b,j)=>{b.classList.toggle('right',r.ok&&j===r.answer);b.classList.toggle('wrong',!r.ok&&j===o);});
+ if(!r.ok){xmiss++;$('#x3msg').innerHTML='<p class="bad">✗ Not quite. Try another.</p>';return;}
+ xdone=true;$('#x3msg').innerHTML='<p class="ok">✓ Correct</p>';
+ $('#xout').innerHTML=r.runs.map(runBox).join('')+`<p>${esc(r.why)}</p><p class="mut">Press <kbd>Enter</kbd> for the next one.</p>`;
+ setX(4);api('explain/'+X.index+'/done',{misses:xmiss});}
+
+/* ---------------- drills ---------------- */
+function setStage(n){stage=n;['s3','s4','s1','s2'].forEach((id,k)=>$('#'+id).classList.toggle('off',k+1>n));
+ $('#guided').hidden=mode!=='guided';$('#speed').hidden=mode!=='speed';
+ if(n===4&&mode==='guided')document.querySelector('[data-slot=subject]').focus();
+ if(n===1)$('#code').focus();
+ if(n>=2)$('#code').blur();}
+async function load(n,info){
+ const d=await api('drill/'+n);i=n;total=d.total;passed=false;finished=false;
+ $('#pos').textContent=`${n+1}/${total} · ${d.domain}${d.plan?' · '+d.plan:''}`;intentText=d.intent;parts=null;$('#intent').textContent=d.intent;
+ $('#state').innerHTML=d.state.map(slHtml).join('\n');
+ for(const e of document.querySelectorAll('#drill input')){e.value='';e.className='';}
+ $('#s1msg').textContent=$('#s2msg').textContent=$('#s3msg').textContent=$('#out').textContent='';
+ $('#reveal').innerHTML='Think it through, then press <kbd>Space</kbd> to see the answer.';
+ setStage(1);}
+async function pickEffect(k){
+ const r=await api('drill/'+i+'/effect',{effect:effects[k]});
+ $('#s1msg').innerHTML=r.ok?`<span class="ok">✓ ${effLabel[r.answer]}</span>`:`<span class="bad">✗ That is not it. Try again.</span>`;
+  if(r.ok)setStage(4);}
+async function checkSlots(){
+ const slots={};document.querySelectorAll('[data-slot]').forEach(e=>slots[e.dataset.slot]=e.value);
+ const r=await api('drill/'+i+'/slots',{slots});let all=true;
+ document.querySelectorAll('[data-slot]').forEach(e=>{const ok=r[e.dataset.slot];all=all&&ok;e.className=ok?'ok':'bad';});
+
+ if(all)await finish();}
+/* Once the learner has named the four parts, the instruction shows them in colour. */
+async function finish(){
+ finished=true;document.activeElement.blur();await lightUp();
+ const mine=$('#code').value.trim();
+ const same=mine.replace(/\s/g,'').replace(/"/g,"'")===refLine.replace(/\s/g,'').replace(/"/g,"'");
+ $('#yourline').innerHTML=`<p>Your line: <code>${colorLine(mine,parts)}</code></p>`+(same?'':`<p>One way to write it: <code>${colorLine(refLine,parts)}</code></p>`)+'<p class="mut">Press <kbd>Enter</kbd> for the next one.</p>';}
+async function lightUp(){await loadParts('drill');const p={...parts};delete p.Verb;$('#intent').innerHTML=colorLine(intentText,p,true);}
+async function hint(){const r=await api('drill/'+i+'/hint',{});
+ const body=r.level===1?r.text.split(' · ').map(x=>{const [k,...v]=x.split(': ');return `<span class="pt pt-${capw(k)}">${esc(k)}</span>: ${esc(v.join(': '))}`;}).join(' · '):esc(r.text);
+ $('#s3msg').innerHTML=`<p class="mut">Hint ${r.level} of 3: <code>${body}</code></p>`;}
+async function run(confident){
+ const r=await api('drill/'+i+'/run',{code:$('#code').value,confident});
+ let h='';
+ if(r.error)h+=`<p class="bad">${esc(r.error)}</p>`;
+ h+=`<p class="${r.passed?'ok':'bad'}">${r.passed?'✓ Correct':'✗ Not quite'}${r.passed&&r.attempt===1?' on the first try':''}</p>`;
+ (r.hints||[]).forEach(t=>h+=`<p class="bad">${esc(t).replace(/`([^`]+)`/g,'<code>$1</code>')}</p>`);
+ if(!r.error)h+=diffTable(r.diff);
+ if(r.stdout)h+=`<p class="mut">It printed:</p><pre>${esc(r.stdout)}</pre>`;
+ if(r.ret)h+=`<p class="mut">The line gave back:</p><pre>${esc(r.ret)}</pre>`;
+ if(r.passed){passed=true;refLine=r.reference_line;h+='<div id="yourline"></div>';}
+ else h+='<p class="mut">Press <kbd>Ctrl</kbd>+<kbd>H</kbd> for a hint.</p>';
+ $('#out').innerHTML=h;if(r.passed){setStage(3);$('#s1msg').textContent='';}}
+
+document.addEventListener('keydown',async e=>{
+ const typing=e.target.tagName==='INPUT';
+ if(!$('#explain').hidden){
+  if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.xslot==='variable')return xSlots();
+  if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.xslot){e.preventDefault();const f=[...document.querySelectorAll('[data-xslot]')];f[f.indexOf(e.target)+1].focus();return;}
+  if(typing)return;
+  if(xs===1&&effects[e.key])return xEffect(e.key);
+  if(xs===2&&mode==='speed'&&e.key===' '){e.preventDefault();const r=await api('explain/'+X.index+'/reveal');$('#xreveal').textContent=Object.entries(r).map(([k,v])=>k.padEnd(8)+v).join('\n');return;}
+  if(xs===2&&mode==='speed'&&e.key==='Enter'){setX(3);await loadParts('explain');$('#xline').innerHTML=colorLine(X.line,parts);return;}
+  if(xs===3&&/^[1-4]$/.test(e.key))return xPick(+e.key-1);
+  if(xs===4&&e.key==='Enter')return boot();
+  if(e.key.toLowerCase()==='m')return setMode(mode==='guided'?'speed':'guided',true);
+  return;}
+ if(!$('#lesson').hidden){
+  if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.b!==undefined){e.preventDefault();return lanswered?lessonNext():checkBlanks();}
+  if(typing)return;
+  if(/^[1-4]$/.test(e.key)&&document.querySelector('.opt'))return pick(+e.key-1);
+  if(e.key==='Enter'&&lanswered)return lessonNext();
+  return;}
+ if(finished&&e.key==='Enter'){e.preventDefault();return boot();}
+ if(e.key==='h'&&e.ctrlKey){e.preventDefault();return hint();}
+ if(e.key==='Enter'&&e.target.id==='code'){e.preventDefault();return finished?boot():(passed?null:run(!e.shiftKey));}
+ if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.slot==='variable')return checkSlots();
+ if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.slot){e.preventDefault();const f=[...document.querySelectorAll('[data-slot]')];f[f.indexOf(e.target)+1].focus();return;}
+ if(typing)return;
+ if(stage===3&&effects[e.key])return pickEffect(e.key);
+ if(stage===4&&mode==='speed'&&e.key===' '){e.preventDefault();const r=await api('drill/'+i+'/reveal');$('#reveal').textContent=Object.entries(r).map(([k,v])=>k.padEnd(8)+v).join('\n');return;}
+ if(stage===4&&mode==='speed'&&e.key==='Enter'){return finish();}
+ if(e.key.toLowerCase()==='m')return setMode(mode==='guided'?'speed':'guided',true);
+ if(finished&&e.key==='Enter')return boot();
+ if(e.key.toLowerCase()==='e'&&stage===1){forceExplain=true;return boot();}
+});
+document.addEventListener('click',e=>{const x=e.target.closest('[data-xo]');if(x&&!$('#explain').hidden)return xPick(+x.dataset.xo);const o=e.target.closest('.opt');if(o&&!$('#lesson').hidden)pick(+o.dataset.o);});
+$('#xbtn').onclick=()=>{forceExplain=true;boot();};
+$('#mode').onclick=()=>setMode(mode==='guided'?'speed':'guided',true);
+setMode(mode);boot();
+</script>
