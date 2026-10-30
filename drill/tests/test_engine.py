@@ -23,7 +23,7 @@ def test_quote_style_irrelevant():
     assert run_line(D["pd-dropna"], 'clean_df = df.dropna(subset=["price"])')["passed"]
 
 
-def test_rebind_without_landing_fails():
+def test_rebind_without_variable_fails():
     assert not run_line(D["pd-dropna"], "df.dropna(subset=['price'])")["passed"]
 
 
@@ -42,7 +42,7 @@ def test_multiple_statements_rejected():
 
 def test_slots():
     ok = check_slots(D["py-append"], {"subject": "scores", "verb": ".append",
-                                      "details": "95", "landing": "None"})
+                                      "details": "95", "variable": "None"})
     assert all(ok.values())
     assert not check_slots(D["py-append"], {"subject": "x"})["subject"]
 

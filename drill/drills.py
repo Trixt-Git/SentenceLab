@@ -1,7 +1,7 @@
 """Drill definitions. One grammatical clause per drill.
 
 grammar values are lists of accepted answers (first one is shown on reveal).
-Use "none" as the accepted Landing answer when the result is dropped.
+Use "none" as the accepted variable answer when nothing is saved.
 """
 from dataclasses import dataclass
 from typing import Any, Callable, Optional
@@ -63,7 +63,7 @@ def _price_df():
     return {"df": pd.DataFrame({"item": ["a", "b", "c"], "price": [10.0, np.nan, 30.0]})}
 
 
-LANDING_OUT = ["print", "print(...)", "stdout", "output", "display"]
+SHOWN = ["none", "print", "print(...)", "stdout", "output", "display", "screen"]
 NONE = ["none", "nothing"]
 
 DRILLS = [
@@ -73,7 +73,7 @@ DRILLS = [
         setup=lambda: {"name": "ada lovelace"},
         effect="rebind",
         grammar={"subject": ["name"], "verb": [".title", "title"],
-                 "details": NONE, "landing": ["title"]},
+                 "details": NONE, "variable": ["title"]},
         reference_line="title = name.title()",
         verify=lambda b, a, out, ret: a.get("title") == "Ada Lovelace" and a["name"] == "ada lovelace",
     ),
@@ -82,7 +82,7 @@ DRILLS = [
         intent="Add up the numbers in scores and call the result total.",
         setup=lambda: {"scores": [72, 88, 91]},
         effect="rebind",
-        grammar={"subject": ["scores"], "verb": ["sum"], "details": NONE, "landing": ["total"]},
+        grammar={"subject": ["scores"], "verb": ["sum"], "details": NONE, "variable": ["total"]},
         reference_line="total = sum(scores)",
         verify=lambda b, a, out, ret: a.get("total") == 251,
     ),
@@ -93,7 +93,7 @@ DRILLS = [
         setup=lambda: {"scores": [72, 88, 91]},
         effect="mutate",
         grammar={"subject": ["scores"], "verb": [".append", "append"],
-                 "details": ["95"], "landing": ["none", "dropped"]},
+                 "details": ["95"], "variable": ["none", "dropped"]},
         reference_line="scores.append(95)",
         verify=lambda b, a, out, ret: a.get("scores") == [72, 88, 91, 95],
         target="scores",
@@ -104,7 +104,7 @@ DRILLS = [
         setup=lambda: {"nums": [3, 1, 2]},
         effect="mutate",
         grammar={"subject": ["nums"], "verb": [".sort", "sort"],
-                 "details": NONE, "landing": ["none", "dropped"]},
+                 "details": NONE, "variable": ["none", "dropped"]},
         reference_line="nums.sort()",
         verify=lambda b, a, out, ret: a.get("nums") == [1, 2, 3],
         target="nums",
@@ -115,7 +115,7 @@ DRILLS = [
         setup=_unfitted_env,
         effect="mutate",
         grammar={"subject": ["model"], "verb": [".fit", "fit"],
-                 "details": ["X_train, y_train"], "landing": ["none", "dropped"]},
+                 "details": ["X_train, y_train"], "variable": ["none", "dropped"]},
         reference_line="model.fit(X_train, y_train)",
         verify=lambda b, a, out, ret: hasattr(a["model"], "coef_"),
         target="model",
@@ -127,7 +127,7 @@ DRILLS = [
         setup=lambda: {"nums": [3, 1, 2]},
         effect="rebind",
         grammar={"subject": ["nums"], "verb": ["sorted"],
-                 "details": NONE, "landing": ["ranked"]},
+                 "details": NONE, "variable": ["ranked"]},
         reference_line="ranked = sorted(nums)",
         verify=lambda b, a, out, ret: a.get("ranked") == [1, 2, 3] and a["nums"] == [3, 1, 2],
     ),
@@ -137,7 +137,7 @@ DRILLS = [
         setup=_price_df,
         effect="rebind",
         grammar={"subject": ["df"], "verb": [".dropna", "dropna"],
-                 "details": ["subset=['price']"], "landing": ["clean_df"]},
+                 "details": ["subset=['price']"], "variable": ["clean_df"]},
         reference_line="clean_df = df.dropna(subset=['price'])",
         verify=lambda b, a, out, ret: (
             isinstance(a.get("clean_df"), pd.DataFrame)
@@ -149,7 +149,7 @@ DRILLS = [
         setup=_price_df,
         effect="rebind",
         grammar={"subject": ["df"], "verb": [".dropna", "dropna"],
-                 "details": ["subset=['price']"], "landing": ["df"]},
+                 "details": ["subset=['price']"], "variable": ["df"]},
         reference_line="df = df.dropna(subset=['price'])",
         verify=lambda b, a, out, ret: list(a["df"]["item"]) == ["a", "c"],
     ),
@@ -159,7 +159,7 @@ DRILLS = [
         setup=lambda: _sklearn_env(),
         effect="rebind",
         grammar={"subject": ["model"], "verb": [".predict", "predict"],
-                 "details": ["X_test"], "landing": ["preds"]},
+                 "details": ["X_test"], "variable": ["preds"]},
         reference_line="preds = model.predict(X_test)",
         verify=lambda b, a, out, ret: np.array_equal(
             a.get("preds"), a["model"].predict(a["X_test"])),
@@ -170,7 +170,7 @@ DRILLS = [
         setup=_scaler_env,
         effect="rebind",
         grammar={"subject": ["scaler"], "verb": [".transform", "transform"],
-                 "details": ["X_test"], "landing": ["X_test_s"]},
+                 "details": ["X_test"], "variable": ["X_test_s"]},
         reference_line="X_test_s = scaler.transform(X_test)",
         verify=lambda b, a, out, ret: (
             "X_test_s" in a
@@ -184,7 +184,7 @@ DRILLS = [
         setup=_price_df,
         effect="emit",
         grammar={"subject": ["df"], "verb": [".head", "head"],
-                 "details": ["2"], "landing": LANDING_OUT},
+                 "details": ["2"], "variable": SHOWN},
         reference_line="df.head(2)",
         verify=lambda b, a, out, ret: set(a) == set(b)
         and _emitted_equals(out, ret, a["df"].head(2)),
@@ -195,7 +195,7 @@ DRILLS = [
         setup=_sklearn_env,
         effect="emit",
         grammar={"subject": ["model"], "verb": [".score", "score"],
-                 "details": ["X_test, y_test"], "landing": LANDING_OUT},
+                 "details": ["X_test, y_test"], "variable": SHOWN},
         reference_line="print(model.score(X_test, y_test))",
         verify=lambda b, a, out, ret: set(a) == set(b)
         and _emitted_equals(out, ret, a["model"].score(a["X_test"], a["y_test"])),

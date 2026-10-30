@@ -167,7 +167,7 @@ def check_slots(drill: Drill, slots: dict) -> dict:
     for slot, accepted in drill.grammar.items():
         given = _norm(slots.get(slot, ""))
         out[slot] = given in {_norm(a).strip(".") for a in accepted} or (
-            slot == "landing" and given in {"", "none", "dropped"}
+            slot == "variable" and given in {"", "none", "dropped"}
             and "none" in {_norm(a) for a in accepted})
     return out
 

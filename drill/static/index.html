@@ -24,7 +24,7 @@ table{border-collapse:collapse;width:100%} td,th{border-bottom:1px solid var(--l
 .line{background:rgba(127,127,127,.12);border-radius:6px;padding:6px 10px;margin:6px 0}
 .cols{display:grid;grid-template-columns:1fr 1fr;gap:12px} @media(max-width:560px){.cols{grid-template-columns:1fr}}
 .slot{display:inline-block;border-bottom:2px solid;margin-right:2px;padding:0 2px}
-.s-Subject{color:var(--s1)} .s-Verb{color:var(--s2)} .s-Details{color:var(--s3)} .s-Landing{color:var(--s4)}
+.s-Subject{color:var(--s1)} .s-Verb{color:var(--s2)} .s-Details{color:var(--s3)} .s-Variable{color:var(--s4)}
 .banner{background:rgba(36,87,214,.1);border-radius:6px;padding:6px 10px;margin:8px 0}
 .chg{border:1px solid var(--line);border-radius:6px;padding:6px 8px;margin:6px 0;font-size:13px}
 .chg-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
@@ -63,7 +63,7 @@ table.mini{font-size:12px;width:auto;min-width:50%} table.mini td,table.mini th{
    <label>Subject</label><input data-xslot="subject">
    <label>Verb</label><input data-xslot="verb">
    <label>Details (or "none")</label><input data-xslot="details">
-   <label>Landing (or "none")</label><input data-xslot="landing">
+   <label>Variable (or "none")</label><input data-xslot="variable">
    <div class="mut">Enter on the last field to check.</div>
   </div>
   <div id="xspeed"><pre id="xreveal" class="mut">Name them in your head, then press <kbd>Space</kbd> to reveal.</pre>
@@ -84,8 +84,8 @@ table.mini{font-size:12px;width:auto;min-width:50%} table.mini td,table.mini th{
  <div id="guided">
   <label>Subject</label><input data-slot="subject">
   <label>Verb</label><input data-slot="verb">
-  <label>Details</label><input data-slot="details">
-  <label>Landing (or "none")</label><input data-slot="landing">
+  <label>Details (or "none")</label><input data-slot="details">
+  <label>Variable (or "none")</label><input data-slot="variable">
   <div class="mut">Enter on the last field to check.</div>
  </div>
  <div id="speed"><pre id="reveal" class="mut">Think it through, then press <kbd>Space</kbd> to reveal.</pre>
@@ -93,7 +93,7 @@ table.mini{font-size:12px;width:auto;min-width:50%} table.mini td,table.mini th{
  <div id="s2msg"></div></section>
 
 <section id="s3" class="off"><h2>3 · Line entry</h2>
- <input id="code" placeholder="[Landing] = [Subject].[Verb]([Details])" autocomplete="off" spellcheck="false">
+ <input id="code" placeholder="[Variable] = [Subject].[Verb]([Details])" autocomplete="off" spellcheck="false">
  <div class="mut"><kbd>Enter</kbd> run, sure &nbsp; <kbd>Shift</kbd>+<kbd>Enter</kbd> run, unsure &nbsp; <kbd>Ctrl</kbd>+<kbd>H</kbd> hint</div>
  <div id="s3msg"></div></section>
 
@@ -250,7 +250,7 @@ async function run(confident){
 document.addEventListener('keydown',async e=>{
  const typing=e.target.tagName==='INPUT';
  if(!$('#explain').hidden){
-  if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.xslot==='landing')return xSlots();
+  if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.xslot==='variable')return xSlots();
   if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.xslot){e.preventDefault();const f=[...document.querySelectorAll('[data-xslot]')];f[f.indexOf(e.target)+1].focus();return;}
   if(typing)return;
   if(xs===1&&effects[e.key])return xEffect(e.key);
@@ -268,7 +268,7 @@ document.addEventListener('keydown',async e=>{
   return;}
  if(e.key==='h'&&e.ctrlKey){e.preventDefault();return hint();}
  if(e.key==='Enter'&&e.target.id==='code'){e.preventDefault();return passed?boot():run(!e.shiftKey);}
- if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.slot==='landing')return checkSlots();
+ if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.slot==='variable')return checkSlots();
  if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.slot){e.preventDefault();const f=[...document.querySelectorAll('[data-slot]')];f[f.indexOf(e.target)+1].focus();return;}
  if(typing)return;
  if(stage===1&&effects[e.key])return pickEffect(e.key);
