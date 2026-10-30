@@ -3,8 +3,8 @@
 <title>SentenceLab Drill</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-:root{--bg:#fff;--fg:#1a1a1a;--mut:#666;--line:#ddd;--ok:#1a7f37;--bad:#c62828;--acc:#2457d6;--s1:#2457d6;--s2:#a14a00;--s3:#7b3fa0;--s4:#1a7f37}
-@media(prefers-color-scheme:dark){:root{--bg:#161616;--fg:#eaeaea;--mut:#999;--line:#333;--ok:#4cc26a;--bad:#ff6b6b;--acc:#7aa2ff;--s1:#7aa2ff;--s2:#ffb066;--s3:#cf9cf0;--s4:#4cc26a}}
+:root{--bg:#fff;--fg:#1a1a1a;--mut:#666;--line:#ddd;--ok:#1a7f37;--bad:#c62828;--acc:#2457d6;--s1:#2457d6;--s2:#a14a00;--s3:#7b3fa0;--s4:#1a7f37;--o1:#0b6bcb;--o2:#b45309;--o3:#7e3fb0}
+@media(prefers-color-scheme:dark){:root{--bg:#161616;--fg:#eaeaea;--mut:#999;--line:#333;--ok:#4cc26a;--bad:#ff6b6b;--acc:#7aa2ff;--s1:#7aa2ff;--s2:#ffb066;--s3:#cf9cf0;--s4:#4cc26a;--o1:#6cb4ff;--o2:#ffb066;--o3:#d7a6f5}}
 body{background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif;max-width:720px;margin:0 auto;padding:16px}
 code,input,pre{font-family:ui-monospace,Menlo,monospace}
 .mut{color:var(--mut)} .ok{color:var(--ok)} .bad{color:var(--bad)}
@@ -24,6 +24,14 @@ table{border-collapse:collapse;width:100%} td,th{border-bottom:1px solid var(--l
 .line{background:rgba(127,127,127,.12);border-radius:6px;padding:6px 10px;margin:6px 0}
 .cols{display:grid;grid-template-columns:1fr 1fr;gap:12px} @media(max-width:560px){.cols{grid-template-columns:1fr}}
 .slot{display:inline-block;border-bottom:2px solid;margin-right:2px;padding:0 2px}
+.hl{font-weight:600;border-radius:3px;padding:0 2px}
+.hl-save{color:var(--o1);background:color-mix(in srgb,var(--o1) 14%,transparent)}
+.hl-change{color:var(--o2);background:color-mix(in srgb,var(--o2) 14%,transparent)}
+.hl-show{color:var(--o3);background:color-mix(in srgb,var(--o3) 14%,transparent)}
+.hl-subject{color:var(--s1)} .hl-verb{color:var(--s2)} .hl-details{color:var(--s3)} .hl-variable{color:var(--s4)}
+.pt{font-weight:700;border-bottom:2px solid}
+.pt-Subject{color:var(--s1)} .pt-Verb{color:var(--s2)} .pt-Details{color:var(--s3)} .pt-Variable{color:var(--s4)}
+.o-save{color:var(--o1)} .o-change{color:var(--o2)} .o-show{color:var(--o3)}
 .s-Subject{color:var(--s1)} .s-Verb{color:var(--s2)} .s-Details{color:var(--s3)} .s-Variable{color:var(--s4)}
 .banner{background:rgba(36,87,214,.1);border-radius:6px;padding:6px 10px;margin:8px 0}
 .chg{border:1px solid var(--line);border-radius:6px;padding:6px 8px;margin:6px 0;font-size:13px}
@@ -56,14 +64,14 @@ table.mini{font-size:12px;width:auto;min-width:50%} table.mini td,table.mini th{
  <pre id="xstate" class="mut"></pre>
  <div class="line"><code id="xline"></code></div>
  <section id="x1"><h2>1 · What happens to the answer?</h2>
-  <div><kbd>1</kbd> The answer is saved in a variable</div><div><kbd>2</kbd> The line changes the thing itself</div><div><kbd>3</kbd> The answer is only shown</div>
+  <div class="o-save"><kbd>1</kbd> The answer is <b>saved in a variable</b></div><div class="o-change"><kbd>2</kbd> The line <b>changes the thing itself</b></div><div class="o-show"><kbd>3</kbd> The answer is <b>only shown</b></div>
   <div id="x1msg"></div></section>
  <section id="x2" class="off"><h2>2 · The four parts of the line</h2>
   <div id="xguided">
-   <label>Subject</label><input data-xslot="subject">
-   <label>Verb</label><input data-xslot="verb">
-   <label>Details (or "none")</label><input data-xslot="details">
-   <label>Variable (or "none")</label><input data-xslot="variable">
+   <label class="s-Subject">Subject</label><input data-xslot="subject">
+   <label class="s-Verb">Verb</label><input data-xslot="verb">
+   <label class="s-Details">Details (or "none")</label><input data-xslot="details">
+   <label class="s-Variable">Variable (or "none")</label><input data-xslot="variable">
    <div class="mut">Press Enter in the last box to check your answers.</div>
   </div>
   <div id="xspeed"><pre id="xreveal" class="mut">Name the four parts in your head, then press <kbd>Space</kbd> to see them.</pre>
@@ -77,15 +85,15 @@ table.mini{font-size:12px;width:auto;min-width:50%} table.mini td,table.mini th{
 <pre id="state" class="mut"></pre>
 
 <section id="s1"><h2>1 · What happens to the answer?</h2>
- <div><kbd>1</kbd> The answer is saved in a variable, like <code>x = …</code></div><div><kbd>2</kbd> The line changes the thing itself, like <code>x.sort()</code></div><div><kbd>3</kbd> The answer is only shown, like <code>print(…)</code></div>
+ <div class="o-save"><kbd>1</kbd> The answer is <b>saved in a variable</b>, like <code>x = …</code></div><div class="o-change"><kbd>2</kbd> The line <b>changes the thing itself</b>, like <code>x.sort()</code></div><div class="o-show"><kbd>3</kbd> The answer is <b>only shown</b>, like <code>print(…)</code></div>
  <div id="s1msg"></div></section>
 
 <section id="s2" class="off"><h2>2 · The four parts of the line</h2>
  <div id="guided">
-  <label>Subject</label><input data-slot="subject">
-  <label>Verb</label><input data-slot="verb">
-  <label>Details (or "none")</label><input data-slot="details">
-  <label>Variable (or "none")</label><input data-slot="variable">
+  <label class="s-Subject">Subject</label><input data-slot="subject">
+  <label class="s-Verb">Verb</label><input data-slot="verb">
+  <label class="s-Details">Details (or "none")</label><input data-slot="details">
+  <label class="s-Variable">Variable (or "none")</label><input data-slot="variable">
   <div class="mut">Press Enter in the last box to check your answers.</div>
  </div>
  <div id="speed"><pre id="reveal" class="mut">Think it through, then press <kbd>Space</kbd> to see the answer.</pre>
@@ -112,6 +120,15 @@ try{mode=localStorage.mode||'guided'}catch{}
 
 function setMode(m,user){mode=m;if(user)manual=true;try{localStorage.mode=m}catch{};$('#mode').textContent=(m==='guided'?'Guided':'Speed')+' mode (M)';if(!$('#drill').hidden)setStage(stage);if(!$('#explain').hidden&&X)setX(xs);}
 function banner(t){const b=$('#banner');b.hidden=!t;b.textContent=t||'';}
+const fmt=t=>esc(t).replace(/\[\[(save|change|show|subject|verb|details|variable)\|(.*?)\]\]/g,(m,k,x)=>`<span class="hl hl-${k}">${x}</span>`);
+function colorLine(line,slots){
+ const spans=[];const order=['Variable','Verb','Subject','Details'];
+ for(const k of order){const v=slots&&slots[k];if(!v||v==='none')continue;
+  const re=new RegExp((/^\w/.test(v)?'\\b':'')+v.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+(/\w$/.test(v)?'\\b':''),'g');let m;
+  while((m=re.exec(line))){const a=m.index,b=a+v.length;if(!spans.some(s=>a<s[1]&&b>s[0])){spans.push([a,b,k]);break;}}}
+ spans.sort((x,y)=>x[0]-y[0]);let out='',pos=0;
+ for(const [a,b,k] of spans){out+=esc(line.slice(pos,a))+`<span class="pt pt-${k}">${esc(line.slice(a,b))}</span>`;pos=b;}
+ return out+esc(line.slice(pos));}
 const sl=v=>/^[(]/.test(v.preview)?`${v.name}: ${v.type} ${v.preview}`:`${v.name}: ${v.type} = ${v.preview}`;
 function toks(t){return t.map(([x,o,ti])=>{const a=ti?` title="${esc(ti).replace(/"/g,'&quot;')}"`:'';return o==='eq'&&!ti?esc(x):`<span class="t-${o}"${a}>${esc(x)}</span>`;}).join('');}
 function mini(t){const cell=([v,o,ti])=>`<td class="c-${o}"${ti?` title="${esc(ti).replace(/"/g,'&quot;')}"`:''}>${esc(v)}</td>`;
@@ -121,7 +138,7 @@ function diffTable(diff){return diff.length?diff.map(d=>{const t=d.detail;let bo
  else if(t&&t.kind==='tokens')body=`<div class="row del tk"><span class="sg">−</span><code>${toks(t.before)}</code></div><div class="row add"><span class="sg">+</span><code>${toks(t.after)}</code></div>`+(t.caption?`<div class="mut note">${esc(t.caption)}</div>`:'');
  else body=(d.before!==undefined?`<div class="row del"><span class="sg">−</span><code>${esc(d.before)}</code></div>`:'')+(d.after!==undefined?`<div class="row add"><span class="sg">+</span><code>${d.change==='added'?esc(d.name)+' = ':''}${esc(d.after)}</code></div>`:'');
  return `<div class="chg"><div class="chg-h"><code>${esc(d.name)}</code><span class="tag">${({added:'new',mutated:'changed',rebound:'replaced'})[d.change]||d.change}</span></div>${body}<div class="mut note">${esc(d.note||'')}</div></div>`;}).join(''):'<p class="mut">Nothing changed.</p>';}
-function runBox(r){return `<div class="line"><code>${esc(r.line)}</code></div>${r.error?`<p class="bad">${esc(r.error)}</p>`:''}${diffTable(r.diff)}${r.stdout?`<pre>${esc(r.stdout)}</pre>`:''}${r.ret?`<p class="mut">The line gave back:</p><pre>${esc(r.ret)}</pre>`:''}`;}
+function runBox(r,slots){return `<div class="line"><code>${slots?colorLine(r.line,slots):esc(r.line)}</code></div>${r.error?`<p class="bad">${esc(r.error)}</p>`:''}${diffTable(r.diff)}${r.stdout?`<pre>${esc(r.stdout)}</pre>`:''}${r.ret?`<p class="mut">The line gave back:</p><pre>${esc(r.ret)}</pre>`:''}`;}
 
 async function boot(){
  const n=await api('next'+(forceExplain?'?kind=explain':''));forceExplain=false;
@@ -148,13 +165,13 @@ function renderStage(){
  $('#pos').textContent=`Lesson · step ${ls+1} of ${stageKeys().length}`;
  const b={set innerHTML(x){scene(x);},querySelector:q=>$('#lbody').querySelector(q)};
  if(st==='teach'){const t=L.teach;lanswered=true;
-  b.innerHTML=`<p class="mut">The idea</p><ul>${t.points.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><p class="mut">Example</p>${t.runs.map(runBox).join('')}${t.slots?`<table>${Object.entries(t.slots).map(([k,v])=>`<tr><td class="s-${k}"><b>${k}</b><td><code class="s-${k}">${esc(v)}</code></tr>`).join('')}</table>`:''}<div class="banner"><b>Rule:</b> ${esc(t.rule)}</div><p class="mut">Press <kbd>Enter</kbd> to continue.</p>`;}
+  b.innerHTML=`<p class="mut">The idea</p><ul>${t.points.map(x=>`<li>${fmt(x)}</li>`).join('')}</ul><p class="mut">Example</p>${t.runs.map(r=>runBox(r,t.slots)).join('')}${t.slots?`<table>${Object.entries(t.slots).map(([k,v])=>`<tr><td class="s-${k}"><b>${k}</b><td><code class="s-${k}">${esc(v)}</code></tr>`).join('')}</table>`:''}<div class="banner"><b>Rule:</b> ${esc(t.rule)}</div><p class="mut">Press <kbd>Enter</kbd> to continue.</p>`;}
  if(st==='predict'){const p=L.predict;
   b.innerHTML=`<p class="mut">Check yourself</p><div class="line"><code>${esc(p.line)}</code></div><p>${esc(p.question)}</p>${opts(p.options)}<div id="fb"></div>`;}
  if(st==='contrast'){const c=L.contrast;
   b.innerHTML=`<p class="mut">Compare the two lines</p><div class="cols"><div class="line"><b>A</b> <code>${esc(c.a)}</code></div><div class="line"><b>B</b> <code>${esc(c.b)}</code></div></div><p>${esc(c.question)}</p>${opts(c.options)}<div id="fb"></div>`;}
  if(st==='worked'){const w=L.worked;
-  b.innerHTML=`<p class="mut">Worked example: the four parts</p><div class="line"><code>${esc(w.line)}</code></div><table>${Object.entries(w.slots).map(([k,v])=>`<tr><td class="s-${k}"><b>${k}</b><td><code class="s-${k}">${esc(v)}</code></tr>`).join('')}</table><p>${esc(w.why)}</p>${opts(w.options)}<div id="fb"></div>`;}
+  b.innerHTML=`<p class="mut">Worked example: the four parts</p><div class="line"><code>${colorLine(w.line,w.slots)}</code></div><table>${Object.entries(w.slots).map(([k,v])=>`<tr><td class="s-${k}"><b>${k}</b><td><code class="s-${k}">${esc(v)}</code></tr>`).join('')}</table><p>${esc(w.why)}</p>${opts(w.options)}<div id="fb"></div>`;}
  if(st.startsWith('faded')){const f=L.faded[+st.slice(5)];
   const parts=f.template.split('___');
   b.innerHTML=`<p class="mut">Fill in the blank${parts.length>2?'s':''}, then press Enter to check.</p><div class="line"><code>${parts.map((p,k)=>esc(p)+(k<parts.length-1?'<input class="blank" data-b>':'')).join('')}</code></div><div id="fb"></div>`;
@@ -170,7 +187,7 @@ async function pick(k){
  let h=r.ok?'<p class="ok">✓ Correct</p>':'<p class="bad">✗ Not quite. Try another.</p>';
  if(r.ok){
   if(st==='contrast'){h+=`<div class="cols">${r.runs.map((x,j)=>`<div><b>${'AB'[j]}</b>${runBox(x)}</div>`).join('')}</div>`;}
-  else h+=r.runs.map(runBox).join('');
+  else h+=r.runs.map(x=>runBox(x,st==='worked'?L.worked.slots:null)).join('');
   if(r.explain)h+=`<p>${esc(r.explain)}</p>`;
   h+='<p class="mut">Press <kbd>Enter</kbd> to continue.</p>';}
  $('#fb').innerHTML=h;}
@@ -200,7 +217,7 @@ async function loadExplain(k){
  document.activeElement.blur();setX(1);}
 async function xEffect(k){
  const r=await api('explain/'+X.index+'/effect',{effect:effects[k]});
- $('#x1msg').innerHTML=r.ok?`<span class="ok">✓ ${effLabel[r.answer]}</span>`:`<span class="bad">✗ That is not it. Look again.</span>`;
+ $('#x1msg').innerHTML=r.ok?`<span class="o-${({rebind:'save',mutate:'change',emit:'show'})[r.answer]}"><b>✓ ${effLabel[r.answer]}</b></span>`:`<span class="bad">✗ That is not it. Look again.</span>`;
  if(r.ok)setX(2);else xmiss++;}
 async function xSlots(){
  const slots={};document.querySelectorAll('[data-xslot]').forEach(e=>slots[e.dataset.xslot]=e.value);
@@ -231,7 +248,7 @@ async function load(n,info){
  document.activeElement.blur();setStage(1);}
 async function pickEffect(k){
  const r=await api('drill/'+i+'/effect',{effect:effects[k]});
- $('#s1msg').innerHTML=r.ok?`<span class="ok">✓ ${effLabel[r.answer]}</span>`:`<span class="bad">✗ That is not it. Try again.</span>`;
+ $('#s1msg').innerHTML=r.ok?`<span class="o-${({rebind:'save',mutate:'change',emit:'show'})[r.answer]}"><b>✓ ${effLabel[r.answer]}</b></span>`:`<span class="bad">✗ That is not it. Try again.</span>`;
  if(r.ok)setStage(2);}
 async function checkSlots(){
  const slots={};document.querySelectorAll('[data-slot]').forEach(e=>slots[e.dataset.slot]=e.value);
